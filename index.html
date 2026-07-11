@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> Gates CDX Kettenspanner-Ritzel Generator (Brompton)</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --text: #1c1e21; --muted: #6a7178;
+    --border: #d8dce1; --accent: #2ea44f; --accent-text: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c; --panel: #1f2228; --text: #e8eaed; --muted: #9aa2ab;
+      --border: #33383f; --accent: #2ea44f; --accent-text: #ffffff;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: system-ui, sans-serif; background: var(--bg);
+    color: var(--text); display: flex; flex-direction: column; height: 100vh;
+  }
+  header {
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 18px; margin: 0; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  main { flex: 1; display: flex; min-height: 0; }
+  #form {
+    width: 340px; overflow-y: auto; padding: 12px 16px;
+    border-right: 1px solid var(--border); background: var(--panel);
+  }
+  #viewport { flex: 1; position: relative; min-width: 0; }
+  #viewport canvas { display: block; }
+  fieldset {
+    border: 1px solid var(--border); border-radius: 6px;
+    margin: 0 0 14px 0; padding: 8px 10px 10px;
+  }
+  legend { font-weight: 600; font-size: 13px; padding: 0 4px; }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin: 4px 0;
+  }
+  .row label { font-size: 13px; flex: 1; }
+  .row input {
+    width: 90px; padding: 4px 6px; border: 1px solid var(--border);
+    border-radius: 4px; background: var(--bg); color: var(--text);
+    font-size: 13px; text-align: right;
+  }
+  .hint { color: var(--muted); font-size: 12px; margin: 4px 0 10px; }
+  .stats {
+    font-size: 12.5px; color: var(--muted); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; margin-bottom: 14px;
+  }
+  .stats b { color: var(--text); }
+  button, a.btn {
+    display: block; width: 100%; padding: 10px; margin: 8px 0;
+    border-radius: 6px; border: 1px solid var(--border);
+    background: var(--panel); color: var(--text); font-size: 14px;
+    cursor: pointer; text-align: center; text-decoration: none;
+  }
+  a.btn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button:hover, a.btn:hover { filter: brightness(0.96); }
+  #copied { color: var(--accent); font-size: 12.5px; text-align: center; min-height: 16px; }
+  #overlaynote {
+    position: absolute; left: 12px; bottom: 10px; font-size: 12px;
+    color: var(--muted); pointer-events: none;
+  }
+  /* Mobil (schmale Bildschirme): Vorschau oben, Formular darunter scrollbar */
+  @media (max-width: 700px) {
+    body { height: 100dvh; }
+    main { flex-direction: column; }
+    /* Vorschau oben festhalten, Formular scrollt darunter */
+    #viewport { flex: 0 0 42%; min-height: 200px; order: -1; }
+    #form {
+      width: 100%; flex: 1; border-right: none;
+      border-top: 1px solid var(--border);
+    }
+    header { padding: 8px 12px; }
+    header h1 { font-size: 16px; }
+    header .sub { font-size: 12px; }
+    .row { margin: 6px 0; }
+    .row label { font-size: 15px; }
+    /* 16px verhindert den Auto-Zoom beim Antippen auf iOS */
+    .row input { width: 110px; padding: 8px 10px; font-size: 16px; }
+    legend { font-size: 15px; }
+    button, a.btn { padding: 12px; font-size: 16px; }
+    #overlaynote { display: none; }
+  }
+  /* Handy im Querformat (niedriger Bildschirm): Kopfzeile auf eine
+     schmale Zeile schrumpfen, damit die Höhe der Vorschau gehört */
+  @media (max-height: 480px) {
+    header { padding: 4px 12px; }
+    header h1 { font-size: 14px; }
+    header .sub { display: none; }
+    #overlaynote { display: none; }
+  }
+  /* … und in der zweispaltigen Ansicht das Formular etwas schmaler,
+     damit die Vorschau mehr Breite bekommt */
+  @media (max-height: 480px) and (min-width: 701px) {
+    #form { width: 300px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1> Gates CDX Kettenspanner-Ritzel Generator (Brompton)</h1>
+  <span class="sub">Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen</span>
+</header>
+<main>
+  <div id="form">
+    <div class="stats" id="stats"></div>
+
+    <fieldset id="sec1"><legend>Zahnrad-Körper (Grundkörper)</legend></fieldset>
+    <fieldset id="sec2"><legend>Zylinder (Kugellager)</legend></fieldset>
+    <fieldset id="sec3"><legend>Seitliche Schmutzabweiser</legend>
+      <div class="hint">Zahn- und Mulden-Rundung werden in der Vorschau angenähert dargestellt; die Release-Dateien enthalten die exakten CAD-Verrundungen.</div>
+    </fieldset>
+
+    <a class="btn primary" id="serienbtn" href="#" style="display:none">
+      ✅ Verrundete STL direkt herunterladen
+    </a>
+    <a class="btn" id="stepbtn" href="#" style="display:none">
+      📐 Gleiche Datei als STEP (für CAD)
+    </a>
+    <div class="hint" id="serienhint"></div>
+    <a class="btn" id="stlbtn" href="#">💾 STL mit meinen Werten herunterladen</a>
+    <div class="hint">
+      Lädt das angezeigte Modell direkt als druckbare STL — mit angenäherten
+      Verrundungen, genau wie in der Vorschau zu sehen.
+    </div>
+    <div class="hint">
+      ⚖️ Nur für den privaten Gebrauch: Teile des Gates-Systems können
+      patentgeschützt sein — kein gewerblicher Verkauf generierter Ritzel.
+      Unabhängiges Hobby-Projekt ohne Verbindung zu Gates.
+    </div>
+  </div>
+  <div id="viewport">
+    <div id="overlaynote">Vorschau: komplette Geometrie wie im Generator, Verrundungen angenähert dargestellt</div>
+  </div>
+</main>
+
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+    "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.7.4/build/index.module.js",
+    "three-bvh-csg": "https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.16/build/index.module.js"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { STLExporter } from 'three/addons/exporters/STLExporter.js';
+import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
+
+// ── Felddefinitionen: identisch zu zahnrad_params.py ────────────────────────
+const SECTIONS = [
+  ['sec1', [
+    ['zaehne',          'Zähne',           14,   1],
+    ['eingriffswinkel', 'Winkel (°)',      20.0, 0.5],
+    ['spitzen_abstand', 'Mitte-Mitte',     10.20, 0.05],
+    ['spitzen_d',       'Kopf Ø',           2.80, 0.05],
+    ['fuss_d',          'Fuß Ø',            7.00, 0.05],
+    ['tiefe',           'Tiefe',            5.60, 0.05],
+    ['breite',          'Breite Z',        11.00, 0.5],
+    ['zahn_r',          'Zahn-Rundung',     0.40, 0.05],
+    ['fuehrung_w',      'Führung Breite',   1.00, 0.1],
+    ['fuehrung_d',      'Führung Ø (0=auto)', 0.00, 0.5],
+  ]],
+  ['sec2', [
+    ['bohrung_d', 'Bohrung Ø',       14.00, 0.5],
+    ['nabe_d',    'Nabe Ø',          20.00, 0.5],
+    ['nabe_l',    'Nabe Länge',      13.00, 0.5],
+    ['lager_d',   'Lagersitz Ø',     16.00, 0.5],
+    ['lager_t',   'Lagersitz Tiefe',  1.00, 0.1],
+  ]],
+  ['sec3', [
+    ['steg_w',       'Steg Breite',    2.00, 0.1],
+    ['seiten_t',     'Tiefe am Steg',  7.05, 0.1],
+    ['tasche_b',     'Mulden-Breite',  4.50, 0.1],
+    ['mulde_winkel', 'Mulden-Winkel', 24.00, 1],
+    ['mulde_r',      'Mulden-Rundung', 1.50, 0.1],
+  ]],
+];
+const DEFAULTS = {};
+for (const [, felder] of SECTIONS)
+  for (const [key,, def] of felder) DEFAULTS[key] = def;
+
+const inputs = {};
+for (const [secId, felder] of SECTIONS) {
+  const sec = document.getElementById(secId);
+  for (const [key, label, def, step] of felder) {
+    const row = document.createElement('div'); row.className = 'row';
+    const lab = document.createElement('label'); lab.textContent = label; lab.htmlFor = key;
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.id = key; inp.value = def; inp.step = step;
+    inp.addEventListener('input', scheduleRebuild);
+    row.append(lab, inp); sec.append(row);
+    inputs[key] = inp;
+  }
+}
+
+function params() {
+  const p = {};
+  for (const k in inputs) {
+    const v = parseFloat(inputs[k].value);
+    p[k] = Number.isFinite(v) ? v : DEFAULTS[k];
+  }
+  p.zaehne = Math.max(6, Math.round(p.zaehne));
+  return p;
+}
+
+// ── Szene ───────────────────────────────────────────────────────────
+const viewport = document.getElementById('viewport');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+viewport.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+scene.background = new THREE.Color(dark ? 0x16181c : 0xf5f6f8);
+
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 2000);
+camera.position.set(55, -55, 45);
+camera.up.set(0, 0, 1);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+// Schatten + Kontrast
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+
+scene.add(new THREE.HemisphereLight(0xf2f5ff, 0x2a2018, 0.85));
+const l1 = new THREE.DirectionalLight(0xfff4e0, 2.4);   // warmes Hauptlicht
+l1.position.set(60, -40, 90);
+l1.castShadow = true;
+l1.shadow.mapSize.set(2048, 2048);
+l1.shadow.camera.left = -70; l1.shadow.camera.right = 70;
+l1.shadow.camera.top = 70;   l1.shadow.camera.bottom = -70;
+l1.shadow.camera.near = 10;  l1.shadow.camera.far = 300;
+l1.shadow.bias = -0.0002;
+scene.add(l1);
+const l2 = new THREE.DirectionalLight(0xcfe0ff, 0.5);   // kühles Gegenlicht
+l2.position.set(-50, 60, -30); scene.add(l2);
+
+// Ritzel-Farbe: Bronze/Kupfer (#A65400)
+const mat = new THREE.MeshStandardMaterial({
+  color: 0xA65400, metalness: 0.35, roughness: 0.45,
+  side: THREE.DoubleSide,
+});
+
+// Unsichtbarer Boden, der nur den Kontaktschatten empfängt
+const boden = new THREE.Mesh(
+  new THREE.CircleGeometry(150, 48),
+  new THREE.ShadowMaterial({ opacity: 0.28 }));
+boden.receiveShadow = true;
+scene.add(boden);
+
+let group = null;
+
+const dir2 = t => new THREE.Vector2(Math.cos(t), Math.sin(t));
+
+// Zahnprofil — Formeln 1:1 aus zahnrad_generator.py
+function zahnShape(p) {
+  const z = p.zaehne, off = (p.eingriffswinkel * Math.PI / 180) * 0.5;
+  const rS = p.spitzen_d / 2, rF = p.fuss_d / 2;
+  const rBahn = p.spitzen_abstand / (2 * Math.sin(Math.PI / z));
+  const rKopf = rBahn + rS;
+  const rFussBahn = rKopf - p.tiefe + rF;
+  const pts = [], N = 16;
+  for (let i = 0; i < z; i++) {
+    const wZ = 2 * Math.PI * i / z, wF = 2 * Math.PI * (i + 0.5) / z;
+    const cpS = dir2(wZ).multiplyScalar(rBahn);
+    const cpF = dir2(wF).multiplyScalar(rFussBahn);
+    for (let k = 0; k <= N; k++) {           // Zahnkopf-Bogen (außen)
+      const t = wZ - Math.PI / 2 + off + (Math.PI - 2 * off) * k / N;
+      pts.push(cpS.clone().addScaledVector(dir2(t), rS));
+    }
+    for (let k = 0; k <= N; k++) {           // Fußrundung (innen, rückwärts)
+      const t = wF + 1.5 * Math.PI - off - (Math.PI - 2 * off) * k / N;
+      pts.push(cpF.clone().addScaledVector(dir2(t), rF));
+    }
+  }
+  const shape = new THREE.Shape(pts);
+  if (p.bohrung_d > 0) {
+    const hole = new THREE.Path();
+    hole.absarc(0, 0, p.bohrung_d / 2, 0, Math.PI * 2, true);
+    shape.holes.push(hole);
+  }
+  return { shape, rKopf };
+}
+
+// Schmutzabweiser-Mulde: Trapez-Prisma je Zahnlücke und Seite —
+// Geometrie wie _add_schmutztaschen im Generator (r_flach/r_tief, Steg bleibt)
+function muldenGeometrie(p, rKopf) {
+  if (p.tasche_b <= 0 || p.seiten_t <= 0) return null;
+  const w2 = p.steg_w / 2;
+  if (w2 >= p.breite / 2) return null;
+  const b2 = p.breite / 2 + 1;         // wie im Generator: sicher durch die Stirnfläche
+  const rOut = rKopf + 2;
+  // Drehpunkt an der Steg-Kante: seiten_t = Tiefe am Steg,
+  // der Winkel macht die Mulde nach außen (Stirnseite) tiefer
+  const rFlach = Math.min(rKopf - p.seiten_t, rOut - 0.2);
+  const rTief  = Math.max(
+    rFlach - Math.tan(p.mulde_winkel * Math.PI / 180) * (b2 - w2), 0.5);
+
+  const teile = [];
+  for (const seite of [1, -1]) {
+    // Profil in (radial, axial): Boden schräg von (rFlach, Steg) zu (rTief, Stirn).
+    // Für die Unterseite Punktreihenfolge umdrehen, damit die Windung
+    // gegen den Uhrzeigersinn bleibt (sonst umgestülptes CSG-Volumen).
+    const punkte = [
+      new THREE.Vector2(rFlach, seite * w2),
+      new THREE.Vector2(rOut,   seite * w2),
+      new THREE.Vector2(rOut,   seite * b2),
+      new THREE.Vector2(rTief,  seite * b2),
+    ];
+    if (seite < 0) punkte.reverse();
+    const prof = new THREE.Shape(punkte);
+    // Mulden-Rundung (mulde_r): runder Bevel am Schneidkörper ->
+    // die Muldenkanten im Teil werden entsprechend verrundet
+    const mr = Math.max(0, Math.min(p.mulde_r, p.tasche_b / 2 - 0.05));
+    const tiefe_b = mr > 0.01 ? p.tasche_b - 2 * mr : p.tasche_b;
+    const prisma = new THREE.ExtrudeGeometry(prof, mr > 0.01 ? {
+      depth: tiefe_b, bevelEnabled: true, bevelSegments: 4,
+      bevelSize: mr, bevelThickness: mr, bevelOffset: -mr,
+    } : { depth: tiefe_b, bevelEnabled: false });
+    prisma.translate(0, 0, -tiefe_b / 2);
+    for (let i = 0; i < p.zaehne; i++) {
+      const a = 2 * Math.PI * (i + 0.5) / p.zaehne;   // Zahnlücke, nicht Zahn!
+      const geo = prisma.clone();
+      // lokal: X=radial, Y=Weltachse Z, Z=tangential
+      const m = new THREE.Matrix4().makeBasis(
+        new THREE.Vector3(Math.cos(a), Math.sin(a), 0),
+        new THREE.Vector3(0, 0, 1),
+        new THREE.Vector3(Math.sin(a), -Math.cos(a), 0));
+      geo.applyMatrix4(m);
+      teile.push(geo);
+    }
+    prisma.dispose();
+  }
+  return mergeGeometries(teile);
+}
+
+const evaluator = new Evaluator();
+
+function csgOp(geoA, geoB, op) {
+  const a = new Brush(geoA); a.updateMatrixWorld();
+  const b = new Brush(geoB); b.updateMatrixWorld();
+  const ergebnis = evaluator.evaluate(a, b, op);
+  geoA.dispose(); geoB.dispose();
+  return ergebnis.geometry;
+}
+evaluator.useGroups = false;   // ein Material für das Ergebnis, keine Gruppen
+
+function buildMeshes(p) {
+  const g = new THREE.Group();
+  const { shape, rKopf } = zahnShape(p);
+
+  // Grundkörper — Zahn-Rundung (zahn_r) als runder Bevel an beiden
+  // Stirnflächen-Kanten, wie die ZahnVerrundung im Generator
+  const zr = Math.max(0, Math.min(p.zahn_r, p.breite / 2 - 0.05));
+  let gear;
+  if (zr > 0.01) {
+    gear = new THREE.ExtrudeGeometry(shape, {
+      depth: p.breite - 2 * zr, curveSegments: 24,
+      bevelEnabled: true, bevelSegments: 4,
+      bevelSize: zr, bevelThickness: zr, bevelOffset: -zr,
+    });
+    gear.translate(0, 0, -(p.breite - 2 * zr) / 2);
+  } else {
+    gear = new THREE.ExtrudeGeometry(shape, { depth: p.breite, bevelEnabled: false, curveSegments: 24 });
+    gear.translate(0, 0, -p.breite / 2);
+  }
+
+  // Mulden per CSG abziehen — wie die Pocket-Schleife im Generator
+  const mulden = muldenGeometrie(p, rKopf);
+  if (mulden) gear = csgOp(gear, mulden, SUBTRACTION);
+
+  // Riemenführung: z-Eck (Ecken auf den Zähnen), Loch = Nabe
+  if (p.fuehrung_w > 0) {
+    const rG = p.fuehrung_d > 0 ? p.fuehrung_d / 2 : rKopf - 1.1;
+    const poly = [];
+    for (let i = 0; i < p.zaehne; i++)
+      poly.push(dir2(2 * Math.PI * i / p.zaehne).multiplyScalar(rG));
+    const fs = new THREE.Shape(poly);
+    const inner = Math.max(p.nabe_d, p.bohrung_d) / 2;
+    if (inner > 0) {
+      const hole = new THREE.Path();
+      hole.absarc(0, 0, inner, 0, Math.PI * 2, true);
+      fs.holes.push(hole);
+    }
+    const fg = new THREE.ExtrudeGeometry(fs, { depth: p.fuehrung_w, bevelEnabled: false, curveSegments: 24 });
+    fg.translate(0, 0, -p.fuehrung_w / 2);
+    gear = csgOp(gear, fg, ADDITION);
+  }
+
+  // Nabe mit Bohrung + Lagersitz-Senkungen: Drehteil (Lathe).
+  // Jede Ecke doppelt einfügen: sonst mittelt Three.js die Normalen
+  // über die Kante und der Zylinder wirkt abgerundet statt scharfkantig.
+  if (p.nabe_d > 0 && p.nabe_l > 0) {
+    const R = p.nabe_d / 2, rB = Math.max(p.bohrung_d / 2, 0.1);
+    const rS_ = Math.max(p.lager_d / 2, rB), t = Math.min(p.lager_t, p.nabe_l / 2), L = p.nabe_l / 2;
+    // Reihenfolge ist bewusst SO herum: andersherum zeigt die Hülle nach
+    // innen (negatives Volumen) und das STL ist umgestülpt.
+    const ecken = [
+      [rS_, L - t], [rB, L - t], [rB, -L + t], [rS_, -L + t],
+      [rS_, -L], [R, -L], [R, L], [rS_, L],
+    ];
+    const prof = [];
+    for (let i = 0; i < ecken.length; i++) {
+      const [r1, z1] = ecken[i], [r2, z2] = ecken[(i + 1) % ecken.length];
+      prof.push(new THREE.Vector2(r1, z1), new THREE.Vector2(r2, z2));
+    }
+    const lathe = new THREE.LatheGeometry(prof, 64);
+    lathe.rotateX(Math.PI / 2);   // Lathe dreht um Y → auf Z-Achse kippen
+    gear = csgOp(gear, lathe, ADDITION);
+  }
+
+  // Ein einziger wasserdichter Körper — sauber für STL/Slicer
+  const koerper = new THREE.Mesh(gear, mat);
+  koerper.castShadow = true;
+  koerper.receiveShadow = true;   // Selbstschattierung in den Mulden
+  g.add(koerper);
+  return { g, rKopf };
+}
+
+let timer = null;
+function scheduleRebuild() { clearTimeout(timer); timer = setTimeout(rebuild, 120); }
+
+// Vorgebaute, voll verrundete Serie (GitHub-Release "stl-serie"):
+// Standardwerte, nur die Zähnezahl variiert
+const SERIE_MIN = 12, SERIE_MAX = 22;
+const SERIE_URL = (z, endung) =>
+  `https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/download/stl-serie/ritzel_z${z}.${endung}`;
+
+function serieAktualisieren(p) {
+  const btn = document.getElementById('serienbtn');
+  const hint = document.getElementById('serienhint');
+  const abweichungen = Object.keys(p).filter(
+    k => k !== 'zaehne' && Math.abs(p[k] - DEFAULTS[k]) > 1e-9);
+  const passt = abweichungen.length === 0 &&
+                p.zaehne >= SERIE_MIN && p.zaehne <= SERIE_MAX;
+  const stepBtn = document.getElementById('stepbtn');
+  if (passt) {
+    btn.style.display = '';
+    btn.href = SERIE_URL(p.zaehne, 'stl');
+    btn.textContent = `✅ Verrundete STL direkt herunterladen (${p.zaehne} Zähne)`;
+    stepBtn.style.display = '';
+    stepBtn.href = SERIE_URL(p.zaehne, 'step');
+    hint.textContent = 'Fertig gebaut mit Standardwerten und allen Verrundungen — ein Klick, keine Wartezeit.';
+  } else {
+    btn.style.display = 'none';
+    stepBtn.style.display = 'none';
+    hint.textContent = abweichungen.length
+      ? 'Vorgebaute verrundete STLs gibt es für die Standardwerte (12–22 Zähne). Deine geänderten Werte brauchen den Cloud-Bau unten.'
+      : `Vorgebaute STLs gibt es für ${SERIE_MIN}–${SERIE_MAX} Zähne — andere Zähnezahlen über den Cloud-Bau unten.`;
+  }
+}
+
+let lastR = 0;
+function rebuild() {
+  const p = params();
+  if (group) { scene.remove(group); group.traverse(o => o.geometry && o.geometry.dispose()); }
+  const { g, rKopf } = buildMeshes(p);
+  group = g; scene.add(group);
+  boden.position.z = -(Math.max(p.breite, p.nabe_l) / 2 + 2);
+
+  // Kamera-Abstand an die Modellgröße anpassen (Blickrichtung beibehalten)
+  if (Math.abs(rKopf - lastR) > 0.5) {
+    lastR = rKopf;
+    const richtung = camera.position.clone().sub(controls.target).normalize();
+    camera.position.copy(controls.target).addScaledVector(richtung, rKopf * 4.0);
+  }
+  document.getElementById('stats').innerHTML =
+    `Kopfkreis-Ø: <b>${(rKopf * 2).toFixed(2)} mm</b> · ` +
+    `Gesamthöhe: <b>${Math.max(p.breite, p.nabe_l).toFixed(1)} mm</b> · ` +
+    `Zähne: <b>${p.zaehne}</b>`;
+  serieAktualisieren(p);
+}
+
+function resize() {
+  const w = viewport.clientWidth, h = viewport.clientHeight;
+  renderer.setSize(w, h); renderer.setPixelRatio(devicePixelRatio);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+// Reagiert auch, wenn nur der Viewport-Bereich seine Größe ändert
+// (mobiler Layout-Wechsel, einklappende Browserleiste, Bildschirmtastatur)
+new ResizeObserver(resize).observe(viewport);
+
+document.getElementById('stlbtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  if (!group) return;
+  const exporter = new STLExporter();
+  const daten = exporter.parse(group, { binary: true });
+  const blob = new Blob([daten], { type: 'model/stl' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ritzel_z${params().zaehne}_vorschau.stl`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+resize(); rebuild();
+window.__dbg = { renderer, scene, THREE };
+(function loop() {
+  requestAnimationFrame(loop);
+  controls.update();
+  try { renderer.render(scene, camera); }
+  catch (e) { console.error('Renderfehler:', e); }
+})();
+</script>
+</body>
+</html>
