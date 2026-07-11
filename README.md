@@ -1,10 +1,10 @@
-# Gates CDX Chain Tensioner Sprocket Generator (Brompton)
+# Gates CDX Belt Tensioner Sprocket Generator (Brompton)
 
 > German Version: [README.md](README.md)
 
-This tool generates parametric **pulley wheels / guide sprockets for the original or modified Brompton chain tensioner** when the folding bike has been converted to the **Gates Carbon Drive (CDX)** belt drive system (e.g., via a Kinetics conversion). The sprockets are generated as finished 3D solids – optimized for 3D printing or CNC milling.
+This tool generates parametric **pulley wheels / guide sprockets for the original or modified Brompton belt tensioner** when the folding bike has been converted to the **Gates Carbon Drive (CDX)** belt drive system (e.g., via a Kinetics conversion). The sprockets are generated as finished 3D solids – optimized for 3D printing or CNC milling.
 
-**Important:** This is *not* a load-bearing drive sprocket for the rear hub, but a ball-bearing **idler pulley / guide sprocket for the chain tensioner**!
+**Important:** This is *not* a load-bearing drive sprocket for the rear hub, but a ball-bearing **idler pulley / guide sprocket for the belt tensioner**!
 
 ![FreeCAD](https://img.shields.io/badge/FreeCAD-1.1%2B-blue)
 ![Python](https://img.shields.io/badge/Python-PySide6-green)
@@ -41,7 +41,7 @@ In the web configurator, you can **rotate and adjust the tensioner sprocket live
 ## Features
 
 * **Fully Parametric:** Tooth count, pressure angle, pitch, tip/root radius, and tooth depth can be freely adjusted.
-* **Thoughtful Geometry:** Central ridge acting as a belt guide, lateral mud/debris ports (angle, depth, and radius adjustable), plus a bore and counterbores for the chain tensioner bearings.
+* **Thoughtful Geometry:** Central ridge acting as a belt guide, lateral mud/debris ports (angle, depth, and radius adjustable), plus a bore and counterbores for the belt tensioner bearings.
 * **Smart UI:** The dock panel is clearly structured and automatically adapts to the FreeCAD theme (Light/Dark Mode).
 * **Remembers Settings:** The last used parameters are automatically reloaded on the next startup.
 * **Fillet Cache:** The tool remembers working radii. If a calculation fails, it doesn't completely reset, saving expensive processing time.
@@ -49,7 +49,7 @@ In the web configurator, you can **rotate and adjust the tensioner sprocket live
 
 ## 3D Printing Tips
 
-Proven settings for the **chain tensioner sprocket** (Reference print: 14 teeth, ~16 g, ~15 cm³):
+Proven settings for the **belt tensioner sprocket** (Reference print: 14 teeth, ~16 g, ~15 cm³):
 
 | Setting | Recommendation |
 |---|---|
@@ -62,11 +62,11 @@ Proven settings for the **chain tensioner sprocket** (Reference print: 14 teeth,
 
 ## Matching Ball Bearings
 
-The default values (Bore Ø 14 mm, bearing seat Ø 16 mm × 1 mm) are designed exactly for the **F605-2RS (5 × 14 × 5 mm)** miniature flanged ball bearing, which fits perfectly onto the Brompton chain tensioner axle. You will need 2 pieces (one per side), with the flange resting in the 1 mm deep recess.
+The default values (Bore Ø 14 mm, bearing seat Ø 16 mm × 1 mm) are designed exactly for the **F605-2RS (5 × 14 × 5 mm)** miniature flanged ball bearing, which fits perfectly onto the Brompton belt tensioner axle. You will need 2 pieces (one per side), with the flange resting in the 1 mm deep recess.
 
 <img src="bilder/f605-2rs-zeichnung.jpg" alt="F605-2RS Dimension Drawing" width="280">
 
-* **Important:** Be sure to get the **2RS variant** (rubber-sealed on both sides). They provide much better protection against rain and road grit on the chain tensioner than metal-shielded (ZZ) versions.
+* **Important:** Be sure to get the **2RS variant** (rubber-sealed on both sides). They provide much better protection against rain and road grit on the belt tensioner than metal-shielded (ZZ) versions.
 * For all-weather commuters, the stainless steel version **SF605-2RS** is highly recommended.
 * **Test the Fit:** Printed bores in PA12-CF can easily turn out 0.1 to 0.2 mm too tight or too loose. It's best to print a small test ring first and adjust the `Bore Ø` parameter by 0.1 mm if needed.
 * **Press, Don't Hammer:** Carefully press the bearings into place (e.g., using a vise with a matching washer). Apply force only to the outer ring, never to the inner ring.
