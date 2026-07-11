@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" id="html">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -106,39 +106,28 @@
 </head>
 <body>
 <header>
-  <h1> Gates CDX Riemenspanner-Ritzel Generator (Brompton)</h1>
-  <span class="sub">Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen</span>
+  <h1 id="title">Gates CDX Riemenspanner-Ritzel Generator (Brompton)</h1>
+  <span class="sub" id="subtitle">Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen</span>
 </header>
 <main>
   <div id="form">
     <div class="stats" id="stats"></div>
 
-    <fieldset id="sec1"><legend>Zahnrad-Körper (Grundkörper)</legend></fieldset>
-    <fieldset id="sec2"><legend>Zylinder (Kugellager)</legend></fieldset>
-    <fieldset id="sec3"><legend>Seitliche Schmutzabweiser</legend>
-      <div class="hint">Zahn- und Mulden-Rundung werden in der Vorschau angenähert dargestellt; die Release-Dateien enthalten die exakten CAD-Verrundungen.</div>
+    <fieldset id="sec1"><legend id="leg1">Zahnrad-Körper (Grundkörper)</legend></fieldset>
+    <fieldset id="sec2"><legend id="leg2">Zylinder (Kugellager)</legend></fieldset>
+    <fieldset id="sec3"><legend id="leg3">Seitliche Schmutzabweiser</legend>
+      <div class="hint" id="hint1">Zahn- und Mulden-Rundung werden in der Vorschau angenähert dargestellt; die Release-Dateien enthalten die exakten CAD-Verrundungen.</div>
     </fieldset>
 
-    <a class="btn primary" id="serienbtn" href="#" style="display:none">
-      ✅ Verrundete STL direkt herunterladen
-    </a>
-    <a class="btn" id="stepbtn" href="#" style="display:none">
-      📐 Gleiche Datei als STEP (für CAD)
-    </a>
+    <a class="btn primary" id="serienbtn" href="#" style="display:none"></a>
+    <a class="btn" id="stepbtn" href="#" style="display:none"></a>
     <div class="hint" id="serienhint"></div>
-    <a class="btn" id="stlbtn" href="#">💾 STL mit meinen Werten herunterladen</a>
-    <div class="hint">
-      Lädt das angezeigte Modell direkt als druckbare STL — mit angenäherten
-      Verrundungen, genau wie in der Vorschau zu sehen.
-    </div>
-    <div class="hint">
-      ⚖️ Nur für den privaten Gebrauch: Teile des Gates-Systems können
-      patentgeschützt sein — kein gewerblicher Verkauf generierter Ritzel.
-      Unabhängiges Hobby-Projekt ohne Verbindung zu Gates.
-    </div>
+    <a class="btn" id="stlbtn" href="#"></a>
+    <div class="hint" id="hint2"></div>
+    <div class="hint" id="hint3"></div>
   </div>
   <div id="viewport">
-    <div id="overlaynote">Vorschau: komplette Geometrie wie im Generator, Verrundungen angenähert dargestellt</div>
+    <div id="overlaynote"></div>
   </div>
 </main>
 
@@ -157,33 +146,141 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
 
-// ── Felddefinitionen: identisch zu zahnrad_params.py ────────────────────────
+// ── Internationalisierung (i18n) ────────────────────────────────────────────
+const i18n = {
+  lang: 'de',
+  strings: {
+    de: {
+      title: 'Gates CDX Riemenspanner-Ritzel Generator (Brompton)',
+      subtitle: 'Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen',
+      leg1: 'Zahnrad-Körper (Grundkörper)',
+      leg2: 'Zylinder (Kugellager)',
+      leg3: 'Seitliche Schmutzabweiser',
+      hint1: 'Zahn- und Mulden-Rundung werden in der Vorschau angenähert dargestellt; die Release-Dateien enthalten die exakten CAD-Verrundungen.',
+      series_stl: 'Verrundete STL direkt herunterladen',
+      series_step: 'Gleiche Datei als STEP (für CAD)',
+      custom_stl: 'STL mit meinen Werten herunterladen',
+      hint2: 'Lädt das angezeigte Modell direkt als druckbare STL — mit angenäherten Verrundungen, genau wie in der Vorschau zu sehen.',
+      hint3: '⚖️ Nur für den privaten Gebrauch: Teile des Gates-Systems können patentgeschützt sein — kein gewerblicher Verkauf generierter Ritzel. Unabhängiges Hobby-Projekt ohne Verbindung zu Gates.',
+      overlay: 'Vorschau: komplette Geometrie wie im Generator, Verrundungen angenähert dargestellt',
+      teeth: 'Zähne',
+      angle: 'Winkel (°)',
+      center_dist: 'Mitte-Mitte',
+      head_d: 'Kopf Ø',
+      foot_d: 'Fuß Ø',
+      depth: 'Tiefe',
+      width_z: 'Breite Z',
+      tooth_round: 'Zahn-Rundung',
+      guide_width: 'Führung Breite',
+      guide_d: 'Führung Ø (0=auto)',
+      bore_d: 'Bohrung Ø',
+      hub_d: 'Nabe Ø',
+      hub_len: 'Nabe Länge',
+      bearing_d: 'Lagersitz Ø',
+      bearing_depth: 'Lagersitz Tiefe',
+      web_width: 'Steg Breite',
+      side_depth: 'Tiefe am Steg',
+      pocket_width: 'Mulden-Breite',
+      pocket_angle: 'Mulden-Winkel',
+      pocket_round: 'Mulden-Rundung',
+      head_circle: 'Kopfkreis-Ø',
+      total_height: 'Gesamthöhe',
+      teeth_label: 'Zähne',
+      series_ready: 'Fertig gebaut mit Standardwerten und allen Verrundungen — ein Klick, keine Wartezeit.',
+      series_modified: 'Vorgebaute verrundete STLs gibt es für die Standardwerte (12–22 Zähne). Deine geänderten Werte brauchen den Cloud-Bau unten.',
+      series_out_of_range: 'Vorgebaute STLs gibt es für 12–22 Zähne — andere Zähnezahlen über den Cloud-Bau unten.',
+    },
+    en: {
+      title: 'Gates CDX Belt-Drive Sprocket Generator (Brompton)',
+      subtitle: 'Change values → preview updates instantly · Rotate/zoom view with mouse or finger',
+      leg1: 'Gear Body (Base)',
+      leg2: 'Cylinder (Bearing)',
+      leg3: 'Side Dirt Shields',
+      hint1: 'Tooth and pocket rounding shown approximated in preview; release files contain exact CAD roundings.',
+      series_stl: 'Download rounded STL directly',
+      series_step: 'Same file as STEP (for CAD)',
+      custom_stl: 'Download STL with my values',
+      hint2: 'Loads the displayed model directly as printable STL — with approximated roundings, exactly as shown in preview.',
+      hint3: '⚖️ Private use only: Parts of the Gates system may be patent-protected — no commercial resale of generated sprockets. Independent hobby project without connection to Gates.',
+      overlay: 'Preview: complete geometry as in generator, roundings shown approximated',
+      teeth: 'Teeth',
+      angle: 'Angle (°)',
+      center_dist: 'Center-to-center',
+      head_d: 'Head Ø',
+      foot_d: 'Foot Ø',
+      depth: 'Depth',
+      width_z: 'Width Z',
+      tooth_round: 'Tooth rounding',
+      guide_width: 'Guide width',
+      guide_d: 'Guide Ø (0=auto)',
+      bore_d: 'Bore Ø',
+      hub_d: 'Hub Ø',
+      hub_len: 'Hub length',
+      bearing_d: 'Bearing seat Ø',
+      bearing_depth: 'Bearing seat depth',
+      web_width: 'Web width',
+      side_depth: 'Depth at web',
+      pocket_width: 'Pocket width',
+      pocket_angle: 'Pocket angle',
+      pocket_round: 'Pocket rounding',
+      head_circle: 'Head circle Ø',
+      total_height: 'Total height',
+      teeth_label: 'Teeth',
+      series_ready: 'Pre-built with standard values and all roundings — one click, no wait.',
+      series_modified: 'Pre-built rounded STLs available for standard values (12–22 teeth). Your modified values need cloud build below.',
+      series_out_of_range: 'Pre-built STLs available for 12–22 teeth — other tooth counts via cloud build below.',
+    }
+  },
+  t(key) { return this.strings[this.lang]?.[key] || key; },
+};
+
+// Spracheinstellung aus Browser erkennen
+window.i18n = i18n;
+function initI18n() {
+  const browserLang = (navigator.language || navigator.userLanguage || 'de').slice(0, 2).toLowerCase();
+  i18n.lang = ['de', 'en'].includes(browserLang) ? browserLang : 'de';
+  document.getElementById('html').lang = i18n.lang;
+  window.i18n = i18n;
+
+  document.getElementById('title').textContent = i18n.t('title');
+  document.getElementById('subtitle').textContent = i18n.t('subtitle');
+  document.getElementById('leg1').textContent = i18n.t('leg1');
+  document.getElementById('leg2').textContent = i18n.t('leg2');
+  document.getElementById('leg3').textContent = i18n.t('leg3');
+  document.getElementById('hint1').textContent = i18n.t('hint1');
+  document.getElementById('hint2').textContent = i18n.t('hint2');
+  document.getElementById('hint3').textContent = i18n.t('hint3');
+  document.getElementById('overlaynote').textContent = i18n.t('overlay');
+}
+window.initI18n = initI18n;
+
+// ── Felddefinitionen: identisch zu zahnrad_params.py, Labels als i18n-Keys ────
 const SECTIONS = [
   ['sec1', [
-    ['zaehne',          'Zähne',           14,   1],
-    ['eingriffswinkel', 'Winkel (°)',      20.0, 0.5],
-    ['spitzen_abstand', 'Mitte-Mitte',     10.20, 0.05],
-    ['spitzen_d',       'Kopf Ø',           2.80, 0.05],
-    ['fuss_d',          'Fuß Ø',            7.00, 0.05],
-    ['tiefe',           'Tiefe',            5.60, 0.05],
-    ['breite',          'Breite Z',        11.00, 0.5],
-    ['zahn_r',          'Zahn-Rundung',     0.40, 0.05],
-    ['fuehrung_w',      'Führung Breite',   1.00, 0.1],
-    ['fuehrung_d',      'Führung Ø (0=auto)', 0.00, 0.5],
+    ['zaehne',          'teeth',           14,   1],
+    ['eingriffswinkel', 'angle',      20.0, 0.5],
+    ['spitzen_abstand', 'center_dist',     10.20, 0.05],
+    ['spitzen_d',       'head_d',           2.80, 0.05],
+    ['fuss_d',          'foot_d',            7.00, 0.05],
+    ['tiefe',           'depth',            5.60, 0.05],
+    ['breite',          'width_z',        11.00, 0.5],
+    ['zahn_r',          'tooth_round',     0.40, 0.05],
+    ['fuehrung_w',      'guide_width',   1.00, 0.1],
+    ['fuehrung_d',      'guide_d', 0.00, 0.5],
   ]],
   ['sec2', [
-    ['bohrung_d', 'Bohrung Ø',       14.00, 0.5],
-    ['nabe_d',    'Nabe Ø',          20.00, 0.5],
-    ['nabe_l',    'Nabe Länge',      13.00, 0.5],
-    ['lager_d',   'Lagersitz Ø',     16.00, 0.5],
-    ['lager_t',   'Lagersitz Tiefe',  1.00, 0.1],
+    ['bohrung_d', 'bore_d',       14.00, 0.5],
+    ['nabe_d',    'hub_d',          20.00, 0.5],
+    ['nabe_l',    'hub_len',      13.00, 0.5],
+    ['lager_d',   'bearing_d',     16.00, 0.5],
+    ['lager_t',   'bearing_depth',  1.00, 0.1],
   ]],
   ['sec3', [
-    ['steg_w',       'Steg Breite',    2.00, 0.1],
-    ['seiten_t',     'Tiefe am Steg',  7.05, 0.1],
-    ['tasche_b',     'Mulden-Breite',  4.50, 0.1],
-    ['mulde_winkel', 'Mulden-Winkel', 24.00, 1],
-    ['mulde_r',      'Mulden-Rundung', 1.50, 0.1],
+    ['steg_w',       'web_width',    2.00, 0.1],
+    ['seiten_t',     'side_depth',  7.05, 0.1],
+    ['tasche_b',     'pocket_width',  4.50, 0.1],
+    ['mulde_winkel', 'pocket_angle', 24.00, 1],
+    ['mulde_r',      'pocket_round', 1.50, 0.1],
   ]],
 ];
 const DEFAULTS = {};
@@ -191,18 +288,22 @@ for (const [, felder] of SECTIONS)
   for (const [key,, def] of felder) DEFAULTS[key] = def;
 
 const inputs = {};
-for (const [secId, felder] of SECTIONS) {
-  const sec = document.getElementById(secId);
-  for (const [key, label, def, step] of felder) {
-    const row = document.createElement('div'); row.className = 'row';
-    const lab = document.createElement('label'); lab.textContent = label; lab.htmlFor = key;
-    const inp = document.createElement('input');
-    inp.type = 'number'; inp.id = key; inp.value = def; inp.step = step;
-    inp.addEventListener('input', scheduleRebuild);
-    row.append(lab, inp); sec.append(row);
-    inputs[key] = inp;
+function buildFormFields() {
+  for (const [secId, felder] of SECTIONS) {
+    const sec = document.getElementById(secId);
+    sec.querySelectorAll('.row').forEach(r => r.remove());
+    for (const [key, labelKey, def, step] of felder) {
+      const row = document.createElement('div'); row.className = 'row';
+      const lab = document.createElement('label'); lab.textContent = i18n.t(labelKey); lab.htmlFor = key;
+      const inp = document.createElement('input');
+      inp.type = 'number'; inp.id = key; inp.value = def; inp.step = step;
+      inp.addEventListener('input', scheduleRebuild);
+      row.append(lab, inp); sec.append(row);
+      inputs[key] = inp;
+    }
   }
 }
+window.buildFormFields = buildFormFields;
 
 function params() {
   const p = {};
@@ -449,16 +550,17 @@ function serieAktualisieren(p) {
   if (passt) {
     btn.style.display = '';
     btn.href = SERIE_URL(p.zaehne, 'stl');
-    btn.textContent = `✅ Verrundete STL direkt herunterladen (${p.zaehne} Zähne)`;
+    btn.textContent = `✅ ${i18n.t('series_stl')} (${p.zaehne} ${i18n.t('teeth_label')})`;
     stepBtn.style.display = '';
     stepBtn.href = SERIE_URL(p.zaehne, 'step');
-    hint.textContent = 'Fertig gebaut mit Standardwerten und allen Verrundungen — ein Klick, keine Wartezeit.';
+    stepBtn.textContent = `📐 ${i18n.t('series_step')}`;
+    hint.textContent = i18n.t('series_ready');
   } else {
     btn.style.display = 'none';
     stepBtn.style.display = 'none';
     hint.textContent = abweichungen.length
-      ? 'Vorgebaute verrundete STLs gibt es für die Standardwerte (12–22 Zähne). Deine geänderten Werte brauchen den Cloud-Bau unten.'
-      : `Vorgebaute STLs gibt es für ${SERIE_MIN}–${SERIE_MAX} Zähne — andere Zähnezahlen über den Cloud-Bau unten.`;
+      ? i18n.t('series_modified')
+      : i18n.t('series_out_of_range');
   }
 }
 
@@ -477,9 +579,9 @@ function rebuild() {
     camera.position.copy(controls.target).addScaledVector(richtung, rKopf * 4.0);
   }
   document.getElementById('stats').innerHTML =
-    `Kopfkreis-Ø: <b>${(rKopf * 2).toFixed(2)} mm</b> · ` +
-    `Gesamthöhe: <b>${Math.max(p.breite, p.nabe_l).toFixed(1)} mm</b> · ` +
-    `Zähne: <b>${p.zaehne}</b>`;
+    `${i18n.t('head_circle')}: <b>${(rKopf * 2).toFixed(2)} mm</b> · ` +
+    `${i18n.t('total_height')}: <b>${Math.max(p.breite, p.nabe_l).toFixed(1)} mm</b> · ` +
+    `${i18n.t('teeth_label')}: <b>${p.zaehne}</b>`;
   serieAktualisieren(p);
 }
 
@@ -501,10 +603,15 @@ document.getElementById('stlbtn').addEventListener('click', (e) => {
   const blob = new Blob([daten], { type: 'model/stl' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `ritzel_z${params().zaehne}_vorschau.stl`;
+  a.download = `ritzel_z${params().zaehne}_preview.stl`;
   a.click();
   URL.revokeObjectURL(a.href);
 });
+
+// Initialisierung
+initI18n();
+buildFormFields();
+document.getElementById('stlbtn').textContent = `💾 ${i18n.t('custom_stl')}`;
 
 resize(); rebuild();
 window.__dbg = { renderer, scene, THREE };
