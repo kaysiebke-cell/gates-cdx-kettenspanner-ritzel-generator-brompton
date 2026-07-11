@@ -1,0 +1,70 @@
+name: Ritzel bauen (headless)
+
+on:
+  workflow_dispatch:
+    inputs:
+      params_json:
+        description: >
+          Parameter als JSON-Objekt (nur Abweichungen vom Standard noetig).
+          Beispiel: {"zaehne": 16, "bohrung_d": 14, "breite": 11}
+        required: false
+        default: "{}"
+  # Selbsttest: bei Aenderungen an der Baulogik einmal mit
+  # Standardwerten durchlaufen
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-ritzel.yml"
+      - "build_headless.py"
+      - "render_gui_preview.py"
+      - "ritzel_params.py"
+      - "zahnrad_generator.py"
+      - "zahnrad_params.py"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PARAMS_JSON: ${{ github.event.inputs.params_json }}
+      OUTPUT_DIR: output
+      # Software-OpenGL erzwingen: unter Xvfb gibt es keine echte GPU,
+      # ohne diese Variable schlaegt Coin3D beim Rendern haeufig fehl.
+      LIBGL_ALWAYS_SOFTWARE: "1"
+
+    steps:
+      - name: Repo auschecken
+        uses: actions/checkout@v4
+
+      # Ubuntu 24.04 hat kein freecad-Paket mehr -> offizielles AppImage
+      # in FreeCAD 1.1.1 verwenden (gleiche Version wie lokal entwickelt).
+      - name: FreeCAD 1.1.1 (AppImage) + virtueller Bildschirm installieren
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb mesa-utils libgl1-mesa-dri
+          wget -q -O FreeCAD.AppImage \
+            "https://github.com/FreeCAD/FreeCAD/releases/download/1.1.1/FreeCAD_1.1.1-Linux-x86_64-py311.AppImage"
+          chmod +x FreeCAD.AppImage
+          # Extrahieren statt mounten: braucht kein FUSE im Runner
+          ./FreeCAD.AppImage --appimage-extract > /dev/null
+          echo "$PWD/squashfs-root/usr/bin" >> "$GITHUB_PATH"
+
+      - name: STEP + STL bauen
+        run: |
+          freecadcmd build_headless.py
+
+      # Render braucht das GUI-Binary (freecadcmd hat kein Coin3D/OpenGL);
+      # schlaegt er fehl, gibt es trotzdem STEP+STL als Artifact.
+      - name: Render-Vorschau erzeugen (echter FreeCAD-Viewport-Look)
+        continue-on-error: true
+        run: |
+          xvfb-run -a freecad render_gui_preview.py
+
+      - name: Ergebnis als Artifact bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: ritzel-export
+          path: output/
+          if-no-files-found: error

@@ -1,0 +1,6 @@
+# Python-Bytecode
+__pycache__/
+
+# Persönliche Laufzeitdaten (werden vom Panel geschrieben)
+zahnrad_werte.json
+zahnrad_cache.json
