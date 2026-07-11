@@ -68,6 +68,12 @@
     position: absolute; left: 12px; bottom: 10px; font-size: 12px;
     color: var(--muted); pointer-events: none;
   }
+  #lang-toggle {
+    padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg); color: var(--text); font-size: 12px;
+    cursor: pointer; white-space: nowrap; margin-left: auto;
+  }
+  #lang-toggle:hover { background: var(--border); }
   /* Mobil (schmale Bildschirme): Vorschau oben, Formular darunter scrollbar */
   @media (max-width: 700px) {
     body { height: 100dvh; }
@@ -108,6 +114,7 @@
 <header>
   <h1 id="title">Gates CDX Riemenspanner-Ritzel Generator (Brompton)</h1>
   <span class="sub" id="subtitle">Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen</span>
+  <button id="lang-toggle">DE / EN</button>
 </header>
 <main>
   <div id="form">
@@ -231,28 +238,35 @@ const i18n = {
       series_out_of_range: 'Pre-built STLs available for 12–22 teeth — other tooth counts via cloud build below.',
     }
   },
-  t(key) { return this.strings[this.lang]?.[key] || key; },
 };
 
-// Spracheinstellung aus Browser erkennen
+function t(key) { return i18n.strings[i18n.lang]?.[key] || key; }
+window.t = t;
 window.i18n = i18n;
+
+// UI übersetzen (ohne Browser-Sprache neu zu erkennen)
+function updateUI() {
+  document.getElementById('html').lang = i18n.lang;
+  document.getElementById('title').textContent = t('title');
+  document.getElementById('subtitle').textContent = t('subtitle');
+  document.getElementById('leg1').textContent = t('leg1');
+  document.getElementById('leg2').textContent = t('leg2');
+  document.getElementById('leg3').textContent = t('leg3');
+  document.getElementById('hint1').textContent = t('hint1');
+  document.getElementById('hint2').textContent = t('hint2');
+  document.getElementById('hint3').textContent = t('hint3');
+  document.getElementById('overlaynote').textContent = t('overlay');
+}
+
+// Spracheinstellung aus Browser erkennen (nur beim Laden)
 function initI18n() {
   const browserLang = (navigator.language || navigator.userLanguage || 'de').slice(0, 2).toLowerCase();
   i18n.lang = ['de', 'en'].includes(browserLang) ? browserLang : 'de';
-  document.getElementById('html').lang = i18n.lang;
   window.i18n = i18n;
-
-  document.getElementById('title').textContent = i18n.t('title');
-  document.getElementById('subtitle').textContent = i18n.t('subtitle');
-  document.getElementById('leg1').textContent = i18n.t('leg1');
-  document.getElementById('leg2').textContent = i18n.t('leg2');
-  document.getElementById('leg3').textContent = i18n.t('leg3');
-  document.getElementById('hint1').textContent = i18n.t('hint1');
-  document.getElementById('hint2').textContent = i18n.t('hint2');
-  document.getElementById('hint3').textContent = i18n.t('hint3');
-  document.getElementById('overlaynote').textContent = i18n.t('overlay');
+  updateUI();
 }
 window.initI18n = initI18n;
+window.updateUI = updateUI;
 
 // ── Felddefinitionen: identisch zu zahnrad_params.py, Labels als i18n-Keys ────
 const SECTIONS = [
@@ -294,7 +308,7 @@ function buildFormFields() {
     sec.querySelectorAll('.row').forEach(r => r.remove());
     for (const [key, labelKey, def, step] of felder) {
       const row = document.createElement('div'); row.className = 'row';
-      const lab = document.createElement('label'); lab.textContent = i18n.t(labelKey); lab.htmlFor = key;
+      const lab = document.createElement('label'); lab.textContent = t(labelKey); lab.htmlFor = key;
       const inp = document.createElement('input');
       inp.type = 'number'; inp.id = key; inp.value = def; inp.step = step;
       inp.addEventListener('input', scheduleRebuild);
@@ -550,17 +564,17 @@ function serieAktualisieren(p) {
   if (passt) {
     btn.style.display = '';
     btn.href = SERIE_URL(p.zaehne, 'stl');
-    btn.textContent = `✅ ${i18n.t('series_stl')} (${p.zaehne} ${i18n.t('teeth_label')})`;
+    btn.textContent = `✅ ${t('series_stl')} (${p.zaehne} ${t('teeth_label')})`;
     stepBtn.style.display = '';
     stepBtn.href = SERIE_URL(p.zaehne, 'step');
-    stepBtn.textContent = `📐 ${i18n.t('series_step')}`;
-    hint.textContent = i18n.t('series_ready');
+    stepBtn.textContent = `📐 ${t('series_step')}`;
+    hint.textContent = t('series_ready');
   } else {
     btn.style.display = 'none';
     stepBtn.style.display = 'none';
     hint.textContent = abweichungen.length
-      ? i18n.t('series_modified')
-      : i18n.t('series_out_of_range');
+      ? t('series_modified')
+      : t('series_out_of_range');
   }
 }
 
@@ -579,11 +593,12 @@ function rebuild() {
     camera.position.copy(controls.target).addScaledVector(richtung, rKopf * 4.0);
   }
   document.getElementById('stats').innerHTML =
-    `${i18n.t('head_circle')}: <b>${(rKopf * 2).toFixed(2)} mm</b> · ` +
-    `${i18n.t('total_height')}: <b>${Math.max(p.breite, p.nabe_l).toFixed(1)} mm</b> · ` +
-    `${i18n.t('teeth_label')}: <b>${p.zaehne}</b>`;
+    `${t('head_circle')}: <b>${(rKopf * 2).toFixed(2)} mm</b> · ` +
+    `${t('total_height')}: <b>${Math.max(p.breite, p.nabe_l).toFixed(1)} mm</b> · ` +
+    `${t('teeth_label')}: <b>${p.zaehne}</b>`;
   serieAktualisieren(p);
 }
+window.rebuild = rebuild;
 
 function resize() {
   const w = viewport.clientWidth, h = viewport.clientHeight;
@@ -608,10 +623,21 @@ document.getElementById('stlbtn').addEventListener('click', (e) => {
   URL.revokeObjectURL(a.href);
 });
 
+// Sprachschalter
+function toggleLanguage() {
+  window.i18n.lang = window.i18n.lang === 'de' ? 'en' : 'de';
+  window.updateUI();
+  window.buildFormFields();
+  document.getElementById('stlbtn').textContent = `💾 ${window.t('custom_stl')}`;
+  window.rebuild();
+}
+window.toggleLanguage = toggleLanguage;
+document.getElementById('lang-toggle').addEventListener('click', toggleLanguage);
+
 // Initialisierung
 initI18n();
 buildFormFields();
-document.getElementById('stlbtn').textContent = `💾 ${i18n.t('custom_stl')}`;
+document.getElementById('stlbtn').textContent = `💾 ${t('custom_stl')}`;
 
 resize(); rebuild();
 window.__dbg = { renderer, scene, THREE };
