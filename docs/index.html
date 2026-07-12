@@ -190,6 +190,7 @@ const i18n = {
       pocket_width: 'Mulden-Breite',
       pocket_angle: 'Mulden-Winkel',
       pocket_round: 'Mulden-Rundung',
+      pocket_edge_round: 'Mulden-Stirn-Rundung',
       head_circle: 'Kopfkreis-Ø',
       total_height: 'Gesamthöhe',
       teeth_label: 'Zähne',
@@ -230,6 +231,7 @@ const i18n = {
       pocket_width: 'Pocket width',
       pocket_angle: 'Pocket angle',
       pocket_round: 'Pocket rounding',
+      pocket_edge_round: 'Pocket edge rounding',
       head_circle: 'Head circle Ø',
       total_height: 'Total height',
       teeth_label: 'Teeth',
@@ -295,6 +297,7 @@ const SECTIONS = [
     ['tasche_b',     'pocket_width',  4.50, 0.1],
     ['mulde_winkel', 'pocket_angle', 24.00, 1],
     ['mulde_r',      'pocket_round', 1.50, 0.1],
+    ['mulde_stirn_r', 'pocket_edge_round', 0.50, 0.1],
   ]],
 ];
 const DEFAULTS = {};
@@ -425,8 +428,8 @@ function muldenGeometrie(p, rKopf) {
 
   const teile = [];
   const mr = Math.max(0, Math.min(p.mulde_r, 1.2));
-  const zr = Math.max(0, Math.min(p.zahn_r, 0.5));  // zahn_r wirkt auch auf Mulden-Öffnungen
-  const mr_total = mr + zr;  // kombinierte Rundung an den Stirnkanten
+  const stirn_r = Math.max(0, Math.min(p.mulde_stirn_r || 0, 1.2));
+  const mr_total = mr + stirn_r;  // kombinierte Rundung an den Stirnkanten
 
   for (const seite of [1, -1]) {
     // Profil mit Bézierkurven: mr für innere Mulden-Kontur,
