@@ -425,10 +425,12 @@ function muldenGeometrie(p, rKopf) {
 
   const teile = [];
   const mr = Math.max(0, Math.min(p.mulde_r, 1.2));
+  const zr = Math.max(0, Math.min(p.zahn_r, 0.5));  // zahn_r wirkt auch auf Mulden-Öffnungen
+  const mr_total = mr + zr;  // kombinierte Rundung an den Stirnkanten
 
   for (const seite of [1, -1]) {
-    // Profil mit echten Bézierkurven an den Ecken, damit die Rundung
-    // nach der CSG-Operation sichtbar bleibt
+    // Profil mit Bézierkurven: mr für innere Mulden-Kontur,
+    // mr_total (mr + zr) für die äußeren Stirnkanten-Öffnungen
     const ecken = [
       new THREE.Vector2(rFlach, seite * w2),
       new THREE.Vector2(rOut,   seite * w2),
@@ -445,7 +447,10 @@ function muldenGeometrie(p, rKopf) {
       const dir_in = p0.clone().sub(p_vor).normalize();
       const dir_out = p1.clone().sub(p0).normalize();
 
-      const abbr = Math.min(mr, p0.clone().sub(p_vor).length() / 2);
+      // Ob die Ecke an der Stirn liegt (z = ±b2): dort mr_total, sonst mr
+      const ist_stirnkante = Math.abs(Math.abs(p0.y) - b2) < 0.1;
+      const rundung = ist_stirnkante ? mr_total : mr;
+      const abbr = Math.min(rundung, p0.clone().sub(p_vor).length() / 2);
       const start = p0.clone().addScaledVector(dir_in, -abbr);
       const ende = p0.clone().addScaledVector(dir_out, abbr);
 
