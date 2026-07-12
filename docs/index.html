@@ -410,8 +410,10 @@ function muldenGeometrie(p, rKopf) {
 
   const teile = [];
   const mr = Math.max(0, Math.min(p.mulde_r, 1.2));
-  const stirn_r = Math.max(0, Math.min(p.mulde_stirn_r || 0, 1.2));
-  const mr_total = mr + stirn_r;
+  // Mulden-Stirn-Rundung: verrundet die schrägen Seitenkanten links/rechts
+  // vom Zahn (wie _add_flanken_fillet lokal) — als Fase auf die Seitenwände
+  // der Extrusion in Zahnrichtung, nicht auf die Profilecken.
+  const stirn_r = Math.max(0, Math.min(p.mulde_stirn_r || 0, p.tasche_b / 2 - 0.05));
 
   for (const seite of [1, -1]) {
     const ecken = [
@@ -430,7 +432,7 @@ function muldenGeometrie(p, rKopf) {
       const dir_in = p0.clone().sub(p_vor).normalize();
       const dir_out = p1.clone().sub(p0).normalize();
 
-      const rundung = (i === 2 || i === 3) ? mr_total : mr;
+      const rundung = mr;
       const abbr = Math.min(rundung, p0.clone().sub(p_vor).length() / 2);
       const start = p0.clone().addScaledVector(dir_in, -abbr);
       const ende = p0.clone().addScaledVector(dir_out, abbr);
@@ -451,8 +453,19 @@ function muldenGeometrie(p, rKopf) {
     }
 
     const tiefe_b = p.tasche_b;
-    const prisma = new THREE.ExtrudeGeometry(prof, { depth: tiefe_b, bevelEnabled: false });
-    prisma.translate(0, 0, -tiefe_b / 2);
+    let prisma;
+    if (stirn_r > 0.01) {
+      // Fase auf beide Extrusions-Enden = Seitenwände der Mulde links/rechts
+      // vom Zahn. bevelOffset hält den Querschnitt gleich (wie zahn_r am Körper).
+      prisma = new THREE.ExtrudeGeometry(prof, {
+        depth: tiefe_b - 2 * stirn_r, bevelEnabled: true, bevelSegments: 3,
+        bevelSize: stirn_r, bevelThickness: stirn_r, bevelOffset: -stirn_r,
+      });
+      prisma.translate(0, 0, -(tiefe_b - 2 * stirn_r) / 2);
+    } else {
+      prisma = new THREE.ExtrudeGeometry(prof, { depth: tiefe_b, bevelEnabled: false });
+      prisma.translate(0, 0, -tiefe_b / 2);
+    }
     for (let i = 0; i < p.zaehne; i++) {
       const a = 2 * Math.PI * (i + 0.5) / p.zaehne;
       const geo = prisma.clone();
