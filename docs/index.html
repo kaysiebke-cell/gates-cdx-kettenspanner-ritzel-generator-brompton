@@ -432,7 +432,7 @@ function muldenGeometrie(p, rKopf) {
       const dir_in = p0.clone().sub(p_vor).normalize();
       const dir_out = p1.clone().sub(p0).normalize();
 
-      const rundung = (i === 2 || i === 3) ? mr + stirn_r : mr;
+      const rundung = mr;
       const abbr = Math.min(rundung, p0.clone().sub(p_vor).length() / 2);
       const start = p0.clone().addScaledVector(dir_in, -abbr);
       const ende = p0.clone().addScaledVector(dir_out, abbr);
@@ -453,8 +453,18 @@ function muldenGeometrie(p, rKopf) {
     }
 
     const tiefe_b = p.tasche_b;
-    const prisma = new THREE.ExtrudeGeometry(prof, { depth: tiefe_b, bevelEnabled: false });
-    prisma.translate(0, 0, -tiefe_b / 2);
+    let prisma;
+    if (stirn_r > 0.01) {
+      const sr = Math.min(stirn_r, tiefe_b / 2 - 0.05);
+      prisma = new THREE.ExtrudeGeometry(prof, {
+        depth: tiefe_b - 2 * sr, bevelEnabled: true, bevelSegments: 3,
+        bevelSize: sr, bevelThickness: sr, bevelOffset: -sr,
+      });
+      prisma.translate(0, 0, -(tiefe_b - 2 * sr) / 2);
+    } else {
+      prisma = new THREE.ExtrudeGeometry(prof, { depth: tiefe_b, bevelEnabled: false });
+      prisma.translate(0, 0, -tiefe_b / 2);
+    }
     for (let i = 0; i < p.zaehne; i++) {
       const a = 2 * Math.PI * (i + 0.5) / p.zaehne;
       const geo = prisma.clone();
