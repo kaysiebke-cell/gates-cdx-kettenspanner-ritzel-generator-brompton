@@ -447,9 +447,9 @@ function muldenGeometrie(p, rKopf) {
       const dir_in = p0.clone().sub(p_vor).normalize();
       const dir_out = p1.clone().sub(p0).normalize();
 
-      // Ob die Ecke an der Stirn liegt (z = ±b2): dort mr_total, sonst mr
-      const ist_stirnkante = Math.abs(Math.abs(p0.y) - b2) < 0.1;
-      const rundung = ist_stirnkante ? mr_total : mr;
+      // Ecken 2 und 3 (äußere Kanten an der Stirn) bekommen mr_total,
+      // Ecken 0 und 1 (innere/mittlere) bekommen mr
+      const rundung = (i === 2 || i === 3) ? mr_total : mr;
       const abbr = Math.min(rundung, p0.clone().sub(p_vor).length() / 2);
       const start = p0.clone().addScaledVector(dir_in, -abbr);
       const ende = p0.clone().addScaledVector(dir_out, abbr);
