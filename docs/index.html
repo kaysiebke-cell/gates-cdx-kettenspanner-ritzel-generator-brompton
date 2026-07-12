@@ -74,10 +74,11 @@
     cursor: pointer; white-space: nowrap; margin-left: auto;
   }
   #lang-toggle:hover { background: var(--border); }
-
+  /* Mobil (schmale Bildschirme): Vorschau oben, Formular darunter scrollbar */
   @media (max-width: 700px) {
     body { height: 100dvh; }
     main { flex-direction: column; }
+    /* Vorschau oben festhalten, Formular scrollt darunter */
     #viewport { flex: 0 0 42%; min-height: 200px; order: -1; }
     #form {
       width: 100%; flex: 1; border-right: none;
@@ -88,17 +89,22 @@
     header .sub { font-size: 12px; }
     .row { margin: 6px 0; }
     .row label { font-size: 15px; }
+    /* 16px verhindert den Auto-Zoom beim Antippen auf iOS */
     .row input { width: 110px; padding: 8px 10px; font-size: 16px; }
     legend { font-size: 15px; }
     button, a.btn { padding: 12px; font-size: 16px; }
     #overlaynote { display: none; }
   }
+  /* Handy im Querformat (niedriger Bildschirm): Kopfzeile auf eine
+     schmale Zeile schrumpfen, damit die Höhe der Vorschau gehört */
   @media (max-height: 480px) {
     header { padding: 4px 12px; }
     header h1 { font-size: 14px; }
     header .sub { display: none; }
     #overlaynote { display: none; }
   }
+  /* … und in der zweispaltigen Ansicht das Formular etwas schmaler,
+     damit die Vorschau mehr Breite bekommt */
   @media (max-height: 480px) and (min-width: 701px) {
     #form { width: 300px; }
   }
@@ -145,7 +151,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { STLExporter } from 'three/addons/exporters/STLExporter.js';
-import { Brush, Evaluator, SUBTRACTION, ADDITION, INTERSECTION } from 'three-bvh-csg';
+import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
 
 // ── Internationalisierung (i18n) ────────────────────────────────────────────
 const i18n = {
@@ -184,7 +190,6 @@ const i18n = {
       pocket_width: 'Mulden-Breite',
       pocket_angle: 'Mulden-Winkel',
       pocket_round: 'Mulden-Rundung',
-      pocket_edge_round: 'Mulden-Stirn-Rundung',
       head_circle: 'Kopfkreis-Ø',
       total_height: 'Gesamthöhe',
       teeth_label: 'Zähne',
@@ -225,7 +230,6 @@ const i18n = {
       pocket_width: 'Pocket width',
       pocket_angle: 'Pocket angle',
       pocket_round: 'Pocket rounding',
-      pocket_edge_round: 'Pocket edge rounding',
       head_circle: 'Head circle Ø',
       total_height: 'Total height',
       teeth_label: 'Teeth',
@@ -240,10 +244,10 @@ function t(key) { return i18n.strings[i18n.lang]?.[key] || key; }
 window.t = t;
 window.i18n = i18n;
 
-const BUILD_VERSION = 'Build 2026-07-12 · v7 (Stirn-Rundung + scharfer Steg)';
+// UI übersetzen (ohne Browser-Sprache neu zu erkennen)
 function updateUI() {
   document.getElementById('html').lang = i18n.lang;
-  document.getElementById('title').textContent = t('title') + '  [' + BUILD_VERSION + ']';
+  document.getElementById('title').textContent = t('title');
   document.getElementById('subtitle').textContent = t('subtitle');
   document.getElementById('leg1').textContent = t('leg1');
   document.getElementById('leg2').textContent = t('leg2');
@@ -254,6 +258,7 @@ function updateUI() {
   document.getElementById('overlaynote').textContent = t('overlay');
 }
 
+// Spracheinstellung aus Browser erkennen (nur beim Laden)
 function initI18n() {
   const browserLang = (navigator.language || navigator.userLanguage || 'de').slice(0, 2).toLowerCase();
   i18n.lang = ['de', 'en'].includes(browserLang) ? browserLang : 'de';
@@ -263,10 +268,11 @@ function initI18n() {
 window.initI18n = initI18n;
 window.updateUI = updateUI;
 
+// ── Felddefinitionen: identisch zu zahnrad_params.py, Labels als i18n-Keys ────
 const SECTIONS = [
   ['sec1', [
     ['zaehne',          'teeth',           14,   1],
-    ['eingriffswinkel', 'angle',       20.0, 0.5],
+    ['eingriffswinkel', 'angle',      20.0, 0.5],
     ['spitzen_abstand', 'center_dist',     10.20, 0.05],
     ['spitzen_d',       'head_d',           2.80, 0.05],
     ['fuss_d',          'foot_d',            7.00, 0.05],
@@ -279,7 +285,7 @@ const SECTIONS = [
   ['sec2', [
     ['bohrung_d', 'bore_d',       14.00, 0.5],
     ['nabe_d',    'hub_d',          20.00, 0.5],
-    ['nabe_l',    'hub_len',       13.00, 0.5],
+    ['nabe_l',    'hub_len',      13.00, 0.5],
     ['lager_d',   'bearing_d',     16.00, 0.5],
     ['lager_t',   'bearing_depth',  1.00, 0.1],
   ]],
@@ -289,7 +295,6 @@ const SECTIONS = [
     ['tasche_b',     'pocket_width',  4.50, 0.1],
     ['mulde_winkel', 'pocket_angle', 24.00, 1],
     ['mulde_r',      'pocket_round', 1.50, 0.1],
-    ['mulde_stirn_r', 'pocket_edge_round', 0.50, 0.1],
   ]],
 ];
 const DEFAULTS = {};
@@ -324,6 +329,7 @@ function params() {
   return p;
 }
 
+// ── Szene ───────────────────────────────────────────────────────────
 const viewport = document.getElementById('viewport');
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 viewport.appendChild(renderer.domElement);
@@ -337,13 +343,14 @@ camera.up.set(0, 0, 1);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
+// Schatten + Kontrast
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
 
 scene.add(new THREE.HemisphereLight(0xf2f5ff, 0x2a2018, 0.85));
-const l1 = new THREE.DirectionalLight(0xfff4e0, 2.4);
+const l1 = new THREE.DirectionalLight(0xfff4e0, 2.4);   // warmes Hauptlicht
 l1.position.set(60, -40, 90);
 l1.castShadow = true;
 l1.shadow.mapSize.set(2048, 2048);
@@ -352,14 +359,16 @@ l1.shadow.camera.top = 70;   l1.shadow.camera.bottom = -70;
 l1.shadow.camera.near = 10;  l1.shadow.camera.far = 300;
 l1.shadow.bias = -0.0002;
 scene.add(l1);
-const l2 = new THREE.DirectionalLight(0xcfe0ff, 0.5);
+const l2 = new THREE.DirectionalLight(0xcfe0ff, 0.5);   // kühles Gegenlicht
 l2.position.set(-50, 60, -30); scene.add(l2);
 
+// Ritzel-Farbe: Bronze/Kupfer (#A65400)
 const mat = new THREE.MeshStandardMaterial({
   color: 0xA65400, metalness: 0.35, roughness: 0.45,
   side: THREE.DoubleSide,
 });
 
+// Unsichtbarer Boden, der nur den Kontaktschatten empfängt
 const boden = new THREE.Mesh(
   new THREE.CircleGeometry(150, 48),
   new THREE.ShadowMaterial({ opacity: 0.28 }));
@@ -370,6 +379,7 @@ let group = null;
 
 const dir2 = t => new THREE.Vector2(Math.cos(t), Math.sin(t));
 
+// Zahnprofil — Formeln 1:1 aus zahnrad_generator.py
 function zahnShape(p) {
   const z = p.zaehne, off = (p.eingriffswinkel * Math.PI / 180) * 0.5;
   const rS = p.spitzen_d / 2, rF = p.fuss_d / 2;
@@ -381,11 +391,11 @@ function zahnShape(p) {
     const wZ = 2 * Math.PI * i / z, wF = 2 * Math.PI * (i + 0.5) / z;
     const cpS = dir2(wZ).multiplyScalar(rBahn);
     const cpF = dir2(wF).multiplyScalar(rFussBahn);
-    for (let k = 0; k <= N; k++) {
+    for (let k = 0; k <= N; k++) {           // Zahnkopf-Bogen (außen)
       const t = wZ - Math.PI / 2 + off + (Math.PI - 2 * off) * k / N;
       pts.push(cpS.clone().addScaledVector(dir2(t), rS));
     }
-    for (let k = 0; k <= N; k++) {
+    for (let k = 0; k <= N; k++) {           // Fußrundung (innen, rückwärts)
       const t = wF + 1.5 * Math.PI - off - (Math.PI - 2 * off) * k / N;
       pts.push(cpF.clone().addScaledVector(dir2(t), rF));
     }
@@ -399,76 +409,46 @@ function zahnShape(p) {
   return { shape, rKopf };
 }
 
+// Schmutzabweiser-Mulde: Trapez-Prisma je Zahnlücke und Seite —
+// Geometrie wie _add_schmutztaschen im Generator (r_flach/r_tief, Steg bleibt)
 function muldenGeometrie(p, rKopf) {
   if (p.tasche_b <= 0 || p.seiten_t <= 0) return null;
   const w2 = p.steg_w / 2;
   if (w2 >= p.breite / 2) return null;
-  const b2 = p.breite / 2 + 1;
+  const b2 = p.breite / 2 + 1;         // wie im Generator: sicher durch die Stirnfläche
   const rOut = rKopf + 2;
+  // Drehpunkt an der Steg-Kante: seiten_t = Tiefe am Steg,
+  // der Winkel macht die Mulde nach außen (Stirnseite) tiefer
   const rFlach = Math.min(rKopf - p.seiten_t, rOut - 0.2);
   const rTief  = Math.max(
     rFlach - Math.tan(p.mulde_winkel * Math.PI / 180) * (b2 - w2), 0.5);
 
   const teile = [];
-  const mr = Math.max(0, Math.min(p.mulde_r, 1.2));
-  // Mulden-Stirn-Rundung: verrundet die schrägen Seitenkanten links/rechts
-  // vom Zahn (wie _add_flanken_fillet lokal) — als Fase auf die Seitenwände
-  // der Extrusion in Zahnrichtung, nicht auf die Profilecken.
-  const stirn_r = Math.max(0, Math.min(p.mulde_stirn_r || 0, 1.2));
-
   for (const seite of [1, -1]) {
-    const ecken = [
+    // Profil in (radial, axial): Boden schräg von (rFlach, Steg) zu (rTief, Stirn).
+    // Für die Unterseite Punktreihenfolge umdrehen, damit die Windung
+    // gegen den Uhrzeigersinn bleibt (sonst umgestülptes CSG-Volumen).
+    const punkte = [
       new THREE.Vector2(rFlach, seite * w2),
       new THREE.Vector2(rOut,   seite * w2),
       new THREE.Vector2(rOut,   seite * b2),
       new THREE.Vector2(rTief,  seite * b2),
     ];
-
-    let prof = new THREE.Shape();
-    for (let i = 0; i < ecken.length; i++) {
-      const p0 = ecken[i];
-      const p1 = ecken[(i + 1) % ecken.length];
-      const p_vor = ecken[(i - 1 + ecken.length) % ecken.length];
-
-      const dir_in = p0.clone().sub(p_vor).normalize();
-      const dir_out = p1.clone().sub(p0).normalize();
-
-      const rundung = mr;
-      const abbr = Math.min(rundung, p0.clone().sub(p_vor).length() / 2);
-      const start = p0.clone().addScaledVector(dir_in, -abbr);
-      const ende = p0.clone().addScaledVector(dir_out, abbr);
-
-      if (i === 0) {
-        prof.moveTo(start.x, start.y);
-      } else {
-        prof.lineTo(start.x, start.y);
-      }
-      prof.quadraticCurveTo(p0.x, p0.y, ende.x, ende.y);
-    }
-
-    if (seite < 0) {
-      const punkte = prof.getPoints(16);
-      punkte.reverse();
-      const prof2 = new THREE.Shape(punkte);
-      prof = prof2;
-    }
-
-    const tiefe_b = p.tasche_b;
-    let prisma;
-    if (stirn_r > 0.01) {
-      const sr = Math.min(stirn_r, tiefe_b / 2 - 0.05);
-      prisma = new THREE.ExtrudeGeometry(prof, {
-        depth: tiefe_b - 2 * sr, bevelEnabled: true, bevelSegments: 3,
-        bevelSize: sr, bevelThickness: sr, bevelOffset: -sr,
-      });
-      prisma.translate(0, 0, -(tiefe_b - 2 * sr) / 2);
-    } else {
-      prisma = new THREE.ExtrudeGeometry(prof, { depth: tiefe_b, bevelEnabled: false });
-      prisma.translate(0, 0, -tiefe_b / 2);
-    }
+    if (seite < 0) punkte.reverse();
+    const prof = new THREE.Shape(punkte);
+    // Mulden-Rundung (mulde_r): runder Bevel am Schneidkörper ->
+    // die Muldenkanten im Teil werden entsprechend verrundet
+    const mr = Math.max(0, Math.min(p.mulde_r, p.tasche_b / 2 - 0.05));
+    const tiefe_b = mr > 0.01 ? p.tasche_b - 2 * mr : p.tasche_b;
+    const prisma = new THREE.ExtrudeGeometry(prof, mr > 0.01 ? {
+      depth: tiefe_b, bevelEnabled: true, bevelSegments: 4,
+      bevelSize: mr, bevelThickness: mr, bevelOffset: -mr,
+    } : { depth: tiefe_b, bevelEnabled: false });
+    prisma.translate(0, 0, -tiefe_b / 2);
     for (let i = 0; i < p.zaehne; i++) {
-      const a = 2 * Math.PI * (i + 0.5) / p.zaehne;
+      const a = 2 * Math.PI * (i + 0.5) / p.zaehne;   // Zahnlücke, nicht Zahn!
       const geo = prisma.clone();
+      // lokal: X=radial, Y=Weltachse Z, Z=tangential
       const m = new THREE.Matrix4().makeBasis(
         new THREE.Vector3(Math.cos(a), Math.sin(a), 0),
         new THREE.Vector3(0, 0, 1),
@@ -490,12 +470,14 @@ function csgOp(geoA, geoB, op) {
   geoA.dispose(); geoB.dispose();
   return ergebnis.geometry;
 }
-evaluator.useGroups = false;
+evaluator.useGroups = false;   // ein Material für das Ergebnis, keine Gruppen
 
 function buildMeshes(p) {
   const g = new THREE.Group();
-  let { shape, rKopf } = zahnShape(p);
+  const { shape, rKopf } = zahnShape(p);
 
+  // Grundkörper — Zahn-Rundung (zahn_r) als runder Bevel an beiden
+  // Stirnflächen-Kanten, wie die ZahnVerrundung im Generator
   const zr = Math.max(0, Math.min(p.zahn_r, p.breite / 2 - 0.05));
   let gear;
   if (zr > 0.01) {
@@ -510,21 +492,11 @@ function buildMeshes(p) {
     gear.translate(0, 0, -p.breite / 2);
   }
 
+  // Mulden per CSG abziehen — wie die Pocket-Schleife im Generator
   const mulden = muldenGeometrie(p, rKopf);
-  if (mulden) {
-    const w2 = p.steg_w / 2;
-    // Vor dem Schnitt eine Kopie des Steg-Bands sichern: die Stirn-Fase der
-    // Mulden würde sonst auch die Steg-Kante mitrunden. Danach dieses
-    // ursprüngliche Material im Band |z|<=steg_w/2 wieder addieren → Steg scharf.
-    let stegRestore = null;
-    if (w2 > 0.05) {
-      const slab = new THREE.BoxGeometry(4 * rKopf + 20, 4 * rKopf + 20, 2 * w2);
-      stegRestore = csgOp(gear.clone(), slab, INTERSECTION);
-    }
-    gear = csgOp(gear, mulden, SUBTRACTION);
-    if (stegRestore) gear = csgOp(gear, stegRestore, ADDITION);
-  }
+  if (mulden) gear = csgOp(gear, mulden, SUBTRACTION);
 
+  // Riemenführung: z-Eck (Ecken auf den Zähnen), Loch = Nabe
   if (p.fuehrung_w > 0) {
     const rG = p.fuehrung_d > 0 ? p.fuehrung_d / 2 : rKopf - 1.1;
     const poly = [];
@@ -542,9 +514,14 @@ function buildMeshes(p) {
     gear = csgOp(gear, fg, ADDITION);
   }
 
+  // Nabe mit Bohrung + Lagersitz-Senkungen: Drehteil (Lathe).
+  // Jede Ecke doppelt einfügen: sonst mittelt Three.js die Normalen
+  // über die Kante und der Zylinder wirkt abgerundet statt scharfkantig.
   if (p.nabe_d > 0 && p.nabe_l > 0) {
     const R = p.nabe_d / 2, rB = Math.max(p.bohrung_d / 2, 0.1);
     const rS_ = Math.max(p.lager_d / 2, rB), t = Math.min(p.lager_t, p.nabe_l / 2), L = p.nabe_l / 2;
+    // Reihenfolge ist bewusst SO herum: andersherum zeigt die Hülle nach
+    // innen (negatives Volumen) und das STL ist umgestülpt.
     const ecken = [
       [rS_, L - t], [rB, L - t], [rB, -L + t], [rS_, -L + t],
       [rS_, -L], [R, -L], [R, L], [rS_, L],
@@ -555,13 +532,14 @@ function buildMeshes(p) {
       prof.push(new THREE.Vector2(r1, z1), new THREE.Vector2(r2, z2));
     }
     const lathe = new THREE.LatheGeometry(prof, 64);
-    lathe.rotateX(Math.PI / 2);
+    lathe.rotateX(Math.PI / 2);   // Lathe dreht um Y → auf Z-Achse kippen
     gear = csgOp(gear, lathe, ADDITION);
   }
 
+  // Ein einziger wasserdichter Körper — sauber für STL/Slicer
   const koerper = new THREE.Mesh(gear, mat);
   koerper.castShadow = true;
-  koerper.receiveShadow = true;
+  koerper.receiveShadow = true;   // Selbstschattierung in den Mulden
   g.add(koerper);
   return { g, rKopf };
 }
@@ -569,6 +547,8 @@ function buildMeshes(p) {
 let timer = null;
 function scheduleRebuild() { clearTimeout(timer); timer = setTimeout(rebuild, 120); }
 
+// Vorgebaute, voll verrundete Serie (GitHub-Release "stl-serie"):
+// Standardwerte, nur die Zähnezahl variiert
 const SERIE_MIN = 12, SERIE_MAX = 22;
 const SERIE_URL = (z, endung) =>
   `https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/download/stl-serie/ritzel_z${z}.${endung}`;
@@ -606,6 +586,7 @@ function rebuild() {
   group = g; scene.add(group);
   boden.position.z = -(Math.max(p.breite, p.nabe_l) / 2 + 2);
 
+  // Kamera-Abstand an die Modellgröße anpassen (Blickrichtung beibehalten)
   if (Math.abs(rKopf - lastR) > 0.5) {
     lastR = rKopf;
     const richtung = camera.position.clone().sub(controls.target).normalize();
@@ -625,6 +606,8 @@ function resize() {
   camera.aspect = w / h; camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);
+// Reagiert auch, wenn nur der Viewport-Bereich seine Größe ändert
+// (mobiler Layout-Wechsel, einklappende Browserleiste, Bildschirmtastatur)
 new ResizeObserver(resize).observe(viewport);
 
 document.getElementById('stlbtn').addEventListener('click', (e) => {
@@ -640,6 +623,7 @@ document.getElementById('stlbtn').addEventListener('click', (e) => {
   URL.revokeObjectURL(a.href);
 });
 
+// Sprachschalter
 function toggleLanguage() {
   window.i18n.lang = window.i18n.lang === 'de' ? 'en' : 'de';
   window.updateUI();
@@ -650,6 +634,7 @@ function toggleLanguage() {
 window.toggleLanguage = toggleLanguage;
 document.getElementById('lang-toggle').addEventListener('click', toggleLanguage);
 
+// Initialisierung
 initI18n();
 buildFormFields();
 document.getElementById('stlbtn').textContent = `💾 ${t('custom_stl')}`;
