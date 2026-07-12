@@ -24,7 +24,7 @@ Im Web-Konfigurator kannst du das **Spannrollen-Ritzel live in 3D drehen und anp
 ## Nutzung direkt in FreeCAD
 
 1. Kopiere den Projektordner in dein FreeCAD-Makroverzeichnis (oder an einen Ort deiner Wahl).
-2. Starte die `main.py` als Makro in FreeCAD. Das Bedienfeld **"Zahnrad Setup"** dockt sich automatisch rechts an.
+2. Starte die `freecad/main.py` als Makro in FreeCAD. Das Bedienfeld **"Zahnrad Setup"** dockt sich automatisch rechts an.
 
 | Button | Funktion |
 |---|---|
@@ -77,14 +77,14 @@ Bezugsquelle für Deutschland: [F605-2RS bei Kugellager-Express](https://www.kug
 
 | Datei | Inhalt |
 |---|---|
-| `main.py` | Der Einstiegspunkt für FreeCAD, lädt alle Module sauber rein. |
-| `zahnrad_ui.py` | Das Bedienfeld (Eingaben, Buttons, Speichern der Werte). |
-| `zahnrad_generator.py` | Die eigentliche Geometrie: Skizze des Zahnprofils und Aufbau des 3D-Körpers. |
-| `zahnrad_params.py` | Definition der Variablen und Standardwerte. |
-| `docs/index.html` | Der Web-Konfigurator (läuft über GitHub Pages). |
-| `build_headless.py` | Hilfsskript: Baut die Release-Serie (STEP/STL) im Hintergrund ohne GUI. |
-| `render_gui_preview.py` | Cloud-Build: Rendert die Vorschau unter Xvfb. |
-| `ritzel_params.py` | Cloud-Build: Standardwerte und JSON-Overrides. |
+| `freecad/main.py` | Der Einstiegspunkt für FreeCAD, lädt alle Module sauber rein. |
+| `freecad/zahnrad_ui.py` | Das Bedienfeld (Eingaben, Buttons, Speichern der Werte). |
+| `freecad/zahnrad_generator.py` | Die eigentliche Geometrie: Skizze des Zahnprofils und Aufbau des 3D-Körpers. |
+| `freecad/zahnrad_params.py` | Definition der Variablen und Standardwerte. |
+| `web/index.html` | Der Web-Konfigurator (läuft über GitHub Pages). |
+| `freecad/build_headless.py` | Hilfsskript: Baut die Release-Serie (STEP/STL) im Hintergrund ohne GUI. |
+| `freecad/render_gui_preview.py` | Cloud-Build: Rendert die Vorschau unter Xvfb. |
+| `freecad/ritzel_params.py` | Cloud-Build: Standardwerte und JSON-Overrides. |
 | `.github/workflows/build-ritzel.yml` | Die GitHub-Aktion für die automatischen Builds. |
 
 ## Rechtliches & Haftung

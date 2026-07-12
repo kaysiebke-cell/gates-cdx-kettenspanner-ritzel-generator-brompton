@@ -15,11 +15,11 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/build-ritzel.yml"
-      - "build_headless.py"
-      - "render_gui_preview.py"
-      - "ritzel_params.py"
-      - "zahnrad_generator.py"
-      - "zahnrad_params.py"
+      - "freecad/build_headless.py"
+      - "freecad/render_gui_preview.py"
+      - "freecad/ritzel_params.py"
+      - "freecad/zahnrad_generator.py"
+      - "freecad/zahnrad_params.py"
 
 permissions:
   contents: read
@@ -53,14 +53,14 @@ jobs:
 
       - name: STEP + STL bauen
         run: |
-          freecadcmd build_headless.py
+          freecadcmd freecad/build_headless.py
 
       # Render braucht das GUI-Binary (freecadcmd hat kein Coin3D/OpenGL);
       # schlaegt er fehl, gibt es trotzdem STEP+STL als Artifact.
       - name: Render-Vorschau erzeugen (echter FreeCAD-Viewport-Look)
         continue-on-error: true
         run: |
-          xvfb-run -a freecad render_gui_preview.py
+          xvfb-run -a freecad freecad/render_gui_preview.py
 
       - name: Ergebnis als Artifact bereitstellen
         uses: actions/upload-artifact@v4

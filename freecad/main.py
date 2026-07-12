@@ -12,7 +12,7 @@ import sys
 try:
     MACRO_DIR = os.path.dirname(os.path.abspath(__file__))
 except NameError:
-    MACRO_DIR = "/home/kaysiebke/Desktop/Macros/Gates CDX Ritzel Generator"
+    MACRO_DIR = "/home/kaysiebke/Desktop/Macros/Gates CDX Ritzel Generator/freecad"
 
 # Eigenes Verzeichnis ganz vorne auf den Pfad
 if MACRO_DIR in sys.path:

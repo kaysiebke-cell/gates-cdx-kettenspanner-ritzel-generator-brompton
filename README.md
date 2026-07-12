@@ -24,7 +24,7 @@ In the web configurator, you can **rotate and adjust the tensioner sprocket live
 ## Direct Usage in FreeCAD
 
 1. Copy the project folder into your FreeCAD macro directory (or any location of your choice).
-2. Run `main.py` as a macro in FreeCAD. The **"Zahnrad Setup"** (Gear Setup) panel will automatically dock on the right side.
+2. Run `freecad/main.py` as a macro in FreeCAD. The **"Zahnrad Setup"** (Gear Setup) panel will automatically dock on the right side.
 
 | Button | Function |
 |---|---|
@@ -75,14 +75,14 @@ The default values (Bore Ø 14 mm, bearing seat Ø 16 mm × 1 mm) are designed e
 
 | File | Content |
 |---|---|
-| `main.py` | The entry point for FreeCAD, cleanly imports all modules. |
-| `zahnrad_ui.py` | The control panel (inputs, buttons, saving values). |
-| `zahnrad_generator.py` | The actual geometry: Tooth profile sketch and 3D body generation. |
-| `zahnrad_params.py` | Definition of variables and default values. |
-| `docs/index.html` | The web configurator (hosted via GitHub Pages). |
-| `build_headless.py` | Helper script: Builds the release series (STEP/STL) in the background without a GUI. |
-| `render_gui_preview.py` | Cloud Build: Renders the preview using Xvfb. |
-| `ritzel_params.py` | Cloud Build: Default values and JSON overrides. |
+| `freecad/main.py` | The entry point for FreeCAD, cleanly imports all modules. |
+| `freecad/zahnrad_ui.py` | The control panel (inputs, buttons, saving values). |
+| `freecad/zahnrad_generator.py` | The actual geometry: Tooth profile sketch and 3D body generation. |
+| `freecad/zahnrad_params.py` | Definition of variables and default values. |
+| `web/index.html` | The web configurator (hosted via GitHub Pages). |
+| `freecad/build_headless.py` | Helper script: Builds the release series (STEP/STL) in the background without a GUI. |
+| `freecad/render_gui_preview.py` | Cloud Build: Renders the preview using Xvfb. |
+| `freecad/ritzel_params.py` | Cloud Build: Default values and JSON overrides. |
 | `.github/workflows/build-ritzel.yml` | GitHub Action for automated builds. |
 
 ## Legal Disclaimer & Liability
