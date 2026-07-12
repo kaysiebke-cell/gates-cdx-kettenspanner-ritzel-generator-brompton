@@ -240,9 +240,10 @@ function t(key) { return i18n.strings[i18n.lang]?.[key] || key; }
 window.t = t;
 window.i18n = i18n;
 
+const BUILD_VERSION = 'Build 2026-07-12 · v6 (Mulden-Stirn-Rundung)';
 function updateUI() {
   document.getElementById('html').lang = i18n.lang;
-  document.getElementById('title').textContent = t('title');
+  document.getElementById('title').textContent = t('title') + '  [' + BUILD_VERSION + ']';
   document.getElementById('subtitle').textContent = t('subtitle');
   document.getElementById('leg1').textContent = t('leg1');
   document.getElementById('leg2').textContent = t('leg2');
