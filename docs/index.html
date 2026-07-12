@@ -145,7 +145,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { STLExporter } from 'three/addons/exporters/STLExporter.js';
-import { Brush, Evaluator, SUBTRACTION, ADDITION, INTERSECTION } from 'three-bvh-csg';
+import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
 
 // ── Internationalisierung (i18n) ────────────────────────────────────────────
 const i18n = {
@@ -240,7 +240,7 @@ function t(key) { return i18n.strings[i18n.lang]?.[key] || key; }
 window.t = t;
 window.i18n = i18n;
 
-const BUILD_VERSION = 'Build 2026-07-12 · v7 (Stirn-Rundung + scharfer Steg)';
+const BUILD_VERSION = 'Build 2026-07-12 · v8 (Stirn-Rundung nur an Stirn, Steg unberührt)';
 function updateUI() {
   document.getElementById('html').lang = i18n.lang;
   document.getElementById('title').textContent = t('title') + '  [' + BUILD_VERSION + ']';
@@ -433,7 +433,10 @@ function muldenGeometrie(p, rKopf) {
       const dir_in = p0.clone().sub(p_vor).normalize();
       const dir_out = p1.clone().sub(p0).normalize();
 
-      const rundung = mr;
+      // mulde_r auf allen Ecken; die Stirn-Ecken (2,3 = an der Stirnfläche,
+      // Y=b2) bekommen zusätzlich die Stirn-Rundung obendrauf. Der Steg
+      // (Ecken 0,1 bei Y=w2) bleibt unberührt.
+      const rundung = (i === 2 || i === 3) ? mr + stirn_r : mr;
       const abbr = Math.min(rundung, p0.clone().sub(p_vor).length() / 2);
       const start = p0.clone().addScaledVector(dir_in, -abbr);
       const ende = p0.clone().addScaledVector(dir_out, abbr);
@@ -454,18 +457,8 @@ function muldenGeometrie(p, rKopf) {
     }
 
     const tiefe_b = p.tasche_b;
-    let prisma;
-    if (stirn_r > 0.01) {
-      const sr = Math.min(stirn_r, tiefe_b / 2 - 0.05);
-      prisma = new THREE.ExtrudeGeometry(prof, {
-        depth: tiefe_b - 2 * sr, bevelEnabled: true, bevelSegments: 3,
-        bevelSize: sr, bevelThickness: sr, bevelOffset: -sr,
-      });
-      prisma.translate(0, 0, -(tiefe_b - 2 * sr) / 2);
-    } else {
-      prisma = new THREE.ExtrudeGeometry(prof, { depth: tiefe_b, bevelEnabled: false });
-      prisma.translate(0, 0, -tiefe_b / 2);
-    }
+    const prisma = new THREE.ExtrudeGeometry(prof, { depth: tiefe_b, bevelEnabled: false });
+    prisma.translate(0, 0, -tiefe_b / 2);
     for (let i = 0; i < p.zaehne; i++) {
       const a = 2 * Math.PI * (i + 0.5) / p.zaehne;
       const geo = prisma.clone();
@@ -511,19 +504,7 @@ function buildMeshes(p) {
   }
 
   const mulden = muldenGeometrie(p, rKopf);
-  if (mulden) {
-    const w2 = p.steg_w / 2;
-    // Vor dem Schnitt eine Kopie des Steg-Bands sichern: die Stirn-Fase der
-    // Mulden würde sonst auch die Steg-Kante mitrunden. Danach dieses
-    // ursprüngliche Material im Band |z|<=steg_w/2 wieder addieren → Steg scharf.
-    let stegRestore = null;
-    if (w2 > 0.05) {
-      const slab = new THREE.BoxGeometry(4 * rKopf + 20, 4 * rKopf + 20, 2 * w2);
-      stegRestore = csgOp(gear.clone(), slab, INTERSECTION);
-    }
-    gear = csgOp(gear, mulden, SUBTRACTION);
-    if (stegRestore) gear = csgOp(gear, stegRestore, ADDITION);
-  }
+  if (mulden) gear = csgOp(gear, mulden, SUBTRACTION);
 
   if (p.fuehrung_w > 0) {
     const rG = p.fuehrung_d > 0 ? p.fuehrung_d / 2 : rKopf - 1.1;
