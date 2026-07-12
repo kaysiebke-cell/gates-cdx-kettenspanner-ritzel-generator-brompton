@@ -496,10 +496,9 @@ evaluator.useGroups = false;   // ein Material für das Ergebnis, keine Gruppen
 
 function buildMeshes(p) {
   const g = new THREE.Group();
-  const { shape, rKopf } = zahnShape(p);
+  let { shape, rKopf } = zahnShape(p);
 
-  // Grundkörper — Zahn-Rundung (zahn_r) als runder Bevel an beiden
-  // Stirnflächen-Kanten, wie die ZahnVerrundung im Generator
+  // Zahn-Rundung (zahn_r): Direkter Bevel auf Profil (wird mit bevelOffset angewendet)
   const zr = Math.max(0, Math.min(p.zahn_r, p.breite / 2 - 0.05));
   let gear;
   if (zr > 0.01) {
@@ -515,6 +514,7 @@ function buildMeshes(p) {
   }
 
   // Mulden per CSG abziehen — wie die Pocket-Schleife im Generator
+  // Die Mulden-Profil-Kurven sind mit Bézierkurven bereits abgerundet
   const mulden = muldenGeometrie(p, rKopf);
   if (mulden) gear = csgOp(gear, mulden, SUBTRACTION);
 
