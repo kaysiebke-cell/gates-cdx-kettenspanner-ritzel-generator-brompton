@@ -145,7 +145,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { STLExporter } from 'three/addons/exporters/STLExporter.js';
-import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
+import { Brush, Evaluator, SUBTRACTION, ADDITION, INTERSECTION } from 'three-bvh-csg';
 
 // ── Internationalisierung (i18n) ────────────────────────────────────────────
 const i18n = {
@@ -240,7 +240,7 @@ function t(key) { return i18n.strings[i18n.lang]?.[key] || key; }
 window.t = t;
 window.i18n = i18n;
 
-const BUILD_VERSION = 'Build 2026-07-12 · v6 (Mulden-Stirn-Rundung)';
+const BUILD_VERSION = 'Build 2026-07-12 · v7 (Stirn-Rundung + scharfer Steg)';
 function updateUI() {
   document.getElementById('html').lang = i18n.lang;
   document.getElementById('title').textContent = t('title') + '  [' + BUILD_VERSION + ']';
@@ -511,7 +511,19 @@ function buildMeshes(p) {
   }
 
   const mulden = muldenGeometrie(p, rKopf);
-  if (mulden) gear = csgOp(gear, mulden, SUBTRACTION);
+  if (mulden) {
+    const w2 = p.steg_w / 2;
+    // Vor dem Schnitt eine Kopie des Steg-Bands sichern: die Stirn-Fase der
+    // Mulden würde sonst auch die Steg-Kante mitrunden. Danach dieses
+    // ursprüngliche Material im Band |z|<=steg_w/2 wieder addieren → Steg scharf.
+    let stegRestore = null;
+    if (w2 > 0.05) {
+      const slab = new THREE.BoxGeometry(4 * rKopf + 20, 4 * rKopf + 20, 2 * w2);
+      stegRestore = csgOp(gear.clone(), slab, INTERSECTION);
+    }
+    gear = csgOp(gear, mulden, SUBTRACTION);
+    if (stegRestore) gear = csgOp(gear, stegRestore, ADDITION);
+  }
 
   if (p.fuehrung_w > 0) {
     const rG = p.fuehrung_d > 0 ? p.fuehrung_d / 2 : rKopf - 1.1;
