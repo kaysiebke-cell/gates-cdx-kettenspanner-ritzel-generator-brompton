@@ -22,3 +22,6 @@ resize();
 rebuild();
 window.__dbg = { renderer, scene, THREE };
 startRenderLoop();
+
+// Lade-Indikator entfernen, sobald das erste Modell steht
+document.getElementById('loader')?.remove();

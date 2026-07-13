@@ -30,14 +30,18 @@
     <div class="hint" id="hint3"></div>
   </div>
   <div id="viewport">
+    <div id="loader">3D&nbsp;·&nbsp;Loading …</div>
     <div id="overlaynote"></div>
   </div>
 </main>
 
-<!-- Gebündeltes Script (Three.js + Addons + CSG-Lib bereits enthalten).
+<!-- Gebündeltes, minifiziertes Script (Three.js + Addons + CSG-Lib enthalten).
      Funktioniert per Doppelklick, kein lokaler Server nötig.
      Quelldateien zum Bearbeiten: js/i18n.js, js/fields.js, js/scene.js,
-     js/geometry.js, js/ui.js, js/main.js (Neu bauen mit esbuild nötig). -->
+     js/geometry.js, js/ui.js, js/main.js.
+     Nach Änderungen neu bauen im Projekt-Wurzelverzeichnis:
+       npm install   (einmalig)
+       npm run build -->
 <script src="js/bundle.js"></script>
 </body>
 </html>

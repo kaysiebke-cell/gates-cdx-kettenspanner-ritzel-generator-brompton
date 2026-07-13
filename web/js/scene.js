@@ -1,9 +1,15 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+// Auf Handys/Tablets die Renderlast senken: kein Antialias (die
+// Pixelratio-Deckelung glättet genug), kleinere Schattenkarte und
+// gedeckelte Pixelratio – sonst rendert ein 3×-Retina-Display in
+// dreifacher Auflösung und die Vorschau ruckelt.
+const istMobil = matchMedia('(max-width: 700px), (pointer: coarse)').matches;
+
 // ── Szene ───────────────────────────────────────────────────────────
 export const viewport = document.getElementById('viewport');
-export const renderer = new THREE.WebGLRenderer({ antialias: true });
+export const renderer = new THREE.WebGLRenderer({ antialias: !istMobil });
 viewport.appendChild(renderer.domElement);
 export const scene = new THREE.Scene();
 const dark = matchMedia('(prefers-color-scheme: dark)').matches;
@@ -25,7 +31,7 @@ scene.add(new THREE.HemisphereLight(0xf2f5ff, 0x2a2018, 0.85));
 const l1 = new THREE.DirectionalLight(0xfff4e0, 2.4);   // warmes Hauptlicht
 l1.position.set(60, -40, 90);
 l1.castShadow = true;
-l1.shadow.mapSize.set(2048, 2048);
+l1.shadow.mapSize.set(istMobil ? 1024 : 2048, istMobil ? 1024 : 2048);
 l1.shadow.camera.left = -70; l1.shadow.camera.right = 70;
 l1.shadow.camera.top = 70;   l1.shadow.camera.bottom = -70;
 l1.shadow.camera.near = 10;  l1.shadow.camera.far = 300;
@@ -49,7 +55,10 @@ scene.add(boden);
 
 export function resize() {
   const w = viewport.clientWidth, h = viewport.clientHeight;
-  renderer.setSize(w, h); renderer.setPixelRatio(devicePixelRatio);
+  // Pixelratio deckeln: >2 bringt kaum sichtbare Schärfe, kostet aber
+  // quadratisch Leistung. Auf Handys zusätzlich auf 1.5 begrenzen.
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, istMobil ? 1.5 : 2));
   camera.aspect = w / h; camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);
