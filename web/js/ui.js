@@ -1,14 +1,11 @@
 import { STLExporter } from 'three/addons/exporters/STLExporter.js';
-import { i18n, t, updateUI } from './i18n.js';
-import { params, DEFAULTS, buildFormFields } from './fields.js';
+import { t } from './i18n.js';
+import { params, DEFAULTS } from './fields.js';
 import { buildMeshes } from './geometry.js';
 import { scene, camera, controls, boden, mat } from './scene.js';
 
 let group = null;
 let lastR = 0;
-let timer = null;
-
-export function scheduleRebuild() { clearTimeout(timer); timer = setTimeout(rebuild, 120); }
 
 // Vorgebaute, voll verrundete Serie (GitHub-Release "stl-serie"):
 // Standardwerte, nur die Zähnezahl variiert
@@ -71,13 +68,4 @@ export function exportStl() {
   a.download = `ritzel_z${params().zaehne}_preview.stl`;
   a.click();
   URL.revokeObjectURL(a.href);
-}
-
-// Sprachschalter
-export function toggleLanguage() {
-  i18n.lang = i18n.lang === 'de' ? 'en' : 'de';
-  updateUI();
-  buildFormFields(scheduleRebuild);
-  document.getElementById('stlbtn').textContent = `💾 ${t('custom_stl')}`;
-  rebuild();
 }

@@ -53,9 +53,12 @@ export function buildFormFields(onChange) {
 }
 
 export function params() {
+  // Direkt aus dem DOM lesen (nach ID), nicht aus der `inputs`-Map:
+  // so liest der Viewer die vom Shell-Bundle gebauten Felder.
   const p = {};
-  for (const k in inputs) {
-    const v = parseFloat(inputs[k].value);
+  for (const k in DEFAULTS) {
+    const el = document.getElementById(k);
+    const v = el ? parseFloat(el.value) : NaN;
     p[k] = Number.isFinite(v) ? v : DEFAULTS[k];
   }
   p.zaehne = Math.max(6, Math.round(p.zaehne));

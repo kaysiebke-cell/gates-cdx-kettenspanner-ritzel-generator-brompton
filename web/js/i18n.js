@@ -1,6 +1,9 @@
 // ── Internationalisierung (i18n) ────────────────────────────────────────────
 export const i18n = {
-  lang: 'de',
+  // Sprache in einem Global halten, damit shell.bundle.js und
+  // viewer.bundle.js (zwei getrennte Skripte) dieselbe Sprache teilen.
+  get lang() { return (typeof window !== 'undefined' && window.__ritzelLang) || 'de'; },
+  set lang(v) { if (typeof window !== 'undefined') window.__ritzelLang = v; },
   strings: {
     de: {
       title: 'Gates CDX Riemenspanner-Ritzel Generator (Brompton)',
