@@ -1,0 +1,103 @@
+:root {
+  --bg: #f5f6f8; --panel: #ffffff; --text: #1c1e21; --muted: #6a7178;
+  --border: #d8dce1; --accent: #2ea44f; --accent-text: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181c; --panel: #1f2228; --text: #e8eaed; --muted: #9aa2ab;
+    --border: #33383f; --accent: #2ea44f; --accent-text: #ffffff;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: system-ui, sans-serif; background: var(--bg);
+  color: var(--text); display: flex; flex-direction: column; height: 100vh;
+}
+header {
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+header h1 { font-size: 18px; margin: 0; }
+header .sub { color: var(--muted); font-size: 13px; }
+main { flex: 1; display: flex; min-height: 0; }
+#form {
+  width: 340px; overflow-y: auto; padding: 12px 16px;
+  border-right: 1px solid var(--border); background: var(--panel);
+}
+#viewport { flex: 1; position: relative; min-width: 0; }
+#viewport canvas { display: block; }
+fieldset {
+  border: 1px solid var(--border); border-radius: 6px;
+  margin: 0 0 14px 0; padding: 8px 10px 10px;
+}
+legend { font-weight: 600; font-size: 13px; padding: 0 4px; }
+.row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin: 4px 0;
+}
+.row label { font-size: 13px; flex: 1; }
+.row input {
+  width: 90px; padding: 4px 6px; border: 1px solid var(--border);
+  border-radius: 4px; background: var(--bg); color: var(--text);
+  font-size: 13px; text-align: right;
+}
+.hint { color: var(--muted); font-size: 12px; margin: 4px 0 10px; }
+.stats {
+  font-size: 12.5px; color: var(--muted); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 10px; margin-bottom: 14px;
+}
+.stats b { color: var(--text); }
+button, a.btn {
+  display: block; width: 100%; padding: 10px; margin: 8px 0;
+  border-radius: 6px; border: 1px solid var(--border);
+  background: var(--panel); color: var(--text); font-size: 14px;
+  cursor: pointer; text-align: center; text-decoration: none;
+}
+a.btn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+button:hover, a.btn:hover { filter: brightness(0.96); }
+#copied { color: var(--accent); font-size: 12.5px; text-align: center; min-height: 16px; }
+#overlaynote {
+  position: absolute; left: 12px; bottom: 10px; font-size: 12px;
+  color: var(--muted); pointer-events: none;
+}
+#lang-toggle {
+  padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--bg); color: var(--text); font-size: 12px;
+  cursor: pointer; white-space: nowrap; margin-left: auto;
+}
+#lang-toggle:hover { background: var(--border); }
+/* Mobil (schmale Bildschirme): Vorschau oben, Formular darunter scrollbar */
+@media (max-width: 700px) {
+  body { height: 100dvh; }
+  main { flex-direction: column; }
+  /* Vorschau oben festhalten, Formular scrollt darunter */
+  #viewport { flex: 0 0 42%; min-height: 200px; order: -1; }
+  #form {
+    width: 100%; flex: 1; border-right: none;
+    border-top: 1px solid var(--border);
+  }
+  header { padding: 8px 12px; }
+  header h1 { font-size: 16px; }
+  header .sub { font-size: 12px; }
+  .row { margin: 6px 0; }
+  .row label { font-size: 15px; }
+  /* 16px verhindert den Auto-Zoom beim Antippen auf iOS */
+  .row input { width: 110px; padding: 8px 10px; font-size: 16px; }
+  legend { font-size: 15px; }
+  button, a.btn { padding: 12px; font-size: 16px; }
+  #overlaynote { display: none; }
+}
+/* Handy im Querformat (niedriger Bildschirm): Kopfzeile auf eine
+   schmale Zeile schrumpfen, damit die Höhe der Vorschau gehört */
+@media (max-height: 480px) {
+  header { padding: 4px 12px; }
+  header h1 { font-size: 14px; }
+  header .sub { display: none; }
+  #overlaynote { display: none; }
+}
+/* … und in der zweispaltigen Ansicht das Formular etwas schmaler,
+   damit die Vorschau mehr Breite bekommt */
+@media (max-height: 480px) and (min-width: 701px) {
+  #form { width: 300px; }
+}
