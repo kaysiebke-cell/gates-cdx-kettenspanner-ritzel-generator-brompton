@@ -58,7 +58,27 @@ Proven settings for the **belt tensioner sprocket** (Reference print: 14 teeth, 
 | **Layer Height** | **0.12–0.16 mm** – The tooth flanks guide the belt. Fine layers provide a noticeably smoother and lower-vibration run (0.20 mm is acceptable if necessary). |
 | **Orientation** | Place it flat on the large face. This prints the teeth sideways and eliminates the need for support material on the flanks. |
 | **Support** | Only required for the mud ports and the hub. The 1 mm deep bearing seat prints perfectly without any supports. |
+| **Bed Temperature** | **80–120 °C** – PA12-CF requires a heated build plate. Higher temperatures reduce warping and layer adhesion issues. |
+| **Chamber Temperature** | **60–80 °C** (with enclosure) – Stabilizes print quality significantly. PA12-CF is demanding; enclosure control pays off. |
 | **Drying** | Important: Dry PA12 for approx. 8 hours at 70 °C before printing if the spool has been left open. |
+
+### Printers Suitable for PA12-CF
+
+✅ **Recommended for this project:**
+- **Prusa XL** + Enclosure
+- **Bambu Lab X1 Carbon** (built-in chamber heating)
+- **Prusa MK3S+** / **MK3.9S** + Enclosure
+- **Zortrax M300+** / **M300 Dual**
+- **Ultimaker S5 Pro**
+- **Formlabs Form 3+**
+
+**Requirements:** Heated build plate (80–120 °C), temperature-controlled chamber (ideal: 60–80 °C), reliable cooling, and good bed adhesion (Bondtech, PEI, Garolite).
+
+### Research & Sources
+
+⚠️ **These recommendations have been compiled from research** – manufacturer data, printer documentation, and community experience (Prusa Forum, Reddit r/3Dprinting). **No guarantee.** Please test with current sources before use, as recommendations may change.
+
+For detailed information, see also [`DRUCK-EMPFEHLUNGEN.md`](DRUCK-EMPFEHLUNGEN.md) (German, comprehensive).
 
 ## Matching Ball Bearings
 
