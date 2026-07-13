@@ -9,8 +9,10 @@
 | **Schichthöhe** | 0,12–0,16 mm | Feine Lagen für ruhigen Lauf. Zahnflanken führen den Riemen – feine Lagen = vibrations­armer Betrieb |
 | **Orientierung** | Flach auf große Fläche | Zähne werden seitlich gedruckt – kein Stützmaterial an den Flanken nötig |
 | **Unterstützung** | Nur Nabe & Öffnungen | 1 mm tiefer Lagersitz druckt perfekt ohne Stützstrukturen |
+| **Drüsen-Temperatur (Nozzle)** | 250–280°C (Start: 260°C) | PA12-CF braucht hohe Temperaturen. Starten bei 260°C, ±5°C nach Bedarf anpassen. CF-Variante braucht stabile Hitze |
+| **Bett-Temperatur (Bed)** | 80–120°C | PA12-CF braucht beheiztes Druckbett. Höhere Temps reduzieren Verzug und Schichtablösungen |
+| **Gehäuse-Temperatur (Chamber)** | 60–80°C | Mit Enclosure: Stabilisiert Druckqualität deutlich. PA12-CF ist anspruchsvoll; Gehäusekontrolle zahlt sich aus |
 | **Trocknung** | 8 Stunden bei 70°C | Wichtig: PA12 vor dem Druck trocknen (falls Spule offen war) |
-| **Bauraum-Temperatur** | 80–120°C (Bett) + 60–80°C (Gehäuse) | PA12-CF braucht beheiztes Druckbett. Höhere Temps reduzieren Verzug und Schichtablösungen. Enclosure stabilisiert Qualität deutlich |
 
 ## Kompatible Drucker für PA12-CF
 

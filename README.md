@@ -58,6 +58,7 @@ Proven settings for the **belt tensioner sprocket** (Reference print: 14 teeth, 
 | **Layer Height** | **0.12–0.16 mm** – The tooth flanks guide the belt. Fine layers provide a noticeably smoother and lower-vibration run (0.20 mm is acceptable if necessary). |
 | **Orientation** | Place it flat on the large face. This prints the teeth sideways and eliminates the need for support material on the flanks. |
 | **Support** | Only required for the mud ports and the hub. The 1 mm deep bearing seat prints perfectly without any supports. |
+| **Nozzle Temperature** | **250–280 °C** – PA12-CF requires high temperatures. Start at 260 °C, adjust ±5 °C if needed. Carbon fiber variant needs stable heat. |
 | **Bed Temperature** | **80–120 °C** – PA12-CF requires a heated build plate. Higher temperatures reduce warping and layer adhesion issues. |
 | **Chamber Temperature** | **60–80 °C** (with enclosure) – Stabilizes print quality significantly. PA12-CF is demanding; enclosure control pays off. |
 | **Drying** | Important: Dry PA12 for approx. 8 hours at 70 °C before printing if the spool has been left open. |
