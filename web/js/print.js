@@ -6,6 +6,7 @@ const H = {
   de: {
     heading: '🖨️ Druck-Empfehlungen: PA12-CF für Gates CDX Ritzel',
     fieldtest: '✅ Praxiserprobt: PA12-CF hat sich im realen Dauerbetrieb bewährt und erfüllt die Anforderungen – Laufleistung 2800–2850 km in ca. 5 Monaten und weiterhin im Einsatz.',
+    props_label: 'Eigenschaften PA12-CF',
     settings: 'Druckeinstellungen',
     printers: 'Kompatible Drucker für PA12-CF',
     reqs: 'Anforderungen',
@@ -15,12 +16,27 @@ const H = {
   en: {
     heading: '🖨️ Print recommendations: PA12-CF for Gates CDX sprocket',
     fieldtest: '✅ Field-tested: PA12-CF has proven itself in real continuous operation and meets the requirements – mileage of 2,800–2,850 km over about 5 months and still in use.',
+    props_label: 'PA12-CF properties',
     settings: 'Print settings',
     printers: 'Compatible printers for PA12-CF',
     reqs: 'Requirements',
     notes: 'Important notes',
     disclaimer: '⚠️ This information was compiled from research (manufacturer specs, printer documentation, community experience, datasheets). No guarantee – please test yourself before use and cross-check with current sources. For hobby projects; no commercial use without permission.',
   },
+};
+
+// Materialeigenschaften von PA12-CF (relevant fürs Ritzel im Riemenantrieb)
+const PROPS = {
+  de: [
+    'sehr verschleißfest', 'steif & formstabil', 'geringe Feuchtigkeitsaufnahme',
+    'gute Gleiteigenschaften (leiser Lauf)', 'hohe Dauer-/Ermüdungsfestigkeit',
+    'chemikalienbeständig', 'leicht',
+  ],
+  en: [
+    'highly wear-resistant', 'stiff & dimensionally stable', 'low moisture absorption',
+    'good sliding properties (quiet running)', 'high fatigue endurance',
+    'chemically resistant', 'lightweight',
+  ],
 };
 
 const SPECS = [
@@ -116,7 +132,11 @@ export function renderPrint(lang) {
   return (
     `<article class="printdoc">` +
     `<h2>${esc(h.heading)}</h2>` +
-    `<p class="fieldtest">${esc(h.fieldtest)}</p>` +
+    `<div class="fieldtest">` +
+      `<p>${esc(h.fieldtest)}</p>` +
+      `<p class="props"><b>${esc(h.props_label)}:</b> ` +
+      PROPS[L].map(esc).join(' · ') + `</p>` +
+    `</div>` +
     `<h3>${esc(h.settings)}</h3>` +
     `<dl class="specs">${specs}</dl>` +
     `<h3>${esc(h.printers)}</h3><ul class="ticks">${printers}</ul>` +
