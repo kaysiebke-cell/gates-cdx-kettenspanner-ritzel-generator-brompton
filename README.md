@@ -71,7 +71,6 @@ Proven settings for the **belt tensioner sprocket** (Reference print: 14 teeth, 
 - **Prusa MK3S+** / **MK3.9S** + Enclosure
 - **Zortrax M300+** / **M300 Dual**
 - **Ultimaker S5 Pro**
-- **Formlabs Form 3+**
 
 **Requirements:** Heated build plate (80–120 °C), temperature-controlled chamber (ideal: 60–80 °C), reliable cooling, and good bed adhesion (Bondtech, PEI, Garolite).
 
@@ -79,7 +78,7 @@ Proven settings for the **belt tensioner sprocket** (Reference print: 14 teeth, 
 
 ⚠️ **These recommendations have been compiled from research** – manufacturer data, printer documentation, and community experience (Prusa Forum, Reddit r/3Dprinting). **No guarantee.** Please test with current sources before use, as recommendations may change.
 
-For detailed information, see also [`DRUCK-EMPFEHLUNGEN.md`](DRUCK-EMPFEHLUNGEN.md) (German, comprehensive).
+For the detailed, up-to-date print recommendations (German & English), see the **Druck-Empfehlungen** tab in the [online tool](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/) – it is the single source of truth and also documents the real-world field test (PA12-CF, 2800–2850 km in ~5 months).
 
 ## Matching Ball Bearings
 
