@@ -8,6 +8,8 @@ export const i18n = {
     de: {
       title: 'Gates CDX Riemenspanner-Ritzel Generator (Brompton)',
       subtitle: 'Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen',
+      tab_gen: 'Generator',
+      tab_print: 'Druck-Empfehlungen',
       leg1: 'Zahnrad-Körper (Grundkörper)',
       leg2: 'Zylinder (Kugellager)',
       leg3: 'Seitliche Schmutzabweiser',
@@ -48,6 +50,8 @@ export const i18n = {
     en: {
       title: 'Gates CDX Belt-Drive Sprocket Generator (Brompton)',
       subtitle: 'Change values → preview updates instantly · Rotate/zoom view with mouse or finger',
+      tab_gen: 'Generator',
+      tab_print: 'Print guide',
       leg1: 'Gear Body (Base)',
       leg2: 'Cylinder (Bearing)',
       leg3: 'Side Dirt Shields',

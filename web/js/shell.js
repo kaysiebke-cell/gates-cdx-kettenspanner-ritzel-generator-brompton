@@ -5,6 +5,7 @@
 // nach dem Parsen von ~765 KB Three.js.
 import { initI18n, updateUI, t, i18n } from './i18n.js';
 import { buildFormFields } from './fields.js';
+import { renderPrint } from './print.js';
 
 // Formularänderung → (entprellt) den Viewer neu bauen lassen, sobald da.
 let timer = null;
@@ -13,10 +14,29 @@ function scheduleRebuild() {
   timer = setTimeout(() => window.__ritzelRebuild && window.__ritzelRebuild(), 120);
 }
 
-// Statische Texte, die kein 3D brauchen (Button-Beschriftung).
+// Statische Texte, die kein 3D brauchen (Button-Beschriftung, Tabs).
 function setStaticTexts() {
   document.getElementById('stlbtn').textContent = `💾 ${t('custom_stl')}`;
+  document.getElementById('tab-gen').textContent = t('tab_gen');
+  document.getElementById('tab-print').textContent = t('tab_print');
+  // Druck-Empfehlungen in der aktuellen Sprache einspeisen
+  document.getElementById('printview').innerHTML = renderPrint(i18n.lang);
 }
+
+// Tab-Umschaltung: Generator-Ansicht (<main>) vs. Druck-Empfehlungen.
+function activateTab(name) {
+  const gen = name === 'gen';
+  document.getElementById('genview').hidden = !gen;
+  document.getElementById('printview').hidden = gen;
+  const tg = document.getElementById('tab-gen'), tp = document.getElementById('tab-print');
+  tg.setAttribute('aria-selected', String(gen));
+  tp.setAttribute('aria-selected', String(!gen));
+  // Wird die 3D-Ansicht wieder sichtbar, muss der Renderer neu vermessen
+  // (der Viewport war ausgeblendet → Größe 0).
+  if (gen) dispatchEvent(new Event('resize'));
+}
+document.getElementById('tab-gen').addEventListener('click', () => activateTab('gen'));
+document.getElementById('tab-print').addEventListener('click', () => activateTab('print'));
 
 initI18n();
 buildFormFields(scheduleRebuild);

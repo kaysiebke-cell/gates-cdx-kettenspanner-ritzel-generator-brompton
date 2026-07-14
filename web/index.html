@@ -12,7 +12,11 @@
   <span class="sub" id="subtitle">Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen</span>
   <button id="lang-toggle">DE / EN</button>
 </header>
-<main>
+<nav id="tabs">
+  <button class="tab" id="tab-gen" aria-selected="true">Generator</button>
+  <button class="tab" id="tab-print" aria-selected="false">Druck-Empfehlungen</button>
+</nav>
+<main id="genview">
   <div id="form">
     <div class="stats" id="stats"></div>
 
@@ -34,6 +38,7 @@
     <div id="overlaynote"></div>
   </div>
 </main>
+<section id="printview" hidden></section>
 
 <!-- Zweigeteilt für schnellen Start:
      shell.bundle.js (winzig) baut sofort das Formular und lädt danach
