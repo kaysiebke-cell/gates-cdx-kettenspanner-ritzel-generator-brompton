@@ -92,7 +92,7 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
 @media (max-width: 700px) {
   main { flex-direction: column; }
   /* Vorschau oben festhalten, Formular scrollt darunter */
-  #viewport { flex: 0 0 42%; min-height: 200px; order: -1; }
+  #viewport { flex: 0 0 50%; min-height: 200px; order: -1; }
   #form {
     width: 100%; flex: 1; border-right: none;
     border-top: 1px solid var(--border);
