@@ -5,6 +5,7 @@
 const H = {
   de: {
     heading: '🖨️ Druck-Empfehlungen: PA12-CF für Gates CDX Ritzel',
+    fieldtest: '✅ Praxiserprobt: PA12-CF hat sich im realen Dauerbetrieb bewährt und erfüllt die Anforderungen – Laufleistung 2800–2850 km in ca. 5 Monaten und weiterhin im Einsatz.',
     settings: 'Druckeinstellungen',
     printers: 'Kompatible Drucker für PA12-CF',
     reqs: 'Anforderungen',
@@ -13,6 +14,7 @@ const H = {
   },
   en: {
     heading: '🖨️ Print recommendations: PA12-CF for Gates CDX sprocket',
+    fieldtest: '✅ Field-tested: PA12-CF has proven itself in real continuous operation and meets the requirements – mileage of 2,800–2,850 km over about 5 months and still in use.',
     settings: 'Print settings',
     printers: 'Compatible printers for PA12-CF',
     reqs: 'Requirements',
@@ -114,6 +116,7 @@ export function renderPrint(lang) {
   return (
     `<article class="printdoc">` +
     `<h2>${esc(h.heading)}</h2>` +
+    `<p class="fieldtest">${esc(h.fieldtest)}</p>` +
     `<h3>${esc(h.settings)}</h3>` +
     `<dl class="specs">${specs}</dl>` +
     `<h3>${esc(h.printers)}</h3><ul class="ticks">${printers}</ul>` +

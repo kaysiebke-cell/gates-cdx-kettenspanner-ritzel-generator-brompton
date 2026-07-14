@@ -116,6 +116,12 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
 }
 .printdoc { max-width: 820px; margin: 0 auto; line-height: 1.5; }
 .printdoc h2 { font-size: 18px; margin: 0 0 4px; }
+.fieldtest {
+  margin: 12px 0 4px; padding: 10px 12px;
+  border: 1px solid var(--accent); border-left-width: 4px; border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--text); font-size: 13.5px;
+}
 .printdoc h3 { font-size: 15px; margin: 22px 0 8px; }
 .printdoc h4 {
   font-size: 12px; margin: 16px 0 6px; color: var(--muted);
