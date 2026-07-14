@@ -11,7 +11,7 @@ const H = {
     printers: 'Kompatible Drucker für PA12-CF',
     reqs: 'Anforderungen',
     notes: 'Wichtige Hinweise',
-    disclaimer: '⚠️ Diese Angaben sind aus Recherche zusammengetragen (Herstellerangaben, Drucker-Dokumentationen, Community-Erfahrungen, Datenblätter). Keine Garantie – bitte vor der Verwendung selbst testen und mit aktuellen Quellen abgleichen. Für Hobby-Projekte; keine kommerzielle Nutzung ohne Genehmigung.',
+    disclaimer: '⚠️ Diese Angaben beruhen auf Recherche (Herstellerangaben, Drucker-Dokumentationen, Community-Erfahrungen, Datenblätter) und eigener Praxiserfahrung (siehe Kasten oben). Keine Garantie – bitte vor der Verwendung selbst testen und mit aktuellen Quellen abgleichen. Für Hobby-Projekte; keine kommerzielle Nutzung ohne Genehmigung.',
   },
   en: {
     heading: '🖨️ Print recommendations: PA12-CF for Gates CDX sprocket',
@@ -21,7 +21,7 @@ const H = {
     printers: 'Compatible printers for PA12-CF',
     reqs: 'Requirements',
     notes: 'Important notes',
-    disclaimer: '⚠️ This information was compiled from research (manufacturer specs, printer documentation, community experience, datasheets). No guarantee – please test yourself before use and cross-check with current sources. For hobby projects; no commercial use without permission.',
+    disclaimer: '⚠️ This information is based on research (manufacturer specs, printer documentation, community experience, datasheets) and hands-on field experience (see box above). No guarantee – please test yourself before use and cross-check with current sources. For hobby projects; no commercial use without permission.',
   },
 };
 
@@ -118,7 +118,7 @@ const NOTES = {
     'PA12-CF ist anspruchsvoll – nichts für Anfänger.',
     'Lagerung wichtig – trockene Umgebung, Silica-Gel.',
     'Tempern (optional) – kontrolliertes Tempern nach dem Druck (nach Herstellerangabe, oft 1–2 h knapp unter der Erweichungstemperatur, danach langsam abkühlen) erhöht Festigkeit und Formstabilität unter mechanischer Dauerlast. Vorher an einem Probeteil testen – leichter Verzug möglich.',
-    'Passung Lagersitz – PA12-CF schwindet beim Abkühlen. Für einen sauberen Sitz des Lagers (z. B. F605-2RS) ggf. ein leichtes Übermaß einplanen und an einem Probedruck prüfen.',
+    'Passung Lagersitz – PA12-CF schwindet beim Abkühlen. Praxiswert: den Lagersitz-Durchmesser um +0,2 mm größer auslegen (14-mm-Lager → 14,2 mm), damit das Lager (z. B. F605-2RS) fest sitzt. Am eigenen Drucker mit einem Probedruck prüfen (Schwund variiert).',
     'Bruchfestigkeit – PA12-CF ist sehr steif, aber spröder als PA12. Nicht überbelasten.',
     'Druckqualität prüfen – erste Proben vor der Serienfertigung machen.',
     'Gesundheit – beim Nachbearbeiten (Schleifen/Bohren) entsteht reizender CF-Feinstaub. Absaugung und Staubmaske (FFP2/FFP3) verwenden.',
@@ -127,7 +127,7 @@ const NOTES = {
     'PA12-CF is demanding – not for beginners.',
     'Storage matters – dry environment, silica gel.',
     'Annealing (optional) – controlled annealing after printing (per manufacturer spec, often 1–2 h just below the softening temperature, then cool slowly) increases strength and dimensional stability under continuous mechanical load. Test on a sample first – slight warping is possible.',
-    'Bearing-seat fit – PA12-CF shrinks as it cools. For a clean bearing fit (e.g. F605-2RS) allow a slight interference and verify with a test print.',
+    'Bearing-seat fit – PA12-CF shrinks as it cools. Proven value: make the bearing-seat diameter +0.2 mm larger (14 mm bearing → 14.2 mm) for a firm press fit (e.g. F605-2RS). Verify on your own printer with a test print (shrinkage varies).',
     'Fracture strength – PA12-CF is very stiff but more brittle than PA12. Do not overload.',
     'Check print quality – make first samples before mass production.',
     'Health – post-processing (sanding/drilling) creates irritating CF fine dust. Use extraction and a dust mask (FFP2/FFP3).',
