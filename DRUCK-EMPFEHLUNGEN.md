@@ -22,7 +22,6 @@
 - Prusa MK3S+ / MK3.9S + Enclosure
 - Zortrax M300+ / M300 Dual
 - Ultimaker S5 Pro
-- Formlabs Form 3+
 
 ⚠️ **Anforderungen:**
 - Beheiztes Druckbett (80–120°C)
