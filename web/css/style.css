@@ -135,6 +135,12 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
 .printdoc li { margin: 3px 0; }
 .printdoc .ticks { list-style: none; padding-left: 0; }
 .printdoc .ticks li::before { content: "✅ "; }
+/* Hinweise: mehr Luft + fettes Leitwort, damit die Liste zum
+   Parameter-Raster passt statt wie ein Fließtext-Block zu wirken. */
+.printdoc ol.notes { margin: 4px 0; }
+.printdoc ol.notes li { margin: 10px 0; line-height: 1.5; padding-left: 4px; }
+.printdoc ol.notes li::marker { color: var(--muted); font-weight: 600; }
+.printdoc ol.notes b { color: var(--text); }
 .specs { margin: 0; }
 .spec {
   display: grid; grid-template-columns: 190px 1fr; gap: 4px 16px;

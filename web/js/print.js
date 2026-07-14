@@ -113,26 +113,29 @@ const REQS = {
   ],
 };
 
-const NOTES = {
-  de: [
-    'PA12-CF ist anspruchsvoll – nichts für Anfänger.',
-    'Lagerung wichtig – trockene Umgebung, Silica-Gel.',
-    'Tempern (optional) – kontrolliertes Tempern nach dem Druck (nach Herstellerangabe, oft 1–2 h knapp unter der Erweichungstemperatur, danach langsam abkühlen) erhöht Festigkeit und Formstabilität unter mechanischer Dauerlast. Vorher an einem Probeteil testen – leichter Verzug möglich.',
-    'Passung Lagersitz – PA12-CF schwindet beim Abkühlen. Praxiswert: den Lagersitz-Durchmesser um +0,2 mm größer auslegen (14-mm-Lager → 14,2 mm), damit das Lager (z. B. F605-2RS) fest sitzt. Am eigenen Drucker mit einem Probedruck prüfen (Schwund variiert).',
-    'Bruchfestigkeit – PA12-CF ist sehr steif, aber spröder als PA12. Nicht überbelasten.',
-    'Druckqualität prüfen – erste Proben vor der Serienfertigung machen.',
-    'Gesundheit – beim Nachbearbeiten (Schleifen/Bohren) entsteht reizender CF-Feinstaub. Absaugung und Staubmaske (FFP2/FFP3) verwenden.',
-  ],
-  en: [
-    'PA12-CF is demanding – not for beginners.',
-    'Storage matters – dry environment, silica gel.',
-    'Annealing (optional) – controlled annealing after printing (per manufacturer spec, often 1–2 h just below the softening temperature, then cool slowly) increases strength and dimensional stability under continuous mechanical load. Test on a sample first – slight warping is possible.',
-    'Bearing-seat fit – PA12-CF shrinks as it cools. Proven value: make the bearing-seat diameter +0.2 mm larger (14 mm bearing → 14.2 mm) for a firm press fit (e.g. F605-2RS). Verify on your own printer with a test print (shrinkage varies).',
-    'Fracture strength – PA12-CF is very stiff but more brittle than PA12. Do not overload.',
-    'Check print quality – make first samples before mass production.',
-    'Health – post-processing (sanding/drilling) creates irritating CF fine dust. Use extraction and a dust mask (FFP2/FFP3).',
-  ],
-};
+// Leitwort (t) + Detail (d) – parallel zu SPECS, damit die Darstellung
+// zum Parameter-Raster passt (fettes Leitwort statt Fließtext-Block).
+const NOTES = [
+  { t:{de:'PA12-CF ist anspruchsvoll', en:'PA12-CF is demanding'},
+    d:{de:'nichts für Anfänger.', en:'not for beginners.'} },
+  { t:{de:'Lagerung', en:'Storage'},
+    d:{de:'trockene Umgebung, Silica-Gel.', en:'dry environment, silica gel.'} },
+  { t:{de:'Tempern (optional)', en:'Annealing (optional)'},
+    d:{de:'kontrolliertes Tempern nach dem Druck (nach Herstellerangabe, oft 1–2 h knapp unter der Erweichungstemperatur, danach langsam abkühlen) erhöht Festigkeit und Formstabilität unter mechanischer Dauerlast. Vorher an einem Probeteil testen – leichter Verzug möglich.',
+       en:'controlled annealing after printing (per manufacturer spec, often 1–2 h just below the softening temperature, then cool slowly) increases strength and dimensional stability under continuous mechanical load. Test on a sample first – slight warping is possible.'} },
+  { t:{de:'Passung Lagersitz', en:'Bearing-seat fit'},
+    d:{de:'PA12-CF schwindet beim Abkühlen. Praxiswert: den Lagersitz-Durchmesser um +0,2 mm größer auslegen (14-mm-Lager → 14,2 mm), damit das Lager (z. B. F605-2RS) fest sitzt. Am eigenen Drucker mit einem Probedruck prüfen (Schwund variiert).',
+       en:'PA12-CF shrinks as it cools. Proven value: make the bearing-seat diameter +0.2 mm larger (14 mm bearing → 14.2 mm) for a firm press fit (e.g. F605-2RS). Verify on your own printer with a test print (shrinkage varies).'} },
+  { t:{de:'Bruchfestigkeit', en:'Fracture strength'},
+    d:{de:'PA12-CF ist sehr steif, aber spröder als PA12. Nicht überbelasten.',
+       en:'PA12-CF is very stiff but more brittle than PA12. Do not overload.'} },
+  { t:{de:'Druckqualität prüfen', en:'Check print quality'},
+    d:{de:'erste Proben vor der Serienfertigung machen.',
+       en:'make first samples before mass production.'} },
+  { t:{de:'Gesundheit', en:'Health'},
+    d:{de:'beim Nachbearbeiten (Schleifen/Bohren) entsteht reizender CF-Feinstaub. Absaugung und Staubmaske (FFP2/FFP3) verwenden.',
+       en:'post-processing (sanding/drilling) creates irritating CF fine dust. Use extraction and a dust mask (FFP2/FFP3).'} },
+];
 
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -144,7 +147,7 @@ export function renderPrint(lang) {
     `<dd><b>${esc(s.v[L])}</b><span>${esc(s.d[L])}</span></dd></div>`).join('');
   const printers = PRINTERS.map(p => `<li>${esc(p)}</li>`).join('');
   const reqs = REQS[L].map(r => `<li>${esc(r)}</li>`).join('');
-  const notes = NOTES[L].map(n => `<li>${esc(n)}</li>`).join('');
+  const notes = NOTES.map(n => `<li><b>${esc(n.t[L])}</b> – ${esc(n.d[L])}</li>`).join('');
   return (
     `<article class="printdoc">` +
     `<h2>${esc(h.heading)}</h2>` +
@@ -157,7 +160,7 @@ export function renderPrint(lang) {
     `<dl class="specs">${specs}</dl>` +
     `<h3>${esc(h.printers)}</h3><ul class="ticks">${printers}</ul>` +
     `<h4>${esc(h.reqs)}</h4><ul>${reqs}</ul>` +
-    `<h3>${esc(h.notes)}</h3><ol>${notes}</ol>` +
+    `<h3>${esc(h.notes)}</h3><ol class="notes">${notes}</ol>` +
     `<p class="disclaimer">${esc(h.disclaimer)}</p>` +
     `</article>`
   );
