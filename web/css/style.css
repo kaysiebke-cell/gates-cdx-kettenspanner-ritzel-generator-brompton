@@ -11,7 +11,11 @@
 * { box-sizing: border-box; }
 body {
   margin: 0; font-family: system-ui, sans-serif; background: var(--bg);
-  color: var(--text); display: flex; flex-direction: column; height: 100vh;
+  color: var(--text); display: flex; flex-direction: column;
+  /* dvh (dynamische Viewport-Höhe) statt vh: sonst reicht das Layout auf
+     dem Handy hinter die Browser-Leiste, und die mittig gerenderte
+     Vorschau erscheint nach unten verschoben (v. a. im Querformat). */
+  height: 100dvh;
 }
 header {
   padding: 10px 16px; border-bottom: 1px solid var(--border);
@@ -75,6 +79,10 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
 }
 @keyframes loader-spin { to { transform: rotate(360deg); } }
 #lang-toggle {
+  /* width/flex zurücksetzen: sonst erbt der Umschalter die globale
+     Button-Regel (display:block; width:100%) und bricht neben dem Titel
+     auf eine eigene volle Zeile um – verschenkt Höhe, v. a. im Querformat. */
+  width: auto; flex: 0 0 auto;
   padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
   background: var(--bg); color: var(--text); font-size: 12px;
   cursor: pointer; white-space: nowrap; margin-left: auto;
@@ -82,7 +90,6 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
 #lang-toggle:hover { background: var(--border); }
 /* Mobil (schmale Bildschirme): Vorschau oben, Formular darunter scrollbar */
 @media (max-width: 700px) {
-  body { height: 100dvh; }
   main { flex-direction: column; }
   /* Vorschau oben festhalten, Formular scrollt darunter */
   #viewport { flex: 0 0 42%; min-height: 200px; order: -1; }
