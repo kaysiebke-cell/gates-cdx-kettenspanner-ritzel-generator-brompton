@@ -97,9 +97,13 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
     width: 100%; flex: 1; border-right: none;
     border-top: 1px solid var(--border);
   }
-  header { padding: 8px 12px; }
-  header h1 { font-size: 16px; }
-  header .sub { font-size: 12px; }
+  /* Kopfzeile kompakt: Titel nimmt die verfügbare Breite (umbricht darin),
+     der DE/EN-Button sitzt daneben statt in einer eigenen Zeile. */
+  header { padding: 8px 12px; flex-wrap: nowrap; align-items: center; }
+  header h1 { font-size: 16px; flex: 1; min-width: 0; }
+  /* Hinweiszeile auf dem Handy ausblenden: spart 2 Zeilen Kopfhöhe
+     zugunsten der Vorschau; Drehen/Zoomen per Finger ist intuitiv. */
+  header .sub { display: none; }
   .row { margin: 6px 0; }
   .row label { font-size: 15px; }
   /* 16px verhindert den Auto-Zoom beim Antippen auf iOS */
