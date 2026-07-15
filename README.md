@@ -49,11 +49,52 @@ In the web configurator, you can **rotate and adjust the tensioner sprocket live
 
 ## 3D Printing (PA12-CF)
 
-The sprocket is designed for **PA12-CF** (carbon-fiber reinforced nylon) and is **field-tested in continuous operation: ~2,800–2,850 km in about 5 months, and still running.** In short: 100 % infill, fine layers (0.12–0.16 mm), printed flat on the large face, on a heated bed with an enclosure, a hardened-steel nozzle (≥ 0.4 mm), and little to no part cooling.
+Configure the sprocket live in the [online tool](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/); its **Druck-Empfehlungen / Print guide** tab and the section below are generated from the same source (`web/js/print-data.js`), so they never drift apart.
 
-👉 **The complete, always up-to-date recommendations** – filament, temperatures, print speed, cooling, drying, annealing, compatible printers, bearing-seat fit and safety notes – live in the **Druck-Empfehlungen / Print guide** tab of the [online tool](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/). It is bilingual (DE/EN) and the single source of truth, so the guidance can't drift out of sync.
+<!-- PRINT:START (auto-generiert aus web/js/print-data.js – nicht von Hand ändern; `npm run build`) -->
+> ✅ Field-tested: PA12-CF has proven itself in real continuous operation and meets the requirements – mileage of 2,800–2,850 km over about 5 months and still in use.
+>
+> **PA12-CF properties:** highly wear-resistant · stiff & dimensionally stable · low moisture absorption · good sliding properties (quiet running) · high fatigue endurance · chemically resistant · lightweight
 
-> ⚠️ The recommendations combine research with the author's own field experience. No guarantee – always test on your own printer.
+### Print settings
+
+| Parameter | Recommendation | Details |
+|---|---|---|
+| **Filament** | PA12-CF | Carbon-fiber reinforced nylon – extremely wear-resistant, stiff, absorbs less moisture than PA6. |
+| **Nozzle** | ≥ 0.4 mm, hardened steel | CF fibers clog smaller nozzles and wear out brass – use a hardened steel (or ruby) nozzle. |
+| **Infill** | 100% | Maximum stability and durability of the flanges – full infill is required. |
+| **Layer height** | 0.12–0.16 mm | Fine layers for smooth running – the tooth flanks guide the belt, fine layers = low-vibration operation. |
+| **Print speed** | Slow (~20–40 mm/s) | CF filament is abrasive and viscous – slower printing improves layer adhesion and dimensional accuracy. |
+| **Cooling (part fan)** | 0–20% (as little as possible) | Too much cooling weakens layer adhesion – print PA12-CF with no or only minimal part cooling. |
+| **Orientation** | Flat on the large face | Teeth are printed sideways – no support material needed on the flanks. |
+| **Support** | Only hub & openings | The 1 mm deep bearing seat prints perfectly without supports. |
+| **Nozzle temperature** | 250–280 °C (start: 260 °C) | PA12-CF needs high temperatures. Start at 260 °C, adjust ±5 °C as needed. The CF variant needs stable heat. |
+| **Bed temperature** | 80–120 °C | PA12-CF needs a heated bed. Higher temperatures reduce warping and layer separation. |
+| **Chamber temperature** | 60–80 °C | With enclosure: noticeably stabilizes print quality. PA12-CF is demanding – chamber control pays off. |
+| **Drying** | 8 hours at 70 °C | Dry before printing (if the spool was left open). For long prints keep the spool in a drybox / with desiccant – nylon keeps absorbing moisture during printing. |
+
+### Compatible printers for PA12-CF
+
+- Prusa XL + Enclosure
+- Bambu Lab X1 Carbon
+- Prusa MK3S+ / MK3.9S + Enclosure
+- Zortrax M300+ / M300 Dual
+- Ultimaker S5 Pro
+
+**Requirements:** Heated bed (80–120 °C) · Temperature-controlled chamber (ideal 60–80 °C) · Reliable cooling · Good bed adhesion (Bondtech, PEI, Garolite)
+
+### Important notes
+
+1. **PA12-CF is demanding** – not for beginners.
+2. **Storage** – dry environment, silica gel.
+3. **Annealing (optional)** – controlled annealing after printing (per manufacturer spec, often 1–2 h just below the softening temperature, then cool slowly) increases strength and dimensional stability under continuous mechanical load. Test on a sample first – slight warping is possible.
+4. **Bearing-seat fit** – PA12-CF shrinks as it cools. Proven value: make the bearing-seat diameter +0.2 mm larger (14 mm bearing → 14.2 mm) for a firm press fit (e.g. F605-2RS). Verify on your own printer with a test print (shrinkage varies).
+5. **Fracture strength** – PA12-CF is very stiff but more brittle than PA12. Do not overload.
+6. **Check print quality** – make first samples before mass production.
+7. **Health** – post-processing (sanding/drilling) creates irritating CF fine dust. Use extraction and a dust mask (FFP2/FFP3).
+
+> ⚠️ This information is based on research (manufacturer specs, printer documentation, community experience, datasheets) and hands-on field experience (see box above). No guarantee – please test yourself before use and cross-check with current sources. For hobby projects; no commercial use without permission.
+<!-- PRINT:END -->
 
 ## Matching Ball Bearings
 
