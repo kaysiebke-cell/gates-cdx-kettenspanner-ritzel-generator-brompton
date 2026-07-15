@@ -2,7 +2,7 @@
 // Rendert den App-Tab aus der EINZIGEN Datenquelle (print-data.js).
 // Dieselben Daten erzeugen per tools/gen-readme.mjs die README-Abschnitte.
 // Nur ins Shell-Bundle importiert – kein 3D nötig.
-import { H, PROPS, SPECS, PRINTERS, REQS, NOTES } from './print-data.js';
+import { H, PROPS, SPECS, PRINTERS, REQS, NOTES, FINISH } from './print-data.js';
 
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -15,6 +15,7 @@ export function renderPrint(lang) {
   const printers = PRINTERS.map(p => `<li>${esc(p)}</li>`).join('');
   const reqs = REQS[L].map(r => `<li>${esc(r)}</li>`).join('');
   const notes = NOTES.map(n => `<li><b>${esc(n.t[L])}</b> – ${esc(n.d[L])}</li>`).join('');
+  const finish = FINISH.map(n => `<li><b>${esc(n.t[L])}</b> – ${esc(n.d[L])}</li>`).join('');
   return (
     `<article class="printdoc">` +
     `<h2>${esc(h.heading)}</h2>` +
@@ -28,6 +29,9 @@ export function renderPrint(lang) {
     `<h3>${esc(h.printers)}</h3><ul class="ticks">${printers}</ul>` +
     `<h4>${esc(h.reqs)}</h4><ul>${reqs}</ul>` +
     `<h3>${esc(h.notes)}</h3><ol class="notes">${notes}</ol>` +
+    `<h3>${esc(h.finish)}</h3>` +
+    `<p class="warn">⚠️ ${esc(h.finish_warn)}</p>` +
+    `<ol class="notes">${finish}</ol>` +
     `<p class="disclaimer">${esc(h.disclaimer)}</p>` +
     `</article>`
   );

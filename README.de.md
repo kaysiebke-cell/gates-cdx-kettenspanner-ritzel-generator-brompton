@@ -93,6 +93,16 @@ Das Ritzel live im [Online-Tool](https://kaysiebke-cell.github.io/gates-cdx-kett
 6. **Druckqualität prüfen** – erste Proben vor der Serienfertigung machen.
 7. **Gesundheit** – beim Nachbearbeiten (Schleifen/Bohren) entsteht reizender CF-Feinstaub. Absaugung und Staubmaske (FFP2/FFP3) verwenden.
 
+### Oberfläche glätten & versiegeln (optional)
+
+> ⚠️ Funktionsflächen maskieren – nicht beschichten oder schleifen: Lagersitz (F605-2RS, +0,2 mm), Zahnflanken (Riemenkontakt) und Bohrung/Achssitz.
+
+1. **Füllen** – Schichtlinien mit dünnem Sekundenkleber (CA), Epoxid (z. B. XTC-3D) oder 2K-Füllprimer füllen – reines Schleifen allein reicht bei CF-Nylon nicht.
+2. **Nass schleifen** – stufenweise 240 → 400 → 600 → 1000+, nass schleifen – bindet den reizenden CF-Feinstaub. Bei trockenen Arbeiten FFP2/FFP3-Maske.
+3. **Versiegeln** – dünn Epoxid oder 2K-PU-Klarlack (UV-/wetterfest) auftragen. Nylon vorher entfetten und leicht anschleifen (haftet sonst schlecht); ggf. Kunststoff-Haftvermittler.
+4. **Reihenfolge** – falls getempert wird: erst tempern, dann versiegeln (Hitze zerstört Beschichtungen).
+5. **Nicht ratsam** – chemisches Dampfglätten braucht Ameisensäure (giftig/ätzend) – fürs Hobby vermeiden; Heißluft/Flamme verzieht CF-Nylon.
+
 > ⚠️ Diese Angaben beruhen auf Recherche (Herstellerangaben, Drucker-Dokumentationen, Community-Erfahrungen, Datenblätter) und eigener Praxiserfahrung (siehe Kasten oben). Keine Garantie – bitte vor der Verwendung selbst testen und mit aktuellen Quellen abgleichen. Für Hobby-Projekte; keine kommerzielle Nutzung ohne Genehmigung.
 <!-- PRINT:END -->
 

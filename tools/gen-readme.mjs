@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { H, PROPS, SPECS, PRINTERS, REQS, NOTES } from '../web/js/print-data.js';
+import { H, PROPS, SPECS, PRINTERS, REQS, NOTES, FINISH } from '../web/js/print-data.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -43,6 +43,13 @@ function section(L) {
   out.push(`### ${h.notes}`);
   out.push('');
   NOTES.forEach((n, i) => out.push(`${i + 1}. **${n.t[L]}** – ${n.d[L]}`));
+  out.push('');
+  // Oberfläche / Finish
+  out.push(`### ${h.finish}`);
+  out.push('');
+  out.push(`> ⚠️ ${h.finish_warn}`);
+  out.push('');
+  FINISH.forEach((n, i) => out.push(`${i + 1}. **${n.t[L]}** – ${n.d[L]}`));
   out.push('');
   // Disclaimer
   out.push(`> ${h.disclaimer}`);

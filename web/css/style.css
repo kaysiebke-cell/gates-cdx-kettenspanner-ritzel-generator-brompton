@@ -122,6 +122,13 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--text); font-size: 13.5px;
 }
+/* Warnbox (Amber) – z. B. „Funktionsflächen maskieren" */
+.printdoc .warn {
+  margin: 12px 0; padding: 10px 12px;
+  border: 1px solid #d9920a; border-left-width: 4px; border-radius: 6px;
+  background: color-mix(in srgb, #d9920a 14%, transparent);
+  color: var(--text); font-size: 13px;
+}
 .fieldtest p { margin: 0; }
 .fieldtest p + p { margin-top: 8px; }
 .fieldtest .props { font-size: 12.5px; }

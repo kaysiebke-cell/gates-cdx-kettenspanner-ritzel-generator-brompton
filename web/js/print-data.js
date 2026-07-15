@@ -14,6 +14,8 @@ export const H = {
     printers: 'Kompatible Drucker für PA12-CF',
     reqs: 'Anforderungen',
     notes: 'Wichtige Hinweise',
+    finish: 'Oberfläche glätten & versiegeln (optional)',
+    finish_warn: 'Funktionsflächen maskieren – nicht beschichten oder schleifen: Lagersitz (F605-2RS, +0,2 mm), Zahnflanken (Riemenkontakt) und Bohrung/Achssitz.',
     disclaimer: '⚠️ Diese Angaben beruhen auf Recherche (Herstellerangaben, Drucker-Dokumentationen, Community-Erfahrungen, Datenblätter) und eigener Praxiserfahrung (siehe Kasten oben). Keine Garantie – bitte vor der Verwendung selbst testen und mit aktuellen Quellen abgleichen. Für Hobby-Projekte; keine kommerzielle Nutzung ohne Genehmigung.',
   },
   en: {
@@ -24,6 +26,8 @@ export const H = {
     printers: 'Compatible printers for PA12-CF',
     reqs: 'Requirements',
     notes: 'Important notes',
+    finish: 'Surface smoothing & sealing (optional)',
+    finish_warn: 'Mask functional surfaces – do not coat or sand: bearing seat (F605-2RS, +0.2 mm), tooth flanks (belt contact) and bore/axle seat.',
     disclaimer: '⚠️ This information is based on research (manufacturer specs, printer documentation, community experience, datasheets) and hands-on field experience (see box above). No guarantee – please test yourself before use and cross-check with current sources. For hobby projects; no commercial use without permission.',
   },
 };
@@ -138,4 +142,24 @@ export const NOTES = [
   { t:{de:'Gesundheit', en:'Health'},
     d:{de:'beim Nachbearbeiten (Schleifen/Bohren) entsteht reizender CF-Feinstaub. Absaugung und Staubmaske (FFP2/FFP3) verwenden.',
        en:'post-processing (sanding/drilling) creates irritating CF fine dust. Use extraction and a dust mask (FFP2/FFP3).'} },
+];
+
+// Oberfläche glätten & versiegeln – rein kosmetisch/optional. Reihenfolge:
+// füllen → nass schleifen → versiegeln. Funktionsflächen maskieren (H.finish_warn).
+export const FINISH = [
+  { t:{de:'Füllen', en:'Fill'},
+    d:{de:'Schichtlinien mit dünnem Sekundenkleber (CA), Epoxid (z. B. XTC-3D) oder 2K-Füllprimer füllen – reines Schleifen allein reicht bei CF-Nylon nicht.',
+       en:'Fill layer lines with thin cyanoacrylate (CA), epoxy (e.g. XTC-3D) or 2K filler primer – sanding alone is not enough on CF nylon.'} },
+  { t:{de:'Nass schleifen', en:'Wet-sand'},
+    d:{de:'stufenweise 240 → 400 → 600 → 1000+, nass schleifen – bindet den reizenden CF-Feinstaub. Bei trockenen Arbeiten FFP2/FFP3-Maske.',
+       en:'work through 240 → 400 → 600 → 1000+, wet-sanding – it binds the irritating CF fine dust. Wear an FFP2/FFP3 mask for dry work.'} },
+  { t:{de:'Versiegeln', en:'Seal'},
+    d:{de:'dünn Epoxid oder 2K-PU-Klarlack (UV-/wetterfest) auftragen. Nylon vorher entfetten und leicht anschleifen (haftet sonst schlecht); ggf. Kunststoff-Haftvermittler.',
+       en:'apply a thin epoxy or 2K PU clear coat (UV/weather-resistant). Degrease and lightly scuff the nylon first (poor adhesion otherwise); use a plastic adhesion promoter if needed.'} },
+  { t:{de:'Reihenfolge', en:'Order'},
+    d:{de:'falls getempert wird: erst tempern, dann versiegeln (Hitze zerstört Beschichtungen).',
+       en:'if annealing: anneal first, then seal (heat destroys coatings).'} },
+  { t:{de:'Nicht ratsam', en:'Not advisable'},
+    d:{de:'chemisches Dampfglätten braucht Ameisensäure (giftig/ätzend) – fürs Hobby vermeiden; Heißluft/Flamme verzieht CF-Nylon.',
+       en:'chemical vapour smoothing needs formic acid (toxic/corrosive) – avoid for hobby use; heat gun/flame warps CF nylon.'} },
 ];
