@@ -1,6 +1,6 @@
 # Gates CDX Belt Tensioner Sprocket Generator (Brompton)
 
-> German Version: [README.md](README.md)
+> Deutsche Version: [README.de.md](README.de.md)
 
 This tool generates parametric **pulley wheels / guide sprockets for the original or modified Brompton belt tensioner** when the folding bike has been converted to the **Gates Carbon Drive (CDX)** belt drive system (e.g., via a Kinetics conversion). The sprockets are generated as finished 3D solids – optimized for 3D printing or CNC milling.
 
@@ -47,38 +47,13 @@ In the web configurator, you can **rotate and adjust the tensioner sprocket live
 * **Fillet Cache:** The tool remembers working radii. If a calculation fails, it doesn't completely reset, saving expensive processing time.
 * **Cloud-Build & Web Configurator:** Fully usable in the browser if you don't have FreeCAD installed.
 
-## 3D Printing Tips
+## 3D Printing (PA12-CF)
 
-Proven settings for the **belt tensioner sprocket** (Reference print: 14 teeth, ~16 g, ~15 cm³):
+The sprocket is designed for **PA12-CF** (carbon-fiber reinforced nylon) and is **field-tested in continuous operation: ~2,800–2,850 km in about 5 months, and still running.** In short: 100 % infill, fine layers (0.12–0.16 mm), printed flat on the large face, on a heated bed with an enclosure, a hardened-steel nozzle (≥ 0.4 mm), and little to no part cooling.
 
-| Setting | Recommendation |
-|---|---|
-| **Filament** | **PA12-CF** (carbon-fiber reinforced nylon). It is extremely wear-resistant, stiff, and absorbs significantly less moisture than standard PA6. |
-| **Infill** | **100%** – Even though it is just a guide pulley, using solid infill ensures maximum stability and longevity of the flanges. |
-| **Layer Height** | **0.12–0.16 mm** – The tooth flanks guide the belt. Fine layers provide a noticeably smoother and lower-vibration run (0.20 mm is acceptable if necessary). |
-| **Orientation** | Place it flat on the large face. This prints the teeth sideways and eliminates the need for support material on the flanks. |
-| **Support** | Only required for the mud ports and the hub. The 1 mm deep bearing seat prints perfectly without any supports. |
-| **Nozzle Temperature** | **250–280 °C** – PA12-CF requires high temperatures. Start at 260 °C, adjust ±5 °C if needed. Carbon fiber variant needs stable heat. |
-| **Bed Temperature** | **80–120 °C** – PA12-CF requires a heated build plate. Higher temperatures reduce warping and layer adhesion issues. |
-| **Chamber Temperature** | **60–80 °C** (with enclosure) – Stabilizes print quality significantly. PA12-CF is demanding; enclosure control pays off. |
-| **Drying** | Important: Dry PA12 for approx. 8 hours at 70 °C before printing if the spool has been left open. |
+👉 **The complete, always up-to-date recommendations** – filament, temperatures, print speed, cooling, drying, annealing, compatible printers, bearing-seat fit and safety notes – live in the **Druck-Empfehlungen / Print guide** tab of the [online tool](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/). It is bilingual (DE/EN) and the single source of truth, so the guidance can't drift out of sync.
 
-### Printers Suitable for PA12-CF
-
-✅ **Recommended for this project:**
-- **Prusa XL** + Enclosure
-- **Bambu Lab X1 Carbon** (built-in chamber heating)
-- **Prusa MK3S+** / **MK3.9S** + Enclosure
-- **Zortrax M300+** / **M300 Dual**
-- **Ultimaker S5 Pro**
-
-**Requirements:** Heated build plate (80–120 °C), temperature-controlled chamber (ideal: 60–80 °C), reliable cooling, and good bed adhesion (Bondtech, PEI, Garolite).
-
-### Research & Sources
-
-⚠️ **These recommendations have been compiled from research** – manufacturer data, printer documentation, and community experience (Prusa Forum, Reddit r/3Dprinting). **No guarantee.** Please test with current sources before use, as recommendations may change.
-
-For the detailed, up-to-date print recommendations (German & English), see the **Druck-Empfehlungen** tab in the [online tool](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/) – it is the single source of truth and also documents the real-world field test (PA12-CF, 2800–2850 km in ~5 months).
+> ⚠️ The recommendations combine research with the author's own field experience. No guarantee – always test on your own printer.
 
 ## Matching Ball Bearings
 
@@ -88,7 +63,7 @@ The default values (Bore Ø 14 mm, bearing seat Ø 16 mm × 1 mm) are designed e
 
 * **Important:** Be sure to get the **2RS variant** (rubber-sealed on both sides). They provide much better protection against rain and road grit on the belt tensioner than metal-shielded (ZZ) versions.
 * For all-weather commuters, the stainless steel version **SF605-2RS** is highly recommended.
-* **Test the Fit:** Printed bores in PA12-CF can easily turn out 0.1 to 0.2 mm too tight or too loose. It's best to print a small test ring first and adjust the `Bore Ø` parameter by 0.1 mm if needed.
+* **Test the Fit:** PA12-CF shrinks as it cools. The author's proven value is to make the bearing-seat diameter **+0.2 mm** larger (e.g. a 14 mm bearing → 14.2 mm) for a firm press fit. Shrinkage varies by printer, so print a small test ring first and fine-tune the `Bore Ø` parameter in 0.1 mm steps.
 * **Press, Don't Hammer:** Carefully press the bearings into place (e.g., using a vise with a matching washer). Apply force only to the outer ring, never to the inner ring.
 
 ## File Structure

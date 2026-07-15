@@ -1,6 +1,6 @@
 # Gates CDX Riemenspanner-Ritzel Generator (Brompton)
 
-> Deutsche Version: [README.de.md](README.de.md)
+> English version: [README.md](README.md)
 
 Dieses Tool generiert parametrische **Umlenkrollen / Führungsritzel für den originalen oder modifizierten Brompton-Riemenspanner**, wenn das Faltrad auf den **Gates Carbon Drive (CDX)** Riemenantrieb umgerüstet wurde (z. B. bei einem Kinetics-Umbau). Die Ritzel werden als fertige 3D-Volumenkörper generiert – optimiert für den 3D-Druck oder die CNC-Fräse.
 
@@ -47,18 +47,13 @@ Im Web-Konfigurator kannst du das **Spannrollen-Ritzel live in 3D drehen und anp
 * **Verrundungs-Cache:** Das Tool merkt sich funktionierende Radien. Schlägt ein Versuch fehl, springt es nicht komplett zurück, sondern spart teure Rechenzeit.
 * **Cloud-Build & Web-Konfigurator:** Komplett im Browser nutzbar, falls du kein FreeCAD installiert hast.
 
-## Tipps für den 3D-Druck
+## 3D-Druck (PA12-CF)
 
-Erprobte Einstellungen für das **Riemenspanner-Ritzel** (Referenzdruck: 14 Zähne, ~16 g, ~15 cm³):
+Das Ritzel ist für **PA12-CF** (kohlefaserverstärktes Nylon) ausgelegt und **praxiserprobt im Dauerbetrieb: ~2.800–2.850 km in ca. 5 Monaten, weiterhin im Einsatz.** Kurz gefasst: 100 % Infill, feine Schichten (0,12–0,16 mm), flach auf die große Stirnseite gedruckt, auf beheiztem Bett mit Gehäuse, gehärtete Stahldüse (≥ 0,4 mm) und wenig bis kein Bauteillüfter.
 
-| Einstellung | Empfehlung |
-|---|---|
-| **Filament** | **PA12-CF** (kohlefaserverstärktes Nylon). Es ist extrem abriebfest, steif und zieht deutlich weniger Feuchtigkeit als normales PA6. |
-| **Infill** | **100 %** – Auch wenn es nur ein Umlenkritzel ist, sorgt Vollmaterial für maximale Stabilität und Langlebigkeit der Flansche. |
-| **Schichthöhe** | **0,12–0,16 mm** – die Zahnflanken führen den Riemen. Feine Schichten sorgen für einen spürbar ruhigeren und vibrationsärmeren Lauf (0,20 mm geht zur Not auch). |
-| **Ausrichtung** | Flach auf die große Stirnseite legen. Die Zähne werden so seitlich gedruckt und brauchen keinen Support an den Flanken. |
-| **Support** | Nur bei den Schmutzmulden und der Nabe nötig. Der 1 mm tiefe Lagersitz kommt komplett ohne aus. |
-| **Trocknung** | Wichtig: PA12 vor dem Drucken ca. 8 Std. bei 70 °C trocknen, falls die Rolle offen lag. |
+👉 **Die vollständigen, stets aktuellen Empfehlungen** – Filament, Temperaturen, Druckgeschwindigkeit, Kühlung, Trocknung, Tempern, kompatible Drucker, Lagersitz-Passung und Sicherheitshinweise – stehen im Tab **Druck-Empfehlungen** des [Online-Tools](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/). Zweisprachig (DE/EN) und die einzige gepflegte Quelle, damit nichts auseinanderdriftet.
+
+> ⚠️ Die Empfehlungen beruhen auf Recherche und eigener Praxiserfahrung. Keine Garantie – am eigenen Drucker testen.
 
 ## Passende Kugellager
 
@@ -70,7 +65,7 @@ Bezugsquelle für Deutschland: [F605-2RS bei Kugellager-Express](https://www.kug
 
 * **Wichtig:** Unbedingt die **2RS-Variante** (beidseitig gummigedichtet) nehmen. Die dichten am Riemenspanner im spritzwassergefährdeten Bereich deutlich besser gegen Regen und Dreck ab als Metalldeckel (ZZ).
 * Für Ganzjahresfahrer lohnt sich die Edelstahl-Version **SF605-2RS**.
-* **Passung testen:** Gedruckte Bohrungen in PA12-CF fallen gerne mal 0,1 bis 0,2 mm zu eng oder zu weit aus. Am besten erst einen kleinen Testring drucken und den Parameter `Bohrung Ø` bei Bedarf um 0,1 mm anpassen.
+* **Passung testen:** PA12-CF schwindet beim Abkühlen. Bewährter Praxiswert: den Lagersitz-Durchmesser um **+0,2 mm** größer auslegen (z. B. 14-mm-Lager → 14,2 mm) für einen festen Presssitz. Der Schwund variiert je Drucker – am besten erst einen kleinen Testring drucken und den Parameter `Bohrung Ø` in 0,1-mm-Schritten feinjustieren.
 * **Pressen, nicht hämmern:** Die Lager vorsichtig einpressen (z. B. im Schraubstock mit einer passenden Unterlegscheibe). Druck nur auf den Außenring ausüben, niemals auf den Innenring.
 
 ## Struktur der Dateien
