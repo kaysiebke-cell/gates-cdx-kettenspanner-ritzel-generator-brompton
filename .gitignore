@@ -8,3 +8,7 @@ zahnrad_cache.json
 # Fremd-/Temporärdateien (nicht Teil dieses Repos)
 kabelclip/
 *.backup
+
+# Build-Abhängigkeiten des Online-Generators (nur zum Bauen, nicht deployen)
+node_modules/
+package-lock.json

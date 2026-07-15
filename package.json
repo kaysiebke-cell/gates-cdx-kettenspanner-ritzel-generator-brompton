@@ -1,0 +1,18 @@
+{
+  "name": "gates-cdx-ritzel-generator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Build-Werkzeuge für den Online-Ritzel-Generator (web/).",
+  "scripts": {
+    "build": "npm run build:shell && npm run build:viewer && npm run docs",
+    "build:shell": "esbuild web/js/shell.js --bundle --format=iife --minify --outfile=web/js/shell.bundle.js",
+    "build:viewer": "esbuild web/js/viewer.js --bundle --format=iife --minify --alias:three/addons=three/examples/jsm --outfile=web/js/viewer.bundle.js",
+    "docs": "node tools/gen-readme.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.21.5",
+    "three": "0.160.1",
+    "three-bvh-csg": "0.0.16"
+  }
+}
