@@ -1,5 +1,8 @@
 import { t } from './i18n.js';
 
+// Harte Zähnezahl-Grenzen (identisch zu zahnrad_params.py: ZAEHNE_MIN/MAX)
+export const ZAEHNE_MIN = 6, ZAEHNE_MAX = 18;
+
 // ── Felddefinitionen: identisch zu zahnrad_params.py, Labels als i18n-Keys ────
 export const SECTIONS = [
   ['sec1', [
@@ -45,6 +48,7 @@ export function buildFormFields(onChange) {
       const lab = document.createElement('label'); lab.textContent = t(labelKey); lab.htmlFor = key;
       const inp = document.createElement('input');
       inp.type = 'number'; inp.id = key; inp.value = def; inp.step = step;
+      if (key === 'zaehne') { inp.min = ZAEHNE_MIN; inp.max = ZAEHNE_MAX; }
       inp.addEventListener('input', onChange);
       row.append(lab, inp); sec.append(row);
       inputs[key] = inp;
@@ -61,6 +65,6 @@ export function params() {
     const v = el ? parseFloat(el.value) : NaN;
     p[k] = Number.isFinite(v) ? v : DEFAULTS[k];
   }
-  p.zaehne = Math.max(6, Math.round(p.zaehne));
+  p.zaehne = Math.min(ZAEHNE_MAX, Math.max(ZAEHNE_MIN, Math.round(p.zaehne)));
   return p;
 }

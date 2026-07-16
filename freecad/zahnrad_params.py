@@ -1,6 +1,10 @@
 # params.py
 # Standardwerte und Felddefinitionen für den Zahnrad-Konfigurator
 
+# Harte Zähnezahl-Grenzen (identisch zur Web-Version: fields.js ZAEHNE_MIN/MAX)
+ZAEHNE_MIN = 6
+ZAEHNE_MAX = 18
+
 # Eingabefelder in drei thematische Abschnitte gegliedert.
 # Format je Abschnitt: (Überschrift, [ (key, label, default), ... ])
 FIELD_SECTIONS = [

@@ -9,7 +9,7 @@ let lastR = 0;
 
 // Vorgebaute, voll verrundete Serie (GitHub-Release "stl-serie"):
 // Standardwerte, nur die Zähnezahl variiert
-const SERIE_MIN = 12, SERIE_MAX = 22;
+const SERIE_MIN = 12, SERIE_MAX = 18;
 const SERIE_URL = (z, endung) =>
   `https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/download/stl-serie/ritzel_z${z}.${endung}`;
 

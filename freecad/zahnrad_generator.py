@@ -8,6 +8,11 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import Part
 
+try:
+    from zahnrad_params import ZAEHNE_MIN, ZAEHNE_MAX
+except Exception:               # Fallback, falls Modul (noch) nicht auf dem Pfad
+    ZAEHNE_MIN, ZAEHNE_MAX = 6, 18
+
 
 class ZahnradVollGenerator:
 
@@ -40,7 +45,14 @@ class ZahnradVollGenerator:
             self.sketch = self.setup_environment()
             self.sketch.deleteAllGeometry()
 
-            z      = int(params['zaehne'])
+            # Harte Zähnezahl-Grenze — in-place, damit auch Solid & Fingerprint
+            # denselben begrenzten Wert sehen (egal welche Eingabequelle).
+            z_roh = int(params['zaehne'])
+            z = max(ZAEHNE_MIN, min(ZAEHNE_MAX, z_roh))
+            if z != z_roh:
+                print(f"Zahnrad: Zaehnezahl {z_roh} auf {z} begrenzt "
+                      f"(erlaubt {ZAEHNE_MIN}..{ZAEHNE_MAX}).")
+            params['zaehne'] = z
             alpha  = math.radians(params['eingriffswinkel'])
             s_mt   = params['spitzen_abstand']
             r_s    = params['spitzen_d'] / 2.0

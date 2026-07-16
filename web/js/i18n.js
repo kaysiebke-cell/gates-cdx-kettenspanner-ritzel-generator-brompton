@@ -44,8 +44,8 @@ export const i18n = {
       total_height: 'Gesamthöhe',
       teeth_label: 'Zähne',
       series_ready: 'Fertig gebaut mit Standardwerten und allen Verrundungen — ein Klick, keine Wartezeit.',
-      series_modified: 'Vorgebaute verrundete STLs gibt es für die Standardwerte (12–22 Zähne). Deine geänderten Werte brauchen den Cloud-Bau unten.',
-      series_out_of_range: 'Vorgebaute STLs gibt es für 12–22 Zähne — andere Zähnezahlen über den Cloud-Bau unten.',
+      series_modified: 'Vorgebaute verrundete STLs gibt es für die Standardwerte (12–18 Zähne). Deine geänderten Werte brauchen den Cloud-Bau unten.',
+      series_out_of_range: 'Vorgebaute STLs gibt es für 12–18 Zähne — andere Zähnezahlen über den Cloud-Bau unten.',
     },
     en: {
       title: 'Gates CDX Belt-Drive Sprocket Generator (Brompton)',
@@ -86,8 +86,8 @@ export const i18n = {
       total_height: 'Total height',
       teeth_label: 'Teeth',
       series_ready: 'Pre-built with standard values and all roundings — one click, no wait.',
-      series_modified: 'Pre-built rounded STLs available for standard values (12–22 teeth). Your modified values need cloud build below.',
-      series_out_of_range: 'Pre-built STLs available for 12–22 teeth — other tooth counts via cloud build below.',
+      series_modified: 'Pre-built rounded STLs available for standard values (12–18 teeth). Your modified values need cloud build below.',
+      series_out_of_range: 'Pre-built STLs available for 12–18 teeth — other tooth counts via cloud build below.',
     }
   },
 };
