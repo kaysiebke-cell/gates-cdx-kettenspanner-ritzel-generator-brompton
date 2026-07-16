@@ -48,7 +48,19 @@ export function buildFormFields(onChange) {
       const lab = document.createElement('label'); lab.textContent = t(labelKey); lab.htmlFor = key;
       const inp = document.createElement('input');
       inp.type = 'number'; inp.id = key; inp.value = def; inp.step = step;
-      if (key === 'zaehne') { inp.min = ZAEHNE_MIN; inp.max = ZAEHNE_MAX; }
+      if (key === 'zaehne') {
+        inp.min = ZAEHNE_MIN; inp.max = ZAEHNE_MAX; inp.step = 1;
+        // min/max am <input type=number> begrenzen nur die Pfeil-Buttons,
+        // nicht die Tastatureingabe. Darum den Wert beim Verlassen/Bestätigen
+        // sichtbar auf [MIN..MAX] einrasten (ganzzahlig), damit die harte
+        // Grenze für Nutzer klar erkennbar ist.
+        inp.addEventListener('change', () => {
+          const v = Math.round(parseFloat(inp.value));
+          if (Number.isFinite(v))
+            inp.value = Math.min(ZAEHNE_MAX, Math.max(ZAEHNE_MIN, v));
+          onChange();
+        });
+      }
       inp.addEventListener('input', onChange);
       row.append(lab, inp); sec.append(row);
       inputs[key] = inp;
