@@ -1,7 +1,7 @@
 import { t } from './i18n.js';
 
 // Harte Zähnezahl-Grenzen (identisch zu zahnrad_params.py: ZAEHNE_MIN/MAX)
-export const ZAEHNE_MIN = 6, ZAEHNE_MAX = 18;
+export const ZAEHNE_MIN = 12, ZAEHNE_MAX = 18;
 
 // ── Felddefinitionen: identisch zu zahnrad_params.py, Labels als i18n-Keys ────
 export const SECTIONS = [

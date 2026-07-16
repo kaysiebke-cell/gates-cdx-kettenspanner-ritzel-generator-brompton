@@ -19,7 +19,7 @@ In the web configurator, you can **rotate and adjust the tensioner sprocket live
 
 **Two ways to download:**
 * **Download ready-made STLs:** Pre-rounded files are available for standard sizes from **12 to 18 teeth** (also available with STEP files in the [Release "stl-serie"](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/tag/stl-serie)).
-* **Generate custom dimensions:** You can enter the parameters freely (tooth count **6–18**) and drag the STL directly out of your browser (fillets are approximated here; the exact CAD fillets are included in the release files).
+* **Generate custom dimensions:** You can enter the parameters freely (tooth count **12–18**) and drag the STL directly out of your browser (fillets are approximated here; the exact CAD fillets are included in the release files).
 
 ## Direct Usage in FreeCAD
 
@@ -40,7 +40,7 @@ In the web configurator, you can **rotate and adjust the tensioner sprocket live
 
 ## Features
 
-* **Fully Parametric:** Tooth count (**6–18**), pressure angle, pitch, tip/root radius, and tooth depth can be freely adjusted.
+* **Fully Parametric:** Tooth count (**12–18**), pressure angle, pitch, tip/root radius, and tooth depth can be freely adjusted.
 * **Thoughtful Geometry:** Central ridge acting as a belt guide, lateral mud/debris ports (angle, depth, and radius adjustable), plus a bore and counterbores for the belt tensioner bearings.
 * **Smart UI:** The dock panel is clearly structured and automatically adapts to the FreeCAD theme (Light/Dark Mode).
 * **Remembers Settings:** The last used parameters are automatically reloaded on the next startup.

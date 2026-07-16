@@ -11,7 +11,7 @@ import Part
 try:
     from zahnrad_params import ZAEHNE_MIN, ZAEHNE_MAX
 except Exception:               # Fallback, falls Modul (noch) nicht auf dem Pfad
-    ZAEHNE_MIN, ZAEHNE_MAX = 6, 18
+    ZAEHNE_MIN, ZAEHNE_MAX = 12, 18
 
 
 class ZahnradVollGenerator:

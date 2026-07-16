@@ -2,7 +2,7 @@
 # Standardwerte und Felddefinitionen für den Zahnrad-Konfigurator
 
 # Harte Zähnezahl-Grenzen (identisch zur Web-Version: fields.js ZAEHNE_MIN/MAX)
-ZAEHNE_MIN = 6
+ZAEHNE_MIN = 12
 ZAEHNE_MAX = 18
 
 # Eingabefelder in drei thematische Abschnitte gegliedert.
