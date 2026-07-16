@@ -12,3 +12,8 @@ kabelclip/
 # Build-Abhängigkeiten des Online-Generators (nur zum Bauen, nicht deployen)
 node_modules/
 package-lock.json
+
+# Generierte Bundles: werden im Pages-Workflow aus web/js/*.js gebaut,
+# nicht committet (siehe .github/workflows/pages.yml).
+web/js/shell.bundle.js
+web/js/viewer.bundle.js
