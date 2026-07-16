@@ -19,7 +19,7 @@ Im Web-Konfigurator kannst du das **Spannrollen-Ritzel live in 3D drehen und anp
 
 **Zwei Wege zum Download:**
 * **Fertige STL direkt laden:** Für Standardgrößen von **12 bis 18 Zähnen** liegen fertig verrundete Dateien bereit (gibt es auch inklusive STEP-Dateien im [Release "stl-serie"](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/tag/stl-serie)).
-* **Eigene Maße generieren:** Du kannst die Parameter frei eintragen (Zähnezahl **6–18**) und das STL direkt aus dem Browser ziehen (die Verrundungen werden hierbei angenähert; die exakten CAD-Verrundungen gibt es in den Release-Dateien).
+* **Eigene Maße generieren:** Du kannst die Parameter frei eintragen (Zähnezahl **12–18**) und das STL direkt aus dem Browser ziehen (die Verrundungen werden hierbei angenähert; die exakten CAD-Verrundungen gibt es in den Release-Dateien).
 
 ## Nutzung direkt in FreeCAD
 
@@ -40,7 +40,7 @@ Im Web-Konfigurator kannst du das **Spannrollen-Ritzel live in 3D drehen und anp
 
 ## Features
 
-* **Komplett parametrisch:** Zähnezahl (**6–18**), Eingriffswinkel, Teilung, Kopf-/Fußradius und Zahntiefe lassen sich frei einstellen.
+* **Komplett parametrisch:** Zähnezahl (**12–18**), Eingriffswinkel, Teilung, Kopf-/Fußradius und Zahntiefe lassen sich frei einstellen.
 * **Durchdachte Geometrie:** Zentraler Steg als Riemenführung, seitliche Schmutzmulden (Winkel, Tiefe und Rundung anpassbar), plus Bohrung und Absätze für die Kugellager des Riemenspanners.
 * **Smartes UI:** Das Dock-Panel ist übersichtlich aufgeteilt und passt sich automatisch an das FreeCAD-Design (Light/Dark Mode) an.
 * **Merkt sich Einstellungen:** Die zuletzt genutzten Parameter werden beim nächsten Start automatisch wieder geladen.
