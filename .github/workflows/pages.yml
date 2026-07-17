@@ -42,6 +42,12 @@ jobs:
         run: npm install
       - name: Bundles bauen (esbuild)
         run: npm run build:shell && npm run build:viewer
+      # Cache-Busting: __V__ in den Bundle-URLs mit dem Commit-Hash ersetzen,
+      # damit Browser nach jedem Deploy automatisch frisch laden.
+      - name: Cache-Busting-Version einsetzen
+        run: |
+          V="${GITHUB_SHA::8}"
+          sed -i "s/__V__/$V/g" web/index.html web/js/shell.bundle.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

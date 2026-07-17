@@ -60,7 +60,7 @@ function loadViewer() {
   if (viewerLoaded) return;
   viewerLoaded = true;
   const s = document.createElement('script');
-  s.src = 'js/viewer.bundle.js';
+  s.src = 'js/viewer.bundle.js?v=__V__';   // __V__ wird im Pages-Deploy ersetzt
   document.body.appendChild(s);
 }
 // In sichtbaren Tabs erst nach dem nächsten Paint laden, damit das
