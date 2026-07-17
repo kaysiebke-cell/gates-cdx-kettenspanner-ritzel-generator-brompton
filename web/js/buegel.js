@@ -22,8 +22,8 @@ const B = {
   screw_depth: 3.0, // Tiefe des Sacklochs von HINTEN (nicht durch)
   boss_r:    4.50,  // Auge-Boss Ring aussen (Sketch013)
   boss_h:    2.0,   // Boss-Hoehe (Pad008)
-  foot_maj:  8.0,   // Fuss-Ellipse Maj (16 breit, X) — Sketch012
-  foot_min:  3.0,   // Fuss-Ellipse Min (6 tief, Y)
+  foot_maj:  8.0,   // Fuss Maj (16 breit, X) — Sketch012
+  foot_min:  3.06,  // Fuss runde Kappe (+Y) = Arm-Endkappe
   foot_z0:  -11.5,  // Z-Unterkante des Fusses (Oberkante bleibt bei +7,5)
   foot_h:   19.0,   // Laenge des aufstehenden Fusses (Z) — Pad 19 mm
   foot_inset: 0.0,  // Fuss buendig am Armende (Sketch010-Kappe = Sketch012 bei |Y|=37,19)
@@ -66,9 +66,12 @@ export function buegelGeometrie(p) {
   boss.translate(0, 0, B.plate_z + B.plate_t);   // auf die Oberseite (-9,5)
   teile.push(boss);
 
-  // --- Fuss/Abwinklung: elliptischer Stab (16x6), steht in +Z auf ---
+  // --- Fuss/Schutzwand als D-Form: vorne runde Kappe (+Y), hinten flach
+  //     am Armende -> sitzt nur auf der Kappe, kein Wulst auf dem Arm ---
   const fs = new THREE.Shape();
-  fs.absellipse(0, 0, B.foot_maj, B.foot_min, 0, Math.PI * 2, false);
+  fs.moveTo(B.foot_maj, 0);
+  fs.absellipse(0, 0, B.foot_maj, B.foot_min, 0, Math.PI, false); // +Y-Halbkappe
+  fs.lineTo(B.foot_maj, 0);                                       // flache Rueckseite
   const foot = new THREE.ExtrudeGeometry(fs, {
     depth: B.foot_h, bevelEnabled: false, curveSegments: 40,
   });

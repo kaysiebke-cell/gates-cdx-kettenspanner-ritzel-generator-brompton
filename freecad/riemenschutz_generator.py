@@ -30,8 +30,8 @@ PLATE_Z     = -14.5   # Z-Unterkante der Arm-Platte (Oberseite bei -9,5)
 BORE_R      = 2.70    # zentrale Achsbohrung (Oe 5,4) -> durchgehend
 BOSS_R      = 4.50    # Auge-Boss aussen (Sketch013)
 BOSS_H      = 2.0     # Boss-Hoehe (Pad008)
-FOOT_MAJ    = 8.0     # Fuss-Ellipse Maj (16 breit, X) — Sketch012
-FOOT_MIN    = 3.0     # Fuss-Ellipse Min (6 tief, Y)
+FOOT_MAJ    = 8.0     # Fuss Maj (16 breit, X) — Sketch012
+FOOT_MIN    = 3.06    # Fuss runde Kappe (Min, +Y) = Arm-Endkappe (kein Versatz)
 FOOT_Z0     = -14.5   # Z-Unterkante des Fusses = Platten-Unterkante (buendig, kein Ueberstand)
 FOOT_H      = 22.0    # Fuss -14,5..+7,5 (voll durch die Platte -> 1 Solid)
 SCREW_R     = 1.70    # Schrauben-Sackloch (Oe 3,4)
@@ -74,9 +74,15 @@ def baue_buegel(zaehne, spitzen_abstand=SPITZEN_ABSTAND, spitzen_d=SPITZEN_D):
     # ── Auge-Boss (Ring): 1 mm in die Platte fuer sauberen Merge ──
     boss = Part.makeCylinder(BOSS_R, BOSS_H + 1.0, V(0, 0, PLATE_Z + PLATE_T - 1.0))
 
-    # ── Fuss/Abwinklung: elliptischer Stab (16x6), steht in +Z auf ──
-    ell_foot = Part.Ellipse(V(0.0, y_far, FOOT_Z0), FOOT_MAJ, FOOT_MIN)
-    foot = Part.Face(Part.Wire([ell_foot.toShape()])).extrude(V(0, 0, FOOT_H))
+    # ── Fuss/Schutzwand als D-Form: vorne runde Kappe (+Y), hinten flach
+    #    am Armende. So sitzt der Fuss nur auf der Kappe, nicht auf dem
+    #    flachen Arm -> sauberer Uebergang ohne Wulst. Steht in +Z auf. ──
+    fR = V(FOOT_MAJ, y_far, FOOT_Z0)
+    fL = V(-FOOT_MAJ, y_far, FOOT_Z0)
+    fell = Part.Ellipse(V(0.0, y_far, FOOT_Z0), FOOT_MAJ, FOOT_MIN)
+    farc = Part.ArcOfEllipse(fell, 0.0, math.pi)     # +Y-Halbkappe: fR -> fL
+    fback = Part.LineSegment(fL, fR)                 # flache Rueckseite am Armende
+    foot = Part.Face(Part.Wire([farc.toShape(), fback.toShape()])).extrude(V(0, 0, FOOT_H))
 
     body = plate.fuse(boss).fuse(foot).removeSplitter()
 
