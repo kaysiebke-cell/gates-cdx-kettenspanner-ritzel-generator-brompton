@@ -66,12 +66,9 @@ export function buegelGeometrie(p) {
   boss.translate(0, 0, B.plate_z + B.plate_t);   // auf die Oberseite (-9,5)
   teile.push(boss);
 
-  // --- Fuss/Schutzwand als D-Form: vorne runde Kappe (+Y), hinten flach
-  //     am Armende -> sitzt nur auf der Kappe, kein Wulst auf dem Arm ---
+  // --- Fuss/Schutzwand: elliptischer Stab (vorne UND hinten rund) ---
   const fs = new THREE.Shape();
-  fs.moveTo(B.foot_maj, 0);
-  fs.absellipse(0, 0, B.foot_maj, B.foot_min, 0, Math.PI, false); // +Y-Halbkappe
-  fs.lineTo(B.foot_maj, 0);                                       // flache Rueckseite
+  fs.absellipse(0, 0, B.foot_maj, B.foot_min, 0, Math.PI * 2, false);
   const foot = new THREE.ExtrudeGeometry(fs, {
     depth: B.foot_h, bevelEnabled: false, curveSegments: 40,
   });

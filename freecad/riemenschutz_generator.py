@@ -74,15 +74,10 @@ def baue_buegel(zaehne, spitzen_abstand=SPITZEN_ABSTAND, spitzen_d=SPITZEN_D):
     # ── Auge-Boss (Ring): 1 mm in die Platte fuer sauberen Merge ──
     boss = Part.makeCylinder(BOSS_R, BOSS_H + 1.0, V(0, 0, PLATE_Z + PLATE_T - 1.0))
 
-    # ── Fuss/Schutzwand als D-Form: vorne runde Kappe (+Y), hinten flach
-    #    am Armende. So sitzt der Fuss nur auf der Kappe, nicht auf dem
-    #    flachen Arm -> sauberer Uebergang ohne Wulst. Steht in +Z auf. ──
-    fR = V(FOOT_MAJ, y_far, FOOT_Z0)
-    fL = V(-FOOT_MAJ, y_far, FOOT_Z0)
+    # ── Fuss/Schutzwand: elliptischer Stab (vorne UND hinten rund),
+    #    steht in +Z auf. Voll durch die Platte -> ein Solid. ──
     fell = Part.Ellipse(V(0.0, y_far, FOOT_Z0), FOOT_MAJ, FOOT_MIN)
-    farc = Part.ArcOfEllipse(fell, 0.0, math.pi)     # +Y-Halbkappe: fR -> fL
-    fback = Part.LineSegment(fL, fR)                 # flache Rueckseite am Armende
-    foot = Part.Face(Part.Wire([farc.toShape(), fback.toShape()])).extrude(V(0, 0, FOOT_H))
+    foot = Part.Face(Part.Wire([fell.toShape()])).extrude(V(0, 0, FOOT_H))
 
     body = plate.fuse(boss).fuse(foot).removeSplitter()
 
