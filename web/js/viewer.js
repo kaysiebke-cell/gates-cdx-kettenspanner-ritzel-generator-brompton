@@ -6,13 +6,22 @@
 import * as THREE from 'three';
 import { t } from './i18n.js';
 import { renderer, scene, camera, resize, startRenderLoop } from './scene.js';
-import { rebuild, exportStl } from './ui.js';
+import { rebuild, exportStl, exportStep } from './ui.js';
 
-// STL-Export
+// Download: Ritzel + Schutzbügel gebündelt als ZIP
 document.getElementById('stlbtn').addEventListener('click', (e) => {
   e.preventDefault();
   exportStl();
 });
+
+// STEP (nur Standardwerte): vorgebaute Ritzel- + Bügel-STEP aus dem Release
+document.getElementById('stepbtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  exportStep();
+});
+
+// Riemenschutz-Bügel ein-/ausblenden (lädt beim Einschalten das Fertigteil)
+document.getElementById('buegelchk')?.addEventListener('change', rebuild);
 
 // Die Shell ruft dies bei jeder Formularänderung (entprellt) auf.
 window.__ritzelRebuild = rebuild;

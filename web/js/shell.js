@@ -17,6 +17,7 @@ function scheduleRebuild() {
 // Statische Texte, die kein 3D brauchen (Button-Beschriftung, Tabs).
 function setStaticTexts() {
   document.getElementById('stlbtn').textContent = `💾 ${t('custom_stl')}`;
+  document.getElementById('buegellbl').textContent = t('buegel_show');
   document.getElementById('tab-gen').textContent = t('tab_gen');
   document.getElementById('tab-print').textContent = t('tab_print');
   // Druck-Empfehlungen in der aktuellen Sprache einspeisen

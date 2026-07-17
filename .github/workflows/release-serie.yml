@@ -1,0 +1,66 @@
+name: Serie bauen & Release (Ritzel + Bügel, STL + STEP)
+
+# Baut die komplette Serie 12–18 Zähne (Ritzel UND Riemenschutz-Bügel) headless
+# in FreeCAD und lädt STEP + STL aller Größen in das Release "serie" hoch.
+# Der Web-STEP-Download zeigt auf diese Release-Dateien.
+
+on:
+  workflow_dispatch:            # manuell per Knopf in Actions
+  push:
+    branches: [main]
+    paths:                      # neu bauen, wenn sich die Baulogik ändert
+      - ".github/workflows/release-serie.yml"
+      - "freecad/build_headless.py"
+      - "freecad/riemenschutz_generator.py"
+      - "freecad/zahnrad_generator.py"
+      - "freecad/zahnrad_params.py"
+      - "freecad/ritzel_params.py"
+
+permissions:
+  contents: write               # nötig, um das Release zu aktualisieren
+
+jobs:
+  serie:
+    runs-on: ubuntu-latest
+    env:
+      OUTPUT_DIR: output
+      LIBGL_ALWAYS_SOFTWARE: "1"
+    steps:
+      - name: Repo auschecken
+        uses: actions/checkout@v4
+
+      - name: FreeCAD 1.1.1 (AppImage) installieren
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dri
+          wget -q -O FreeCAD.AppImage \
+            "https://github.com/FreeCAD/FreeCAD/releases/download/1.1.1/FreeCAD_1.1.1-Linux-x86_64-py311.AppImage"
+          chmod +x FreeCAD.AppImage
+          ./FreeCAD.AppImage --appimage-extract > /dev/null
+          echo "$PWD/squashfs-root/usr/bin" >> "$GITHUB_PATH"
+
+      - name: Serie 12–18 bauen (Ritzel + Bügel, STEP + STL)
+        run: |
+          mkdir -p "$OUTPUT_DIR"
+          for Z in 12 13 14 15 16 17 18; do
+            echo "::group::Zähnezahl $Z"
+            PARAMS_JSON="{\"zaehne\": $Z}" freecadcmd freecad/build_headless.py
+            echo "::endgroup::"
+          done
+          echo "── Erzeugte Dateien ──"
+          ls -la "$OUTPUT_DIR"
+
+      - name: Release "serie" aktualisieren
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: serie
+          name: Serie — Ritzel + Bügel (STL + STEP)
+          body: >
+            Automatisch gebaute Serie 12–18 Zähne: Ritzel und Riemenschutz-Bügel,
+            je als STEP (exakt) und STL. Erzeugt vom Workflow release-serie.yml.
+          files: |
+            output/ritzel_z*.step
+            output/ritzel_z*.stl
+            output/riemenschutz_z*.step
+            output/riemenschutz_z*.stl
+          fail_on_unmatched_files: true

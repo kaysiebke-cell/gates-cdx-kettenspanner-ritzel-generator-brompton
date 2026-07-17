@@ -62,6 +62,26 @@ def main():
     print(f"Fertig: {step_pfad}")
     print(f"Fertig: {stl_pfad}")
 
+    # ── Riemenschutz-Buegel (parametrisch) — STEP + STL ──
+    from riemenschutz_generator import baue_buegel
+    buegel = baue_buegel(
+        params['zaehne'], params['spitzen_abstand'], params['spitzen_d'])
+    if not buegel.isValid() or buegel.Volume <= 0:
+        print("Warnung: Buegel-Koerper ungueltig — uebersprungen.")
+    else:
+        b_step = os.path.join(out_dir, f"riemenschutz_z{z}.step")
+        b_stl = os.path.join(out_dir, f"riemenschutz_z{z}.stl")
+        buegel.exportStep(b_step)
+        mesh_b = MeshPart.meshFromShape(
+            Shape=buegel,
+            LinearDeflection=0.05,
+            AngularDeflection=0.5,
+            Relative=False,
+        )
+        mesh_b.write(b_stl)
+        print(f"Fertig: {b_step}")
+        print(f"Fertig: {b_stl}")
+
 
 # freecadcmd setzt __name__ auf den Modulnamen (nicht "__main__"),
 # daher main() direkt aufrufen — sonst passiert still gar nichts.
