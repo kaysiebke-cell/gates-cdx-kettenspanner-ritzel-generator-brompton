@@ -41,11 +41,17 @@ jobs:
 
       - name: Serie 12–18 bauen (Ritzel + Bügel, STEP + STL)
         run: |
+          sudo apt-get install -y zip
           mkdir -p "$OUTPUT_DIR"
           for Z in 12 13 14 15 16 17 18; do
             echo "::group::Zähnezahl $Z"
             PARAMS_JSON="{\"zaehne\": $Z}" freecadcmd freecad/build_headless.py
             echo "::endgroup::"
+          done
+          # Pro Größe eine ZIP mit Ritzel- + Bügel-STEP (für den Web-Download).
+          for Z in 12 13 14 15 16 17 18; do
+            (cd "$OUTPUT_DIR" && zip -q "cdx_ritzel_buegel_z${Z}_step.zip" \
+              "ritzel_z${Z}.step" "riemenschutz_z${Z}.step")
           done
           echo "── Erzeugte Dateien ──"
           ls -la "$OUTPUT_DIR"
@@ -63,4 +69,5 @@ jobs:
             output/ritzel_z*.stl
             output/riemenschutz_z*.step
             output/riemenschutz_z*.stl
+            output/cdx_ritzel_buegel_z*_step.zip
           fail_on_unmatched_files: true

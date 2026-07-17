@@ -52,17 +52,16 @@ function stepAktualisieren(p) {
   if (zeigen) hint.textContent = t('step_hint');
 }
 
-// STEP für Ritzel + Bügel als zwei direkte Release-Downloads.
+// STEP für Ritzel + Bügel: eine vorgebaute ZIP direkt aus dem Release
+// (serverseitig gebündelt — der Browser darf Release-Dateien nicht per
+// fetch laden, ein direkter Link geht aber ohne CORS-Problem).
 export function exportStep() {
   const z = params().zaehne;
-  const lade = (name) => {
-    const a = document.createElement('a');
-    a.href = RELEASE_URL(name);
-    a.download = name;
-    document.body.appendChild(a); a.click(); a.remove();
-  };
-  lade(`ritzel_z${z}.step`);
-  setTimeout(() => lade(`riemenschutz_z${z}.step`), 500);
+  const name = `cdx_ritzel_buegel_z${z}_step.zip`;
+  const a = document.createElement('a');
+  a.href = RELEASE_URL(name);
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
 }
 
 export function rebuild() {
