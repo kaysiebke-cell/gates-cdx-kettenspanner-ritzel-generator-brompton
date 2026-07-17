@@ -33,7 +33,7 @@ BOSS_H      = 2.0     # Boss-Hoehe (Pad008)
 FOOT_MAJ    = 8.0     # Fuss Maj (16 breit, X) — Sketch012
 FOOT_MIN    = 3.06    # Fuss runde Kappe (Min, +Y) = Arm-Endkappe (kein Versatz)
 FOOT_Z0     = -14.5   # Z-Unterkante des Fusses = Platten-Unterkante (buendig, kein Ueberstand)
-FOOT_H      = 22.0    # Fuss -14,5..+7,5 (voll durch die Platte -> 1 Solid)
+FOOT_H      = 24.0    # Fuss -14,5..+9,5: 19 mm ueber der Platte, 24 mm gesamt (Original)
 SCREW_R     = 1.70    # Schrauben-Sackloch (Oe 3,4)
 SCREW_X     = 5.05    # Schrauben-Sackloch Zentrum X (aus STL gemessen)
 SCREW_Y     = 5.03    # Schrauben-Sackloch Zentrum Y (+Y-Seite, ~45°)

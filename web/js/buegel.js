@@ -24,8 +24,8 @@ const B = {
   boss_h:    2.0,   // Boss-Hoehe (Pad008)
   foot_maj:  8.0,   // Fuss Maj (16 breit, X) — Sketch012
   foot_min:  3.06,  // Fuss runde Kappe (+Y) = Arm-Endkappe
-  foot_z0:  -11.5,  // Z-Unterkante des Fusses (Oberkante bleibt bei +7,5)
-  foot_h:   19.0,   // Laenge des aufstehenden Fusses (Z) — Pad 19 mm
+  foot_z0:  -14.5,  // Z-Unterkante des Fusses = Platten-Unterkante
+  foot_h:   24.0,   // Fuss -14,5..+9,5: 19 mm ueber der Platte, 24 mm gesamt
   foot_inset: 0.0,  // Fuss buendig am Armende (Sketch010-Kappe = Sketch012 bei |Y|=37,19)
 };
 
