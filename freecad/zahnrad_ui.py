@@ -103,7 +103,8 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         btn_layout.addWidget(self._make_button("Vorschau", self.run_update), 0, 0)
         btn_layout.addWidget(self._make_button("Körper erzeugen", self.build_body), 0, 1)
         btn_layout.addWidget(self._make_button("Fertigteil", self.build_fertigteil), 1, 0)
-        btn_layout.addWidget(self._make_button("Schließen", self.close), 1, 1)
+        btn_layout.addWidget(self._make_button("Riemenschutz-Bügel", self.build_buegel), 1, 1)
+        btn_layout.addWidget(self._make_button("Schließen", self.close), 2, 0, 1, 2)
         outer.addLayout(btn_layout)
 
     def _build_section_grid(self, grid, felder):
@@ -202,5 +203,44 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         try:
             self.generator.make_fertigteil(self._collect_params())
             self._save_values()
+        finally:
+            self._busy = False
+
+    def build_buegel(self):
+        """Riemenschutz-Bügel zur aktuellen Zähnezahl als Part-Körper
+        erzeugen (Knopf 'Riemenschutz-Bügel'). Nutzt Mitte-Mitte und Kopf-Ø
+        aus dem Panel, damit der Bügel zum Ritzel passt."""
+        if self._busy:
+            return
+        self._busy = True
+        try:
+            import FreeCAD as App
+            from riemenschutz_generator import baue_buegel
+            p = self._collect_params()
+            z = max(12, min(18, int(p['zaehne'])))   # Bügel-Serie 12..18
+            shape = baue_buegel(z, p['spitzen_abstand'], p['spitzen_d'])
+
+            doc = App.ActiveDocument or App.newDocument("ZahnradDokument")
+            # Vorhandene(n) Bügel entfernen (fester Name -> in place aktualisieren;
+            # raeumt auch alte 'Riemenschutz_z<N>' aus frueheren Versionen weg).
+            for o in list(doc.Objects):
+                if o.Name.startswith("Riemenschutz") or \
+                   (o.Label or "").startswith("Riemenschutz"):
+                    doc.removeObject(o.Name)
+            obj = doc.addObject("Part::Feature", "Riemenschutz")
+            obj.Label = "Riemenschutz z%d" % z
+            obj.Shape = shape
+            doc.recompute()
+            try:
+                Gui.ActiveDocument.ActiveView.fitAll()
+            except Exception:
+                pass
+            self._save_values()
+            App.Console.PrintMessage("Riemenschutz-Bügel z=%d erzeugt.\n" % z)
+        except Exception as e:
+            import traceback
+            import FreeCAD as App
+            App.Console.PrintError("Bügel konnte nicht erzeugt werden: %s\n" % e)
+            traceback.print_exc()
         finally:
             self._busy = False

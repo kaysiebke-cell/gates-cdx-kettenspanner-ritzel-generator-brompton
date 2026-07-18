@@ -20,7 +20,8 @@ if MACRO_DIR in sys.path:
 sys.path.insert(0, MACRO_DIR)
 
 # Evtl. gecachte (alte) Versionen verwerfen, damit Änderungen sofort greifen
-for _m in ("zahnrad_params", "zahnrad_generator", "zahnrad_ui"):
+for _m in ("zahnrad_params", "zahnrad_generator", "zahnrad_ui",
+           "riemenschutz_generator"):
     sys.modules.pop(_m, None)
 
 import FreeCADGui as Gui

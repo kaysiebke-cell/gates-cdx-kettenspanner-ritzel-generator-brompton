@@ -96,11 +96,12 @@ def build(zaehne=17):
     z = max(12, min(18, int(zaehne)))
     doc = App.ActiveDocument or App.newDocument("Riemenschutz")
     shape = baue_buegel(z)
-    name = "Riemenschutz_z%d" % z
-    old = doc.getObject(name)
-    if old:
-        doc.removeObject(old.Name)
-    obj = doc.addObject("Part::Feature", name)
+    # Fester Name -> vorhandenen Buegel in place ersetzen (kein Anhaeufen).
+    for o in list(doc.Objects):
+        if o.Name.startswith("Riemenschutz") or (o.Label or "").startswith("Riemenschutz"):
+            doc.removeObject(o.Name)
+    obj = doc.addObject("Part::Feature", "Riemenschutz")
+    obj.Label = "Riemenschutz z%d" % z
     obj.Shape = shape
     doc.recompute()
     if Gui and Gui.ActiveDocument:
