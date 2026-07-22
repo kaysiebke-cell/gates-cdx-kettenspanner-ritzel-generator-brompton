@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#2a2d34"/>
+      <stop offset="0.55" stop-color="#17191e"/>
+      <stop offset="1" stop-color="#0d0e11"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0.1" y1="0.05" x2="0.9" y2="0.95">
+      <stop offset="0" stop-color="#F7A34B"/>
+      <stop offset="0.45" stop-color="#DE7A24"/>
+      <stop offset="1" stop-color="#9E410C"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.36" cy="0.30" r="0.7">
+      <stop offset="0" stop-color="#FFCE93" stop-opacity="0.38"/>
+      <stop offset="0.45" stop-color="#FFCE93" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bore" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#0a0805"/>
+      <stop offset="0.8" stop-color="#140d06"/>
+      <stop offset="1" stop-color="#3a1d09"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="512" height="512" rx="120.3" ry="120.3" fill="url(#bg)"/>
+
+  <!-- Schatten des Ritzels -->
+  <ellipse cx="265.6" cy="272.8" rx="226.4" ry="226.4" fill="#000000" opacity="0.22"/>
+
+  <!-- Zaehne + Grundkoerper -->
+  <g>
+    <rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(0.000 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(25.714 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(51.429 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(77.143 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(102.857 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(128.571 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(154.286 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(180.000 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(205.714 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(231.429 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(257.143 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(282.857 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(308.571 256.0 256.0)"/><rect x="227.72" y="24.99" width="56.55" height="86.63" rx="16.97" ry="16.97" fill="url(#metal)" transform="rotate(334.286 256.0 256.0)"/>
+    <circle cx="256.0" cy="256.0" r="178.1" fill="url(#metal)"/>
+
+    <!-- eingelassene Rille (Kontur) -->
+    <circle cx="256.0" cy="256.0" r="139.6" fill="none" stroke="#7d3308" stroke-width="8.4" opacity="0.9"/>
+    <circle cx="256.0" cy="256.0" r="134.7" fill="none" stroke="#FFB566" stroke-width="2.9" opacity="0.5"/>
+
+    <!-- Lagersitz -->
+    <circle cx="256.0" cy="256.0" r="110.7" fill="url(#metal)"/>
+    <circle cx="256.0" cy="256.0" r="110.7" fill="none" stroke="#7d3308" stroke-width="4.8" opacity="0.85"/>
+
+    <!-- Bohrung -->
+    <circle cx="256.0" cy="256.0" r="62.6" fill="url(#bore)"/>
+    <circle cx="256.0" cy="256.0" r="62.6" fill="none" stroke="#FFB566" stroke-width="2.9" opacity="0.35"/>
+  </g>
+
+  <!-- Glanzlicht ueber allem -->
+  <circle cx="256.0" cy="256.0" r="231.0" fill="url(#sheen)"/>
+</svg>
