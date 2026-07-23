@@ -1,7 +1,7 @@
 import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 import * as THREE from 'three';
 import { t } from './i18n.js';
-import { params, DEFAULTS } from './fields.js';
+import { params } from './fields.js';
 import { buildMeshes } from './geometry.js';
 import { scene, camera, controls, boden, mat } from './scene.js';
 import { buegelGeometrie, buegelMaterial } from './buegel.js';
@@ -29,40 +29,9 @@ export function aktualisiereBuegel(p) {
   buegelGruppe.add(m);
 }
 
-// STEP gibt es nur vorgebaut (Browser kann kein STEP erzeugen): die
-// GitHub-Action baut die Serie 12–18 und legt Ritzel- + Bügel-STEP ins
-// Release "serie". Der STEP-Button erscheint daher nur bei Standardwerten.
-const SERIE_MIN = 12, SERIE_MAX = 18;
-const RELEASE_URL = (name) =>
-  `https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/download/serie/${name}`;
-
-function istStandard(p) {
-  const abw = Object.keys(p).filter(
-    k => k !== 'zaehne' && Math.abs(p[k] - DEFAULTS[k]) > 1e-9);
-  return abw.length === 0 && p.zaehne >= SERIE_MIN && p.zaehne <= SERIE_MAX;
-}
-
-function stepAktualisieren(p) {
-  const btn = document.getElementById('stepbtn');
-  const hint = document.getElementById('stephint');
-  const zeigen = istStandard(p);
-  btn.style.display = zeigen ? '' : 'none';
-  hint.style.display = zeigen ? '' : 'none';
-  if (zeigen) btn.textContent = `📐 ${t('step_both')} (${p.zaehne} ${t('teeth_label')})`;
-  if (zeigen) hint.textContent = t('step_hint');
-}
-
-// STEP für Ritzel + Bügel: eine vorgebaute ZIP direkt aus dem Release
-// (serverseitig gebündelt — der Browser darf Release-Dateien nicht per
-// fetch laden, ein direkter Link geht aber ohne CORS-Problem).
-export function exportStep() {
-  const z = params().zaehne;
-  const name = `cdx_ritzel_buegel_z${z}_step.zip`;
-  const a = document.createElement('a');
-  a.href = RELEASE_URL(name);
-  a.download = name;
-  document.body.appendChild(a); a.click(); a.remove();
-}
+// Der STEP-Download (vorgebaute Release-ZIP, nur bei Standardwerten) lebt
+// jetzt in step.js und wird von der Shell verdrahtet — er braucht kein 3D
+// und funktioniert daher auch, wenn der Viewer nicht geladen ist.
 
 export function rebuild() {
   const p = params();
@@ -81,7 +50,6 @@ export function rebuild() {
     `${t('head_circle')}: <b>${(rKopf * 2).toFixed(2)} mm</b> · ` +
     `${t('total_height')}: <b>${Math.max(p.breite, p.nabe_l).toFixed(1)} mm</b> · ` +
     `${t('teeth_label')}: <b>${p.zaehne}</b>`;
-  stepAktualisieren(p);
   aktualisiereBuegel(p);
 }
 

@@ -6,10 +6,13 @@
 import { initI18n, updateUI, t, i18n } from './i18n.js';
 import { buildFormFields } from './fields.js';
 import { renderPrint } from './print.js';
+import { refreshStepButton, exportStep } from './step.js';
 
-// Formularänderung → (entprellt) den Viewer neu bauen lassen, sobald da.
+// Formularänderung → STEP-Button sofort aktualisieren (braucht kein 3D)
+// und (entprellt) den Viewer neu bauen lassen, sobald er da ist.
 let timer = null;
-function scheduleRebuild() {
+function onFormChange() {
+  refreshStepButton();
   clearTimeout(timer);
   timer = setTimeout(() => window.__ritzelRebuild && window.__ritzelRebuild(), 120);
 }
@@ -40,16 +43,25 @@ document.getElementById('tab-gen').addEventListener('click', () => activateTab('
 document.getElementById('tab-print').addEventListener('click', () => activateTab('print'));
 
 initI18n();
-buildFormFields(scheduleRebuild);
+buildFormFields(onFormChange);
 setStaticTexts();
+refreshStepButton();   // STEP-Button gleich beim Start setzen (ohne 3D)
+
+// STEP-Download aus dem Release: hängt nicht am Viewer, damit er auch auf
+// schwachen Handys funktioniert, wo Three.js evtl. nicht lädt.
+document.getElementById('stepbtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  exportStep();
+});
 
 // Sprachumschalter: Formular + Titel sofort umstellen; der Viewer
 // aktualisiert (falls schon geladen) Stats/Serien-Buttons über den Hook.
 document.getElementById('lang-toggle').addEventListener('click', () => {
   i18n.lang = i18n.lang === 'de' ? 'en' : 'de';
   updateUI();
-  buildFormFields(scheduleRebuild);
+  buildFormFields(onFormChange);
   setStaticTexts();
+  refreshStepButton();   // Beschriftung in neuer Sprache
   if (window.__ritzelLangChanged) window.__ritzelLangChanged();
 });
 
