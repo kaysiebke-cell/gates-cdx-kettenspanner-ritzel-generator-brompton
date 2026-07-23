@@ -1,0 +1,12 @@
+name = "ritzel-step"
+main = "step-proxy.js"
+compatibility_date = "2024-11-01"
+
+# GITHUB_TOKEN wird NICHT hier eingetragen, sondern als Secret gesetzt:
+#   npx wrangler secret put GITHUB_TOKEN
+#
+# REPO und ALLOWED_ORIGIN sind unkritisch und stehen als Variablen hier.
+# ALLOWED_ORIGIN an deine Pages-URL anpassen (ohne abschliessenden Slash).
+[vars]
+REPO = "kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton"
+ALLOWED_ORIGIN = "https://kaysiebke-cell.github.io"

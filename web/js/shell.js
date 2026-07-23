@@ -6,7 +6,7 @@
 import { initI18n, updateUI, t, i18n } from './i18n.js';
 import { buildFormFields } from './fields.js';
 import { renderPrint } from './print.js';
-import { refreshStepButton, exportStep } from './step.js';
+import { refreshStepButton, exportStep, initStep } from './step.js';
 
 // Formularänderung → STEP-Button sofort aktualisieren (braucht kein 3D)
 // und (entprellt) den Viewer neu bauen lassen, sobald er da ist.
@@ -45,7 +45,8 @@ document.getElementById('tab-print').addEventListener('click', () => activateTab
 initI18n();
 buildFormFields(onFormChange);
 setStaticTexts();
-refreshStepButton();   // STEP-Button gleich beim Start setzen (ohne 3D)
+initStep();            // Cloud-Build-Button verdrahten (eigene Werte)
+refreshStepButton();   // STEP-Buttons gleich beim Start setzen (ohne 3D)
 
 // STEP-Download aus dem Release: hängt nicht am Viewer, damit er auch auf
 // schwachen Handys funktioniert, wo Three.js evtl. nicht lädt.
