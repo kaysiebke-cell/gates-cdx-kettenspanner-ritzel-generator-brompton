@@ -1,5 +1,11 @@
 name: Ritzel bauen (headless)
 
+# Der Web-Generator kann diesen Build per Vermittler (worker/) mit eigenen
+# Werten anstossen, um STEP fuer nicht-Standard-Parameter zu erzeugen.
+# Die client_id landet im run-name, damit der Vermittler genau diesen Lauf
+# wiederfindet.
+run-name: Ritzel bauen ${{ inputs.client_id }}
+
 on:
   workflow_dispatch:
     inputs:
@@ -9,6 +15,12 @@ on:
           Beispiel: {"zaehne": 16, "bohrung_d": 14, "breite": 11}
         required: false
         default: "{}"
+      client_id:
+        description: >
+          Korrelations-ID des Web-Vermittlers (worker/). Optional; nur fuer
+          On-Demand-STEP-Builds gesetzt, damit der Lauf wiederfindbar ist.
+        required: false
+        default: ""
   # Selbsttest: bei Aenderungen an der Baulogik einmal mit
   # Standardwerten durchlaufen
   push:
@@ -67,4 +79,16 @@ jobs:
         with:
           name: ritzel-export
           path: output/
+          if-no-files-found: error
+
+      # Nur die STEP-Dateien als eigenes Artifact — der Web-Vermittler
+      # (worker/) laedt genau dieses und reicht es als ZIP an den Browser
+      # durch (Ritzel + Buegel). Kein Rendern/STL noetig.
+      - name: STEP fuer Web-Download bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: step-download
+          path: |
+            output/ritzel_z*.step
+            output/riemenschutz_z*.step
           if-no-files-found: error
