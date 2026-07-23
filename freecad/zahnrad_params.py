@@ -18,14 +18,14 @@ FIELD_SECTIONS = [
         ("breite",          "Breite Z",       11.00),  # axiale Gesamtdicke
         ("zahn_r",          "Zahn-Rundung",    0.40),  # Verrundung der Zahnkontur beidseitig (0 = scharf)
         ("fuehrung_w",      "Führung Breite",  1.00),  # Dicke des Führungsrings (0 = keiner)
-        ("fuehrung_d",      "Führung Ø",       0.00),  # Führungsring-Außen-Ø (0 = auto)
+        ("fuehrung_d",      "Führung Ø",      46.50),  # Führungsring-Außen-Ø (0 = auto)
     ]),
     ("Seitliche Schmutzabweiser", [
-        ("steg_w",          "Steg Breite",     2.00),  # stehender Mittelsteg (Muldenabstand)
-        ("seiten_t",        "Tiefe am Steg",   7.05),  # radiale Muldentiefe am Steg (Drehpunkt)
-        ("tasche_b",        "Mulden-Breite",   4.50),  # tangentiale Breite je Mulde (0 = keine)
-        ("mulde_winkel",    "Mulden-Winkel",  24.00),  # dreht an der Steg-Kante, nach außen tiefer (0 = gerade)
-        ("mulde_r",         "Mulden-Rundung",  1.50),  # Radius der Winkelflächen-Verrundung
+        ("steg_w",          "Steg Breite",     3.00),  # stehender Mittelsteg (Muldenabstand)
+        ("seiten_t",        "Tiefe am Steg",   6.00),  # radiale Muldentiefe am Steg (Drehpunkt)
+        ("tasche_b",        "Mulden-Breite",   5.00),  # tangentiale Breite je Mulde (0 = keine)
+        ("mulde_winkel",    "Mulden-Winkel",  35.00),  # dreht an der Steg-Kante, nach außen tiefer (0 = gerade)
+        ("mulde_r",         "Mulden-Rundung",  2.00),  # Radius der Winkelflächen-Verrundung
     ]),
     ("Zylinder (Kugellager)", [
         ("bohrung_d",       "Bohrung Ø",      14.00),  # zentrale Wellenbohrung (0 = keine)

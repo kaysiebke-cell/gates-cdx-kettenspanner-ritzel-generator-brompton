@@ -15,7 +15,7 @@ export const SECTIONS = [
     ['breite',          'width_z',        11.00, 0.5],
     ['zahn_r',          'tooth_round',     0.40, 0.05],
     ['fuehrung_w',      'guide_width',   1.00, 0.1],
-    ['fuehrung_d',      'guide_d', 0.00, 0.5],
+    ['fuehrung_d',      'guide_d', 46.50, 0.5],
   ]],
   ['sec2', [
     ['bohrung_d', 'bore_d',       14.00, 0.5],
@@ -25,11 +25,11 @@ export const SECTIONS = [
     ['lager_t',   'bearing_depth',  1.00, 0.1],
   ]],
   ['sec3', [
-    ['steg_w',       'web_width',    2.00, 0.1],
-    ['seiten_t',     'side_depth',  7.05, 0.1],
-    ['tasche_b',     'pocket_width',  4.50, 0.1],
-    ['mulde_winkel', 'pocket_angle', 24.00, 1],
-    ['mulde_r',      'pocket_round', 1.50, 0.1],
+    ['steg_w',       'web_width',    3.00, 0.1],
+    ['seiten_t',     'side_depth',  6.00, 0.1],
+    ['tasche_b',     'pocket_width',  5.00, 0.1],
+    ['mulde_winkel', 'pocket_angle', 35.00, 1],
+    ['mulde_r',      'pocket_round', 2.00, 0.1],
   ]],
 ];
 
