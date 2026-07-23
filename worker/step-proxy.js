@@ -21,6 +21,14 @@ const WORKFLOW = 'build-ritzel.yml';
 const REF = 'main';
 const GH = 'https://api.github.com';
 
+// Fest hinterlegte Vorgaben, damit beim Einrichten nur der GITHUB_TOKEN
+// als Secret gesetzt werden muss. Nur noetig zu aendern, wenn Repo oder
+// Pages-Adresse anders sind — dann per Variable REPO / ALLOWED_ORIGIN im
+// Cloudflare-Dashboard ueberschreiben.
+const DEFAULT_REPO = 'kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton';
+const DEFAULT_ORIGIN = 'https://kaysiebke-cell.github.io';
+const repoOf = (env) => env.REPO || DEFAULT_REPO;
+
 // Erlaubte Parameter + zulaessige Bereiche. Fremde Keys werden verworfen,
 // Werte auf sinnvolle Grenzen geklemmt — so kann der oeffentliche Endpunkt
 // keine entarteten oder missbraeuchlichen Builds ausloesen.
@@ -78,7 +86,7 @@ const ghHeaders = (env) => ({
 
 // Lauf ueber die client_id im run-name wiederfinden ("Ritzel bauen <id>").
 async function findeLauf(env, id) {
-  const url = `${GH}/repos/${env.REPO}/actions/workflows/${WORKFLOW}/runs?event=workflow_dispatch&per_page=40`;
+  const url = `${GH}/repos/${repoOf(env)}/actions/workflows/${WORKFLOW}/runs?event=workflow_dispatch&per_page=40`;
   const r = await fetch(url, { headers: ghHeaders(env) });
   if (!r.ok) return null;
   const data = await r.json();
@@ -87,7 +95,8 @@ async function findeLauf(env, id) {
 
 export default {
   async fetch(request, env) {
-    const origin = env.ALLOWED_ORIGIN || '*';
+    const origin = env.ALLOWED_ORIGIN || DEFAULT_ORIGIN;
+    const repo = repoOf(env);
     const url = new URL(request.url);
 
     if (request.method === 'OPTIONS')
@@ -104,7 +113,7 @@ export default {
 
         const id = crypto.randomUUID();
         const disp = await fetch(
-          `${GH}/repos/${env.REPO}/actions/workflows/${WORKFLOW}/dispatches`,
+          `${GH}/repos/${repo}/actions/workflows/${WORKFLOW}/dispatches`,
           {
             method: 'POST',
             headers: ghHeaders(env),
@@ -143,7 +152,7 @@ export default {
             { status: 409, headers: jsonHeaders(origin) });
 
         const aRes = await fetch(
-          `${GH}/repos/${env.REPO}/actions/runs/${lauf.id}/artifacts`,
+          `${GH}/repos/${repo}/actions/runs/${lauf.id}/artifacts`,
           { headers: ghHeaders(env) });
         const aData = await aRes.json();
         const art = (aData.artifacts || []).find(a => a.name === 'step-download');
@@ -152,7 +161,7 @@ export default {
             { status: 404, headers: jsonHeaders(origin) });
 
         const zip = await fetch(
-          `${GH}/repos/${env.REPO}/actions/artifacts/${art.id}/zip`,
+          `${GH}/repos/${repo}/actions/artifacts/${art.id}/zip`,
           { headers: ghHeaders(env) });
         if (!zip.ok)
           return new Response(JSON.stringify({ error: `artifact ${zip.status}` }),
