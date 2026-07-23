@@ -10,4 +10,4 @@
 //   2. Die vom Worker vergebene URL hier eintragen, z. B.
 //      export const STEP_API = 'https://ritzel-step.dein-name.workers.dev';
 //   3. Änderung committen → Pages-Deploy schaltet den Button frei.
-export const STEP_API = 'https://gates-cdx-kettenspanner-ritzel-generator-brompton.kaysiebke.workers.dev';
+export const STEP_API = '';
