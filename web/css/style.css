@@ -89,6 +89,19 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
 }
 #lang-toggle:hover { background: var(--border); }
 
+/* Install-Button (PWA): nur sichtbar, wenn der Browser die Installation
+   anbietet (Steuerung via [hidden] im Inline-Skript). Optisch hervorgehoben
+   in der Theme-Farbe, damit er als Handlungsaufforderung erkennbar ist. */
+#installbtn {
+  width: auto; flex: 0 0 auto;
+  padding: 4px 10px; border: 1px solid var(--accent); border-radius: 4px;
+  background: var(--accent); color: var(--accent-text); font-size: 12px;
+  cursor: pointer; white-space: nowrap; margin-left: auto;
+}
+#installbtn + #lang-toggle { margin-left: 8px; }
+#installbtn:hover { filter: brightness(1.08); }
+#installbtn[hidden] { display: none; }
+
 /* ── Tab-Leiste ───────────────────────────────────────────────────── */
 /* Ausblenden erzwingen: die Author-Regel `main { display:flex }` würde
    sonst das UA-`[hidden]` (display:none) überstimmen, sodass die

@@ -58,6 +58,7 @@ export const i18n = {
       buegel_show: 'Riemenschutz-Bügel anzeigen',
       buegel_stl: 'Bügel-STL',
       buegel_missing: 'Bügel-Datei für diese Zähnezahl noch nicht exportiert (freecad/export_buegel.py ausführen).',
+      install: '⬇ Als App installieren',
     },
     en: {
       title: 'Gates CDX Belt-Drive Sprocket Generator (Brompton)',
@@ -112,6 +113,7 @@ export const i18n = {
       buegel_show: 'Show belt-guard bracket',
       buegel_stl: 'Bracket STL',
       buegel_missing: 'Bracket file for this tooth count not exported yet (run freecad/export_buegel.py).',
+      install: '⬇ Install as app',
     }
   },
 };

@@ -23,6 +23,9 @@ function setStaticTexts() {
   document.getElementById('buegellbl').textContent = t('buegel_show');
   document.getElementById('tab-gen').textContent = t('tab_gen');
   document.getElementById('tab-print').textContent = t('tab_print');
+  // Install-Button-Beschriftung (Sichtbarkeit steuert das Inline-PWA-Skript)
+  const ib = document.getElementById('installbtn');
+  if (ib) ib.textContent = t('install');
   // Druck-Empfehlungen in der aktuellen Sprache einspeisen
   document.getElementById('printview').innerHTML = renderPrint(i18n.lang);
 }
