@@ -47,7 +47,7 @@ jobs:
       - name: Cache-Busting-Version einsetzen
         run: |
           V="${GITHUB_SHA::8}"
-          sed -i "s/__V__/$V/g" web/index.html web/js/shell.bundle.js
+          sed -i "s/__V__/$V/g" web/index.html web/js/shell.bundle.js web/sw.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

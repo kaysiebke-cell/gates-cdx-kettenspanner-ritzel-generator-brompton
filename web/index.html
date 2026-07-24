@@ -18,6 +18,7 @@
 <header>
   <h1 id="title">Gates CDX Riemenspanner-Ritzel Generator (Brompton)</h1>
   <span class="sub" id="subtitle">Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen</span>
+  <button id="installbtn" hidden>⬇ Als App installieren</button>
   <button id="lang-toggle">DE / EN</button>
 </header>
 <nav id="tabs">
@@ -65,5 +66,44 @@
        npm install   (einmalig)
        npm run build -->
 <script src="js/shell.bundle.js?v=__V__"></script>
+
+<!-- PWA: Service Worker registrieren (Voraussetzung für "Als App installieren"
+     auf Android/Chrome) und den Install-Button verdrahten. Bewusst als eigenes
+     Inline-Skript, damit die Installierbarkeit auch dann greift, wenn das
+     Shell-Bundle einmal nicht lädt. -->
+<script>
+(function () {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+
+  var deferredPrompt = null;
+  var btn = document.getElementById('installbtn');
+
+  // Chrome/Edge/Android: eigener Install-Prompt über beforeinstallprompt.
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (btn) btn.hidden = false;
+  });
+
+  if (btn) {
+    btn.addEventListener('click', function () {
+      if (!deferredPrompt) return;
+      btn.hidden = true;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.finally(function () { deferredPrompt = null; });
+    });
+  }
+
+  // Nach erfolgreicher Installation den Button ausblenden.
+  window.addEventListener('appinstalled', function () {
+    deferredPrompt = null;
+    if (btn) btn.hidden = true;
+  });
+})();
+</script>
 </body>
 </html>
