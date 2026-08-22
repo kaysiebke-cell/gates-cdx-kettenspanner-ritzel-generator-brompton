@@ -404,16 +404,24 @@ body {
   /* Navigation Bar: aus der Rail wird die Leiste am unteren Rand */
   #tabs {
     order: 9; flex-direction: row; gap: 0;
-    width: 100%; height: auto; padding: 8px;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    width: 100%; height: auto; padding: 5px 8px;
+    padding-bottom: calc(5px + env(safe-area-inset-bottom));
     box-shadow: 0 -1px 3px rgba(0,0,0,.10);
   }
-  .tab { flex: 1; min-width: 0; }
+  .tab { flex: 1; min-width: 0; padding: 3px 2px; gap: 2px; }
+  .tab__ind { height: 30px; }
   #genview, #printview { order: 1; }
 
   #genview { flex-direction: column; }
   /* Vorschau oben festhalten, Formular scrollt darunter */
-  #viewport { flex: 0 0 46%; min-height: 190px; order: -1; margin: 8px 8px 10px; }
+  /* Feste, gedeckelte Höhe statt 46 % der Fläche: auf grossen Handys
+     verschlang der Prozentwert den halben Bildschirm, obwohl die Vorschau
+     ab ~260 px nicht mehr an Aussagekraft gewinnt. Der gewonnene Platz
+     geht ans Formular – da wird gearbeitet. */
+  #viewport {
+    flex: 0 0 auto; height: clamp(150px, 30dvh, 260px);
+    order: -1; margin: 8px 8px 10px;
+  }
   /* Klare Kante zum Formular. Ein Schatten allein reicht nicht: schwarz
      auf fast schwarzem Grund ist im Dunkelmodus unsichtbar. */
   /* KEINE Polsterung oben: ein haftendes Kind richtet sich am Rand der
@@ -434,7 +442,7 @@ body {
     position: sticky; top: 0; z-index: 2; gap: 6px;
     /* über die Seitenpolsterung von #form hinausziehen, sonst scrollt
        links und rechts Inhalt an der Leiste vorbei */
-    margin: 0 -8px 4px; padding: 10px 8px 8px;
+    margin: 0 -8px 2px; padding: 8px 8px 6px;
     background: var(--surface);
   }
   /* weicher Auslauf nach unten – zeigt, dass der Inhalt weiterläuft */
@@ -443,11 +451,15 @@ body {
     height: 12px; pointer-events: none;
     background: linear-gradient(var(--surface), transparent);
   }
-  .stat { padding: 8px 10px; border-radius: 14px; }
-  .row { min-height: 48px; }
+  .stat { padding: 6px 10px; border-radius: 12px; gap: 0; }
+  .stat__k { font-size: 10.5px; }
+  .stat__v { font-size: 14px; }
+  /* Am Handy grosszuegiger als am Desktop: der gewonnene Platz aus der
+     gedeckelten Vorschau geht in Zeilenhoehe und Feldgroesse. */
+  .row { min-height: 52px; padding: 0 14px; }
   .row label { font-size: 15px; }
   /* 16px verhindert den Auto-Zoom beim Antippen auf iOS */
-  .row input { width: 104px; height: 40px; font-size: 16px; border-radius: 10px; }
+  .row input { width: 112px; height: 44px; font-size: 16px; border-radius: 11px; }
   .card__title { font-size: 16px; }
   .btn { min-height: 52px; font-size: 16px; }
   #overlaynote { display: none; }
@@ -467,14 +479,20 @@ body {
   .topbar .sub { display: none; }
   .lang-btn, #installbtn { height: 34px; }
   #overlaynote { display: none; }
-  /* Rail schmaler, Nav-Bar flacher */
-  #tabs { width: 72px; padding: 6px 4px; }
+  /* Rail schmaler, Nav-Bar flacher. Schrift etwas kleiner, sonst werden
+     "Generator" in der Rail und die Kachel-Beschriftungen abgeschnitten. */
+  #tabs { width: 78px; padding: 6px 4px; }
   .tab__ind { width: 48px; height: 28px; }
+  .tab__label { font-size: 11px; }
+  .stat__k { font-size: 10px; }
+  .stat { padding: 8px 10px; }
 }
 @media (max-height: 480px) and (max-width: 700px) {
   #tabs { padding: 4px 8px; padding-bottom: calc(4px + env(safe-area-inset-bottom)); }
   .tab__label { display: none; }
-  #viewport { flex: 0 0 54%; }
+  /* height aus der Portraet-Regel zuruecknehmen – im flachen Querformat
+     teilt sich die Hoehe besser prozentual auf */
+  #viewport { flex: 0 0 54%; height: auto; }
 }
 /* … und in der zweispaltigen Ansicht das Formular etwas schmaler,
    damit die Vorschau mehr Breite bekommt */
