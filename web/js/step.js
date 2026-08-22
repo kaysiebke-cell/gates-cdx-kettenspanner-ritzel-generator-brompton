@@ -45,9 +45,7 @@ export function refreshStepButton() {
   btn.style.display = standard ? '' : 'none';
   hint.style.display = standard ? '' : 'none';
   if (standard) {
-    // Nur den Label-Span setzen – textContent würde das SVG-Icon löschen.
-    el('stepbtn-label').textContent =
-      `${t('step_both')} (${p.zaehne} ${t('teeth_label')})`;
+    btn.textContent = `📐 ${t('step_both')} (${p.zaehne} ${t('teeth_label')})`;
     hint.textContent = t('step_hint');
   }
 
@@ -58,11 +56,7 @@ export function refreshStepButton() {
     if (bbtn) bbtn.style.display = 'none';
     if (bhint) bhint.style.display = 'none';
   } else if (STEP_API) {
-    if (bbtn) {
-      bbtn.style.display = '';
-      el('stepbuildbtn-label').textContent = t('step_build');
-      bbtn.disabled = false;
-    }
+    if (bbtn) { bbtn.style.display = ''; bbtn.textContent = t('step_build'); bbtn.disabled = false; }
     if (bhint) { bhint.style.display = ''; bhint.textContent = t('step_build_hint'); }
   } else {
     if (bbtn) bbtn.style.display = 'none';

@@ -19,13 +19,12 @@ function onFormChange() {
 
 // Statische Texte, die kein 3D brauchen (Button-Beschriftung, Tabs).
 function setStaticTexts() {
-  // Nur die Label-Spans beschriften – die SVG-Icons im Markup bleiben.
-  document.getElementById('stlbtn-label').textContent = t('custom_stl');
+  document.getElementById('stlbtn').textContent = `💾 ${t('custom_stl')}`;
   document.getElementById('buegellbl').textContent = t('buegel_show');
-  document.getElementById('tab-gen-label').textContent = t('nav_gen');
-  document.getElementById('tab-print-label').textContent = t('nav_print');
+  document.getElementById('tab-gen').textContent = t('tab_gen');
+  document.getElementById('tab-print').textContent = t('tab_print');
   // Install-Button-Beschriftung (Sichtbarkeit steuert das Inline-PWA-Skript)
-  const ib = document.getElementById('installbtn-label');
+  const ib = document.getElementById('installbtn');
   if (ib) ib.textContent = t('install');
   // Druck-Empfehlungen in der aktuellen Sprache einspeisen
   document.getElementById('printview').innerHTML = renderPrint(i18n.lang);
@@ -36,13 +35,9 @@ function activateTab(name) {
   const gen = name === 'gen';
   document.getElementById('genview').hidden = !gen;
   document.getElementById('printview').hidden = gen;
-  // Navigationsleiste: der aktive Eintrag trägt aria-current="page"
-  // (aria-selected gilt nur im Tab-Muster und wäre hier unwirksam).
   const tg = document.getElementById('tab-gen'), tp = document.getElementById('tab-print');
-  for (const [el, aktiv] of [[tg, gen], [tp, !gen]]) {
-    if (aktiv) el.setAttribute('aria-current', 'page');
-    else el.removeAttribute('aria-current');
-  }
+  tg.setAttribute('aria-selected', String(gen));
+  tp.setAttribute('aria-selected', String(!gen));
   // Wird die 3D-Ansicht wieder sichtbar, muss der Renderer neu vermessen
   // (der Viewport war ausgeblendet → Größe 0).
   if (gen) dispatchEvent(new Event('resize'));
