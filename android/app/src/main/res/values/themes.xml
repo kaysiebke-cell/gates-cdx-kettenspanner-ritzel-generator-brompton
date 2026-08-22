@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Farben entsprechen der Rolle „surface-container“ aus web/css/style.css,
+       damit Statusleiste und App-Leiste der Seite ineinander übergehen. -->
+  <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <item name="android:statusBarColor">#EEF0F1</item>
+    <item name="android:navigationBarColor">#EEF0F1</item>
+    <item name="android:windowLightStatusBar">true</item>
+    <item name="android:windowBackground">#FBFBFC</item>
+  </style>
+</resources>

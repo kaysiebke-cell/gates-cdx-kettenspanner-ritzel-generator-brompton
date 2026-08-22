@@ -1,0 +1,216 @@
+name: Android-App bauen (APK)
+
+# Baut aus der Web-App in web/ eine installierbare Android-APK.
+#
+# Gebaut und geprüft wird auf JEDEM Zweig — ein Vorschlag soll durchgerechnet
+# sein, bevor er zusammengeführt wird. Veröffentlicht wird die APK aber nur
+# von „main" und von Versions-Tags: Am Download-Link in APK-HERUNTERLADEN.md
+# hängt die Fassung, die jemand auf sein Handy lädt. Da darf kein Zweig-Bau
+# landen, der vielleicht nie zusammengeführt wird.
+#
+# Vom Zweig gibt es die APK trotzdem — unter „Artefakte" beim Lauf selbst.
+
+on:
+  push:
+    branches: [ "**" ]
+    paths:
+      - "web/**"
+      - "android/**"
+      - "package.json"
+      - ".github/workflows/android.yml"
+    tags:
+      - "v*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: JDK 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Die *.bundle.js liegen nicht im Repo (siehe .gitignore) — ohne diesen
+      # Schritt käme eine APK heraus, in der die Web-App nicht startet.
+      - name: Web-Bundles bauen (esbuild)
+        run: |
+          npm install
+          npm run build:shell && npm run build:viewer
+
+      - name: Android-SDK einrichten
+        uses: android-actions/setup-android@v3
+
+      - name: Gradle-Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      # Ohne festen Schlüssel bekäme jede APK eine andere Signatur — dann ließe
+      # sich kein Update über eine bestehende Installation legen. Der Schlüssel
+      # liegt als Base64 in den Repository-Secrets. Fehlt er, wird eine
+      # Debug-APK gebaut (installierbar, aber nicht update-fähig).
+      - name: Signaturschlüssel bereitstellen
+        id: schluessel
+        env:
+          KEYSTORE_B64: ${{ secrets.SIGNIER_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "vorhanden=ja" >> "$GITHUB_OUTPUT"
+            echo "Signaturschlüssel gefunden — es wird eine Release-APK gebaut."
+          else
+            echo "vorhanden=nein" >> "$GITHUB_OUTPUT"
+            echo "::warning::Kein SIGNIER_KEYSTORE_B64 hinterlegt — es wird eine Debug-APK gebaut. Updates über eine bestehende Installation sind damit NICHT möglich."
+          fi
+
+      - name: APK bauen
+        working-directory: android
+        env:
+          SIGNIER_KEYSTORE: ${{ steps.schluessel.outputs.vorhanden == 'ja' && format('{0}/release.jks', runner.temp) || '' }}
+          SIGNIER_KEYSTORE_PASSWORT: ${{ secrets.SIGNIER_KEYSTORE_PASSWORT }}
+          SIGNIER_ALIAS: ${{ secrets.SIGNIER_ALIAS }}
+          SIGNIER_ALIAS_PASSWORT: ${{ secrets.SIGNIER_ALIAS_PASSWORT }}
+          # Laufnummer als versionCode: Android verlangt für ein Update eine
+          # höhere Zahl. Dazu 1000 addiert, damit die APK von hier IMMER über
+          # einer selbst gebauten Testfassung liegt — sonst genügt ein
+          # Probelauf am eigenen Rechner, und die nächste APK von GitHub gilt
+          # als Rückschritt. Der Bereich unter 1000 gehört den Testfassungen.
+          #
+          # Gerechnet wird unten in der Shell: die Ausdrücke von GitHub Actions
+          # beherrschen kein Plus, `run_number + 1000` bricht den Lauf ab.
+          LAUF_NUMMER: ${{ github.run_number }}
+        run: |
+          export VERSION_CODE=$((LAUF_NUMMER + 1000))
+          echo "versionCode dieser APK: $VERSION_CODE"
+          chmod +x ./gradlew
+          if [ "${{ steps.schluessel.outputs.vorhanden }}" = "ja" ]; then
+            ./gradlew --no-daemon assembleRelease
+          else
+            ./gradlew --no-daemon assembleDebug
+          fi
+
+      - name: APK umbenennen
+        run: |
+          mkdir -p out
+          if [ "${{ steps.schluessel.outputs.vorhanden }}" = "ja" ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk out/ritzel-generator.apk
+          else
+            cp android/app/build/outputs/apk/debug/app-debug.apk out/ritzel-generator.apk
+          fi
+          ls -lh out/ritzel-generator.apk
+
+      # Eine APK ohne Web-App baut grün durch und bliebe auf dem Handy weiß.
+      # Deshalb hier eine harte Kontrolle, bevor irgendetwas veröffentlicht wird.
+      #
+      # Geprüft wird nicht nur, ob die Dateien DA sind, sondern ob sie
+      # DIESELBEN sind: Byte für Byte gegen web/. Vorhandensein allein sagt
+      # nichts — eine APK mit veralteter style.css bestünde die Prüfung, und
+      # auf dem Handy änderte sich nach dem Update nichts.
+      #
+      # index.html und sw.js sind ausgenommen: dort ersetzt der Build den
+      # Platzhalter __V__ durch die Inhaltskennung (Cache-Busting). Bei ihnen
+      # wird stattdessen geprüft, dass KEIN Platzhalter übrig blieb.
+      - name: Prüfen, ob die Web-App aktuell in der APK steckt
+        run: |
+          python3 - <<'PY'
+          import sys, zipfile, hashlib, os, re
+
+          apk = zipfile.ZipFile("out/ritzel-generator.apk")
+          drin = {n for n in apk.namelist() if n.startswith("assets/www/")}
+
+          noetig = ["assets/www/index.html", "assets/www/css/style.css",
+                    "assets/www/js/shell.bundle.js", "assets/www/js/viewer.bundle.js",
+                    "assets/www/sw.js", "assets/www/manifest.webmanifest"]
+          fehlt = [d for d in noetig if d not in drin]
+          if fehlt:
+              print("::error::Die APK enthält die Web-App nicht: " + ", ".join(fehlt))
+              sys.exit(1)
+
+          ersetzt = {"assets/www/index.html", "assets/www/sw.js"}
+          abweichend = []
+          for name in sorted(drin):
+              quelle = os.path.join("web", name[len("assets/www/"):])
+              if not os.path.isfile(quelle):
+                  abweichend.append(name + " (keine Quelle in web/)")
+                  continue
+              inhalt = apk.read(name)
+              if name in ersetzt:
+                  if b"__V__" in inhalt:
+                      abweichend.append(name + " (Platzhalter __V__ nicht ersetzt)")
+                  else:
+                      print("  ersetzt: " + name)
+                  continue
+              a = hashlib.sha256(open(quelle, "rb").read()).hexdigest()
+              b = hashlib.sha256(inhalt).hexdigest()
+              if a != b:
+                  abweichend.append(name + " (Inhalt weicht von web/ ab)")
+              else:
+                  print("  gleich: " + name)
+
+          if abweichend:
+              for a in abweichend:
+                  print("::error::" + a)
+              print("::error::Die APK trägt eine andere Fassung der Web-App als web/.")
+              sys.exit(1)
+
+          # Kein Abbruch: nicht alles in web/ gehört in die APK (buegel/*.stl
+          # etwa lädt die Seite gar nicht). Sichtbar soll es trotzdem sein,
+          # falls jemand eine neue Datei anlegt und die Kopierregel vergisst.
+          for pfad, _, dateien in os.walk("web"):
+              for d in dateien:
+                  lokal = os.path.join(pfad, d)
+                  erwartet = "assets/www/" + os.path.relpath(lokal, "web")
+                  if erwartet not in drin:
+                      print("::notice::nicht in der APK: " + erwartet
+                            + " — falls gewollt, ist alles gut; sonst fehlt eine"
+                            + " include-Zeile in android/app/build.gradle")
+          PY
+
+      - name: Schlüssel wieder entfernen
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+
+      - name: APK als Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: ritzel-generator-apk
+          path: out/ritzel-generator.apk
+          if-no-files-found: error
+
+      - name: Release mit APK veröffentlichen (direkter Download, ohne ZIP)
+        if: >-
+          github.event_name == 'push'
+          && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'app' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'Ritzel-Generator (Android-App)' }}
+          make_latest: false
+          files: out/ritzel-generator.apk
+          body: |
+            Installierbare Android-App — Gates CDX Ritzel-Generator.
+
+            **Herunterladen:** unten unter „Assets" → `ritzel-generator.apk`.
+            **Installieren:** APK aufs Handy laden, öffnen, „Aus dieser Quelle
+            installieren" erlauben.
+
+            Die App bringt die komplette Web-App mit und läuft ohne Netz.
+            Netz braucht nur der STEP-Download für Standardwerte, der die
+            fertige ZIP aus dem Release „serie" holt.

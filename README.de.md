@@ -15,6 +15,10 @@ Dieses Tool generiert parametrische **Umlenkrollen / Führungsritzel für den or
 
 [![⚙ Konfigurator öffnen](https://img.shields.io/badge/%E2%9A%99%20Konfigurator%20%C3%B6ffnen-Live--Vorschau%20im%20Browser-blue?style=for-the-badge)](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/)
 
+[![📱 Android-App](https://img.shields.io/badge/%F0%9F%93%B1%20Android--App-APK%20herunterladen-brightgreen?style=for-the-badge)](APK-HERUNTERLADEN.md)
+
+Fürs Handy gibt es dieselbe Anwendung als **installierbare App** — sie bringt alles mit und läuft ohne Netz: [Anleitung zum Herunterladen](APK-HERUNTERLADEN.md).
+
 Im Web-Konfigurator kannst du das **Spannrollen-Ritzel live in 3D drehen und anpassen**. Zahnprofil, Schmutzöffnungen, Riemenführung, Nabe und Kugellagersitze verändern sich direkt mit deinen Wünschen.
 
 **Zwei Wege zum Download:**

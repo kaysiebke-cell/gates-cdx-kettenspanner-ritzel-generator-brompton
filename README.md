@@ -15,6 +15,10 @@ This tool generates parametric **pulley wheels / guide sprockets for the origina
 
 [![⚙ Open Configurator](https://img.shields.io/badge/%E2%9A%99%20Open%20Configurator-Live--Preview%20in%20Browser-blue?style=for-the-badge)](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/)
 
+[![📱 Android app](https://img.shields.io/badge/%F0%9F%93%B1%20Android%20app-download%20APK-brightgreen?style=for-the-badge)](APK-HERUNTERLADEN.md)
+
+The same tool is available as an **installable app** for phones — it ships everything and runs offline: [download instructions](APK-HERUNTERLADEN.md).
+
 In the web configurator, you can **rotate and adjust the tensioner sprocket live in 3D**. The tooth profile, debris mud ports, belt guide, hub, and ball bearing seats update instantly based on your preferences.
 
 **Two ways to download:**

@@ -17,3 +17,15 @@ package-lock.json
 # nicht committet (siehe .github/workflows/pages.yml).
 web/js/shell.bundle.js
 web/js/viewer.bundle.js
+
+# Android-Build
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+# Die Web-App wird beim Bauen aus web/ hierher kopiert, nicht gepflegt.
+android/app/src/main/assets/
+# Signaturschluessel gehoert NICHT ins Repo (siehe APK-HERUNTERLADEN.md)
+*.jks
+*.keystore
+android/keystore.properties

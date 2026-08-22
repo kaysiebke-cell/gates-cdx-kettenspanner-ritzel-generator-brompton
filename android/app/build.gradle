@@ -1,0 +1,177 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+// --- Signierung ---------------------------------------------------------------
+// Ein DEBUG-Schlüssel wird auf jedem Rechner (und jedem CI-Läufer) neu erzeugt.
+// Damit hätte jede APK eine andere Signatur, und Android verweigert die
+// Installation über eine bestehende App: man müsste erst deinstallieren.
+//
+// Deshalb IMMER derselbe feste Schlüssel, aus zwei möglichen Quellen:
+//
+//   1. keystore.properties neben dieser Datei — der Weg für Android Studio und
+//      ./gradlew auf dem eigenen PC. Die Datei kommt NICHT ins Repo.
+//   2. Umgebungsvariablen — der Weg für GitHub Actions, wo der Schlüssel aus
+//      den Repository-Secrets kommt.
+//
+// Fehlt beides (fremder Rechner, frisch geklont), baut Gradle einfach weiter
+// und nimmt den üblichen Debug-Schlüssel.
+def signKeystore, signStorePass, signAlias, signAliasPass
+
+def schluesselDatei = rootProject.file("keystore.properties")
+if (schluesselDatei.exists()) {
+    def angaben = new Properties()
+    schluesselDatei.withInputStream { angaben.load(it) }
+    // Der Pfad darf mit ~ beginnen; Java löst das nicht selbst auf.
+    signKeystore  = (angaben['storeFile'] ?: '').replaceFirst('^~', System.getProperty('user.home'))
+    signStorePass = angaben['storePassword']
+    signAlias     = angaben['keyAlias']
+    signAliasPass = angaben['keyPassword']
+} else {
+    signKeystore  = System.getenv("SIGNIER_KEYSTORE")
+    signStorePass = System.getenv("SIGNIER_KEYSTORE_PASSWORT")
+    signAlias     = System.getenv("SIGNIER_ALIAS")
+    signAliasPass = System.getenv("SIGNIER_ALIAS_PASSWORT")
+}
+
+def signVorhanden = signKeystore != null && !signKeystore.isEmpty() && file(signKeystore).exists()
+if (signVorhanden) {
+    logger.lifecycle("Signierung: fester Schlüssel aus " +
+                     (schluesselDatei.exists() ? "keystore.properties" : "Umgebungsvariablen"))
+} else {
+    logger.lifecycle("Signierung: kein fester Schlüssel gefunden — es wird der Debug-Schlüssel benutzt.")
+}
+
+// --- Die Web-App in web/ ist die einzige Quelle der Wahrheit ---
+// Dieselben Dateien bedienen GitHub Pages und die APK. Statt sie doppelt im
+// Repo zu halten, kopiert der Build sie vor dem Zusammenbauen nach
+// src/main/assets/www (der Ordner ist ge-.gitignore-t).
+//
+// Der naheliegende Weg über assets.srcDir(<Copy-Task>) sieht sauberer aus,
+// funktioniert hier aber NICHT: Gradle löst den Task-Verweis auf ein leeres
+// Verzeichnis auf, der Build wird grün — und die APK enthält keine Web-App.
+// Deshalb dieser handfeste Weg mit ausdrücklich gesetzten Abhängigkeiten.
+//
+// Die *.bundle.js liegen nicht im Repo (siehe .gitignore); sie entstehen vor
+// dem Gradle-Lauf mit `npm run build` — in der CI ein eigener Schritt.
+def webDst = file("src/main/assets/www")
+def webQuelle = file("$rootDir/../web")
+
+// Cache-Busting, wie es der Pages-Deploy per sed macht: In index.html und
+// sw.js steht __V__ als Platzhalter. Bliebe er stehen, hieße der Cache des
+// Service Workers in JEDER App-Fassung gleich — nach einem Update reichte er
+// die alten Dateien aus seinem Bestand weiter, und auf dem Handy änderte sich
+// nichts. Als Kennung dient ein Hash über die mitgelieferten Dateien: er
+// ändert sich genau dann, wenn sich die Web-App ändert, und bleibt sonst
+// gleich (sonst liefe kein einziger Build je „up-to-date“ durch).
+def webKennung = {
+    def md = java.security.MessageDigest.getInstance("SHA-1")
+    def dateien = []
+    webQuelle.eachFileRecurse { f ->
+        if (f.isFile() && !f.path.replace('\\', '/').contains('/buegel/')) dateien << f
+    }
+    dateien.sort { it.path }.each { md.update(it.bytes) }
+    md.digest().encodeHex().toString().substring(0, 8)
+}()
+
+tasks.register('copyWebApp', Copy) {
+    description = 'Kopiert die Web-App aus web/ in die App-Assets.'
+    // index.html trägt Umlaute — ohne diese Angabe filtert Gradle mit der
+    // Standardkodierung der Plattform und zerlegt sie.
+    filteringCharset = 'UTF-8'
+    inputs.property('webKennung', webKennung)
+    from("$rootDir/../web") {
+        include 'index.html'
+        include 'sw.js'
+        include 'manifest.webmanifest'
+        include 'favicon.ico'
+        include 'css/**'
+        include 'js/**'
+        include 'icons/**'
+        // buegel/*.stl bleibt draußen: die Web-App baut den Bügel
+        // parametrisch in JS und lädt diese Dateien nicht.
+    }
+    into webDst
+    filesMatching(['index.html', 'sw.js']) {
+        filter { zeile -> zeile.replace('__V__', webKennung) }
+    }
+}
+
+// Jeder Task, der die Assets liest, muss NACH dem Kopieren laufen. Neben dem
+// Asset-Merge betrifft das auch den Lint-Lauf des Release-Builds.
+tasks.configureEach { t ->
+    def liestAssets = (t.name.startsWith('merge') && t.name.endsWith('Assets')) ||
+                      t.name.toLowerCase().contains('lint')
+    if (liestAssets && t.name != 'copyWebApp') {
+        t.dependsOn 'copyWebApp'
+    }
+}
+tasks.named('clean') { delete webDst }
+
+android {
+    namespace 'de.ritzelgenerator.app'
+    compileSdk 34
+
+    lint {
+        // Persönliches Werkzeug: der Release-Build soll nicht an Stil-Hinweisen scheitern.
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    defaultConfig {
+        applicationId "de.ritzelgenerator.app"
+        // 29 (Android 10): ab hier schreibt MediaStore in „Downloads" ohne
+        // Laufzeit-Berechtigung — das spart die Storage-Permission komplett,
+        // und die App muss nichts erfragen, um die STL-ZIP abzulegen.
+        minSdk 29
+        targetSdk 34
+        // Android verlangt für ein Update eine HÖHERE Zahl. In der CI zählt die
+        // Laufnummer hoch, lokal bleibt es bei 1.
+        versionCode Integer.parseInt(System.getenv("VERSION_CODE") ?: "1")
+        versionName "1.0"
+    }
+
+    signingConfigs {
+        release {
+            if (signVorhanden) {
+                storeFile file(signKeystore)
+                storePassword signStorePass
+                keyAlias signAlias
+                keyPassword signAliasPass
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // Persönliches Werkzeug: keine Verschleierung nötig, hält den Build einfach.
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (signVorhanden) {
+                signingConfig signingConfigs.release
+            }
+        }
+        debug {
+            // Auch der Debug-Build bekommt den festen Schlüssel. Sonst hätte die
+            // APK aus Android Studio eine andere Signatur als die von GitHub.
+            if (signVorhanden) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.webkit:webkit:1.11.0'
+}
