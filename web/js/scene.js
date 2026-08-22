@@ -14,7 +14,7 @@ viewport.appendChild(renderer.domElement);
 export const scene = new THREE.Scene();
 const dark = matchMedia('(prefers-color-scheme: dark)').matches;
 // passt zur CSS-Rolle --surface-container-low des Viewport-Rahmens
-scene.background = new THREE.Color(dark ? 0x181d19 : 0xf0f5ee);
+scene.background = new THREE.Color(dark ? 0x1a1b1d : 0xf4f5f6);
 
 export const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 2000);
 camera.position.set(55, -55, 45);
