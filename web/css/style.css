@@ -184,23 +184,22 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
   #viewport { flex: 0 0 50%; min-height: 200px; order: -1; }
   #form {
     width: 100%; flex: 1; border-right: none;
-    /* Kräftiger als der übrige Rahmen: an dieser Kante muss auf einen Blick
-       erkennbar sein, dass die Felder DARUNTER weiterlaufen. color-mix statt
-       fester Farbe, damit die Linie in beiden Themen trägt. */
-    border-top: 2px solid color-mix(in srgb, var(--muted) 40%, transparent);
-    /* Keine Polsterung oben: den Abstand liefert ::before, und ein haftendes
-       Kind richtet sich am Rand der Content-Box aus — mit Polsterung liefe
-       sie als Streifen darüber, in dem die Zeilen ungeschnitten durchscheinen. */
+    border-top: 1px solid var(--border);
+    /* Keine Polsterung oben: die Kennzahlen-Leiste haftet am oberen Rand und
+       richtet sich dabei am Rand der Content-Box aus — mit Polsterung liefe
+       sie als Streifen darüber, in dem die Zeilen ungeschnitten
+       durchscheinen. */
     padding-top: 0;
   }
-  /* Weicher Auslauf direkt unter der Kante: die Zeilen verschwinden sichtbar
-     unter der Vorschau, statt an ihr abgeschnitten zu wirken. Dient zugleich
-     als oberer Abstand. Die Farbe kommt aus dem Thema — ein schwarzer
-     Schatten wäre im Dunkelmodus unsichtbar. */
-  #form::before {
-    content: ""; display: block; position: sticky; top: 0; z-index: 2;
-    height: 12px; margin: 0 -16px;
-    background: linear-gradient(var(--panel), transparent);
+  /* Die Kennzahlen bleiben beim Scrollen stehen und decken dabei ab, was
+     darunter durchläuft — das trennt Vorschau und Formular, ganz ohne
+     zusätzliche Linie. Nebeneffekt: die Maße sind immer im Blick.
+     Dafür über die Seitenpolsterung hinaus auf volle Breite gezogen, sonst
+     scrollt links und rechts Inhalt an der Leiste vorbei. */
+  .stats {
+    position: sticky; top: 0; z-index: 2;
+    margin: 0 -16px 14px; padding: 10px 16px;
+    border: none; border-bottom: 1px solid var(--border); border-radius: 0;
   }
   /* Kopfzeile kompakt: Titel nimmt die verfügbare Breite (umbricht darin),
      der DE/EN-Button sitzt daneben statt in einer eigenen Zeile. */
