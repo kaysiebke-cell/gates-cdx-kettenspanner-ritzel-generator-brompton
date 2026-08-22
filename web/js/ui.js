@@ -46,10 +46,14 @@ export function rebuild() {
     const richtung = camera.position.clone().sub(controls.target).normalize();
     camera.position.copy(controls.target).addScaledVector(richtung, rKopf * 4.0);
   }
+  // Kennzahlen als Material-Kacheln (Label oben, Wert groß darunter)
+  const kachel = (k, v, u = '') =>
+    `<div class="stat"><span class="stat__k">${k}</span>` +
+    `<span class="stat__v">${v}${u ? ` <span class="stat__u">${u}</span>` : ''}</span></div>`;
   document.getElementById('stats').innerHTML =
-    `${t('head_circle')}: <b>${(rKopf * 2).toFixed(2)} mm</b> · ` +
-    `${t('total_height')}: <b>${Math.max(p.breite, p.nabe_l).toFixed(1)} mm</b> · ` +
-    `${t('teeth_label')}: <b>${p.zaehne}</b>`;
+    kachel(t('head_circle'), (rKopf * 2).toFixed(2), 'mm') +
+    kachel(t('total_height'), Math.max(p.breite, p.nabe_l).toFixed(1), 'mm') +
+    kachel(t('teeth_label'), p.zaehne);
   aktualisiereBuegel(p);
 }
 

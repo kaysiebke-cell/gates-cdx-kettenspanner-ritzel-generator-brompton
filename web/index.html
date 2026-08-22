@@ -2,9 +2,13 @@
 <html lang="de" id="html">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- viewport-fit=cover: nötig, damit env(safe-area-inset-*) greift und die
+     Navigationsleiste unten nicht unter der Gestenleiste des Handys liegt. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title> Gates CDX Riemenspanner-Ritzel Generator (Brompton)</title>
-<meta name="theme-color" content="#2ea44f">
+<!-- Statusleisten-Farbe passend zur Top-App-Bar (--surface-container) -->
+<meta name="theme-color" content="#eaefe8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c211d" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
@@ -12,56 +16,143 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
 <meta name="apple-mobile-web-app-title" content="Ritzel-Generator">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="css/style.css">
+<!-- ?v=__V__ wie bei den Bundles; sw.js hält denselben Pfad im PRECACHE. -->
+<link rel="stylesheet" href="css/style.css?v=__V__">
 </head>
 <body>
-<header>
-  <h1 id="title">Gates CDX Riemenspanner-Ritzel Generator (Brompton)</h1>
-  <span class="sub" id="subtitle">Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen</span>
-  <button id="installbtn" hidden>⬇ Als App installieren</button>
-  <button id="lang-toggle">DE / EN</button>
+
+<!-- ── Top-App-Bar (Material 3) ─────────────────────────────────── -->
+<header class="topbar">
+  <span class="topbar__logo" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3.2"/>
+      <circle cx="12" cy="12" r="8" stroke-dasharray="2.6 2.2"/>
+    </svg>
+  </span>
+  <div class="topbar__text">
+    <h1 id="title">Gates CDX Riemenspanner-Ritzel Generator (Brompton)</h1>
+    <span class="sub" id="subtitle">Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen</span>
+  </div>
+  <button id="installbtn" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+    </svg>
+    <span id="installbtn-label">Als App installieren</span>
+  </button>
+  <button id="lang-toggle" class="lang-btn" title="DE / EN">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9S14.5 18.3 12 21c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z"/>
+    </svg>
+    <span>DE / EN</span>
+  </button>
 </header>
-<nav id="tabs">
-  <button class="tab" id="tab-gen" aria-selected="true">Generator</button>
-  <button class="tab" id="tab-print" aria-selected="false">Druck-Empfehlungen</button>
-</nav>
-<main id="genview">
-  <div id="form">
-    <div class="stats" id="stats"></div>
 
-    <fieldset id="sec1"><legend id="leg1">Zahnrad-Körper (Grundkörper)</legend></fieldset>
-    <fieldset id="sec2"><legend id="leg2">Zylinder (Kugellager)</legend></fieldset>
-    <fieldset id="sec3"><legend id="leg3">Seitliche Schmutzabweiser</legend>
-      <div class="hint" id="hint1">Zahn- und Mulden-Rundung werden in der Vorschau angenähert dargestellt; die Release-Dateien enthalten die exakten CAD-Verrundungen.</div>
-    </fieldset>
+<div id="content">
 
-    <a class="btn" id="stlbtn" href="#"></a>
-    <a class="btn" id="stepbtn" href="#" style="display:none"></a>
-    <div class="hint" id="stephint" style="display:none"></div>
-    <button class="btn" id="stepbuildbtn" style="display:none"></button>
-    <div class="hint" id="stepbuildhint" style="display:none"></div>
-    <div class="hint" id="stepbuildstatus" style="display:none"></div>
+  <!-- Ein DOM, zwei Rollen: Navigation Rail (Desktop) bzw. Navigation
+       Bar am unteren Rand (Handy) – umgeschaltet allein per CSS. -->
+  <nav id="tabs" aria-label="Ansicht">
+    <button class="tab" id="tab-gen" aria-current="page">
+      <span class="tab__ind">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h9M19 18h1"/>
+          <circle cx="16" cy="6" r="2.4"/><circle cx="10" cy="12" r="2.4"/><circle cx="16" cy="18" r="2.4"/>
+        </svg>
+      </span>
+      <span class="tab__label" id="tab-gen-label">Generator</span>
+    </button>
+    <button class="tab" id="tab-print">
+      <span class="tab__ind">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+          <path d="M7 9V4h10v5"/>
+          <path d="M5 9h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-1"/>
+          <path d="M6 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2"/>
+          <path d="M7 14h10v6H7z"/>
+        </svg>
+      </span>
+      <span class="tab__label" id="tab-print-label">Druck</span>
+    </button>
+  </nav>
 
-    <label class="chk" id="buegelrow" for="buegelchk">
-      <input type="checkbox" id="buegelchk"> <span id="buegellbl"></span>
-    </label>
+  <main id="genview">
+    <div id="form">
+      <div class="stats" id="stats"></div>
 
-    <div class="hint" id="hint2"></div>
-    <div class="hint" id="hint3"></div>
-  </div>
-  <div id="viewport">
-    <div id="loader">3D&nbsp;·&nbsp;Loading …</div>
-    <div id="overlaynote"></div>
-  </div>
-</main>
-<section id="printview" hidden></section>
+      <details class="card" id="sec1" open>
+        <summary class="card__head">
+          <span class="card__title" id="leg1">Zahnrad-Körper (Grundkörper)</span>
+          <span class="card__chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        </summary>
+      </details>
+
+      <details class="card" id="sec2" open>
+        <summary class="card__head">
+          <span class="card__title" id="leg2">Zylinder (Kugellager)</span>
+          <span class="card__chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        </summary>
+      </details>
+
+      <details class="card" id="sec3" open>
+        <summary class="card__head">
+          <span class="card__title" id="leg3">Seitliche Schmutzabweiser</span>
+          <span class="card__chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        </summary>
+      </details>
+      <p class="hint" id="hint1">Zahn- und Mulden-Rundung werden in der Vorschau angenähert dargestellt; die Release-Dateien enthalten die exakten CAD-Verrundungen.</p>
+
+      <a class="btn btn--filled" id="stlbtn" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+        </svg>
+        <span id="stlbtn-label"></span>
+      </a>
+
+      <!-- Vorgebaute STEP-ZIP aus dem Release (nur bei Standardwerten) -->
+      <a class="btn btn--tonal" id="stepbtn" href="#" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+          <path d="m12 2 9 5v10l-9 5-9-5V7l9-5Z"/><path d="m3 7 9 5 9-5M12 12v10"/>
+        </svg>
+        <span id="stepbtn-label"></span>
+      </a>
+      <p class="hint" id="stephint" style="display:none"></p>
+
+      <!-- Cloud-Build für eigene Werte (nur wenn STEP_API gesetzt ist) -->
+      <button class="btn btn--tonal" id="stepbuildbtn" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M7 18a4 4 0 0 1-.4-7.98A6 6 0 0 1 18 9.5a3.5 3.5 0 0 1-.5 6.98"/>
+          <path d="M12 12v8m0 0 3-3m-3 3-3-3"/>
+        </svg>
+        <span id="stepbuildbtn-label"></span>
+      </button>
+      <p class="hint" id="stepbuildhint" style="display:none"></p>
+      <p class="status" id="stepbuildstatus" style="display:none"></p>
+
+      <label class="switch" for="buegelchk">
+        <span class="switch__text" id="buegellbl"></span>
+        <input type="checkbox" id="buegelchk">
+        <span class="switch__track"><span class="switch__thumb"></span></span>
+      </label>
+
+      <p class="hint" id="hint2"></p>
+      <p class="hint hint--legal" id="hint3"></p>
+    </div>
+
+    <div id="viewport">
+      <div id="loader">3D&nbsp;·&nbsp;Loading …</div>
+      <div id="overlaynote"></div>
+    </div>
+  </main>
+
+  <section id="printview" hidden></section>
+</div>
 
 <!-- Zweigeteilt für schnellen Start:
      shell.bundle.js (winzig) baut sofort das Formular und lädt danach
      viewer.bundle.js (Three.js + Addons + CSG) im Hintergrund nach.
      Funktioniert per Doppelklick, kein lokaler Server nötig.
      Quelldateien: js/shell.js, js/viewer.js, js/i18n.js, js/fields.js,
-     js/scene.js, js/geometry.js, js/ui.js.
+     js/scene.js, js/geometry.js, js/ui.js, js/step.js.
      Nach Änderungen neu bauen im Projekt-Wurzelverzeichnis:
        npm install   (einmalig)
        npm run build -->

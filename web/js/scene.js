@@ -13,7 +13,8 @@ export const renderer = new THREE.WebGLRenderer({ antialias: !istMobil });
 viewport.appendChild(renderer.domElement);
 export const scene = new THREE.Scene();
 const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-scene.background = new THREE.Color(dark ? 0x16181c : 0xf5f6f8);
+// passt zur CSS-Rolle --surface-container-low des Viewport-Rahmens
+scene.background = new THREE.Color(dark ? 0x181d19 : 0xf0f5ee);
 
 export const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 2000);
 camera.position.set(55, -55, 45);

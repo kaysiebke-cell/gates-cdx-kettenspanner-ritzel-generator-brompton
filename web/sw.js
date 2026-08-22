@@ -15,7 +15,7 @@ const CACHE = 'ritzel-' + VERSION;
 const PRECACHE = [
   './',
   './index.html',
-  './css/style.css',
+  './css/style.css?v=__V__',
   './manifest.webmanifest',
   './favicon.ico',
   './icons/icon.svg',
