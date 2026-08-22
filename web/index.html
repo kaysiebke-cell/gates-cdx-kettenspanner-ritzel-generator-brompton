@@ -165,6 +165,17 @@
 <script>
 (function () {
   if ('serviceWorker' in navigator) {
+    // Steuerte beim Laden schon ein Worker? Wechselt er danach, ist gerade
+    // eine neue Version aktiv geworden, waehrend die Seite noch die alte
+    // zeigt – dann einmal neu laden. Ohne die Abfrage wuerde auch der
+    // allererste Besuch neu laden (dort uebernimmt clients.claim()).
+    var hatteController = !!navigator.serviceWorker.controller;
+    var laedtNeu = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!hatteController || laedtNeu) return;
+      laedtNeu = true;
+      location.reload();
+    });
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').catch(function () {});
     });

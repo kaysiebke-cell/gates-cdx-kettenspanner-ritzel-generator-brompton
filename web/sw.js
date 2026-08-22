@@ -56,7 +56,14 @@ self.addEventListener('fetch', (event) => {
   if (req.mode === 'navigate' || accept.includes('text/html')) {
     event.respondWith((async () => {
       try {
-        const net = await fetch(req);
+        // Bewusst am HTTP-Cache vorbei: GitHub Pages liefert index.html mit
+        // max-age=600. Ein einfaches fetch(req) darf daraus bis zu zehn
+        // Minuten die ALTE Seite bedienen – und die verweist auf die alten,
+        // versionierten CSS-/JS-URLs, die hier cache-first ausgeliefert
+        // werden. Ergebnis: die komplette alte App trotz neuem Deploy.
+        // (new Request(req, …) geht nicht: Navigations-Requests lassen sich
+        // nicht kopieren, darum die URL.)
+        const net = await fetch(req.url, { cache: 'reload', credentials: 'same-origin' });
         const cache = await caches.open(CACHE);
         cache.put('./index.html', net.clone());
         return net;
