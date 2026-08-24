@@ -121,7 +121,7 @@ A solid web runs between hub and tooth rim across the full width. Structurally i
 | `Spoke Width` | Width of one arm across the spoke (default 4.5 mm). |
 | `Sweep (°)` | 0° = straight, radial spokes. Larger values bend the arms tangentially. If the value does not fit the ring, it is reduced automatically. |
 | `Wall Thickness` | Material left standing at the tooth rim **and** at the hub (default 2.0 mm). |
-| `Spoke Round` | Corner radius of the openings. Drawn directly in the sketch, not as a 3D fillet. |
+| `Spoke Round` | Corner radius of the openings, drawn directly in the sketch (not a 3D fillet). At most half the ring width – about 3.8 mm at 18 teeth, at which point the opening becomes a slot. Larger values are reduced to that. |
 
 **When it pays off:** What limits the spokes is not the tooth root but the dirt pocket. It deepens towards the face by `Pocket Angle` and ends there about 2.8 mm further in than at the central ridge – only below that does material span the full width. If less than 6 mm of free ring remains between hub collar and rim, no spokes are built at all and the web stays solid. With the default values the limit sits at 17 teeth:
 
@@ -155,6 +155,7 @@ The default values (Bore Ø 14 mm, bearing seat Ø 16 mm × 1 mm) are designed e
 | `freecad/zahnrad_generator.py` | The actual geometry: Tooth profile sketch and 3D body generation. |
 | `freecad/zahnrad_params.py` | Definition of variables and default values. |
 | `freecad/speichen_geometrie.py` | Contour maths for the spoke openings (no FreeCAD import). |
+| `tools/check-speichen.mjs` | `npm run check`: verifies that the Python and JS versions compute the same contour. |
 | `web/js/speichen.js` | The same code for the web preview – must match the Python version. |
 | `web/index.html` | The web configurator (hosted via GitHub Pages). |
 | `freecad/build_headless.py` | Helper script: Builds the release series (STEP/STL) in the background without a GUI. |

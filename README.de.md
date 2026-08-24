@@ -121,7 +121,7 @@ Zwischen Nabe und Zahnkranz sitzt ein massiver Steg über die volle Breite. Trag
 | `Speichen Breite` | Breite eines Arms quer zur Speiche (Standard 4,5 mm). |
 | `Schwung (°)` | 0° = gerade, radiale Speichen. Größere Werte biegen die Arme tangential. Passt der Wert nicht in den Ring, wird er automatisch zurückgenommen. |
 | `Wandstärke` | Stehen bleibendes Material am Zahnkranz **und** an der Nabe (Standard 2,0 mm). |
-| `Speichen-Rundung` | Eckenradius der Öffnungen. Wird direkt in der Skizze gezeichnet, nicht als 3D-Verrundung. |
+| `Speichen-Rundung` | Eckenradius der Öffnungen, direkt in der Skizze gezeichnet (keine 3D-Verrundung). Höchstens die halbe Ringbreite – bei 18 Zähnen also rund 3,8 mm, dann ist die Öffnung ein Langloch. Größere Werte werden auf dieses Maß zurückgenommen. |
 
 **Ab wann es sich lohnt:** Maßgeblich ist nicht der Zahnfuß, sondern die Schmutzmulde. Sie wird mit `Mulden-Winkel` zur Stirnfläche hin tiefer und endet dort rund 2,8 mm weiter innen als am Mittelsteg – erst darunter steht Material über die volle Breite. Bleiben zwischen Nabenkragen und Kranz weniger als 6 mm frei, werden gar keine Speichen gebaut und der Steg bleibt voll. Mit den Standardwerten liegt die Grenze bei 17 Zähnen:
 
@@ -157,6 +157,7 @@ Bezugsquelle für Deutschland: [F605-2RS bei Kugellager-Express](https://www.kug
 | `freecad/zahnrad_generator.py` | Die eigentliche Geometrie: Skizze des Zahnprofils und Aufbau des 3D-Körpers. |
 | `freecad/zahnrad_params.py` | Definition der Variablen und Standardwerte. |
 | `freecad/speichen_geometrie.py` | Kontur-Mathematik der Speichen-Durchbrüche (ohne FreeCAD-Import). |
+| `tools/check-speichen.mjs` | `npm run check`: prüft, dass Python- und JS-Fassung dieselbe Kontur rechnen. |
 | `web/js/speichen.js` | Derselbe Code für die Web-Vorschau – muss zur Python-Fassung passen. |
 | `web/index.html` | Der Web-Konfigurator (läuft über GitHub Pages). |
 | `freecad/build_headless.py` | Hilfsskript: Baut die Release-Serie (STEP/STL) im Hintergrund ohne GUI. |

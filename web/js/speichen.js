@@ -134,7 +134,9 @@ export function kontur(anzahl, armB, ri, ra, rundung, schwungGrad) {
   const leer = { oeffnungen: [], schwung: 0, rundung: 0 };
   if (!istSinnvoll(ri, ra, n, armB)) return leer;
   const teilung = 2 * Math.PI / n;
-  const grenze = Math.min(rundung, (ra - ri) / 3, armB);
+  // Obergrenze ist die halbe Ringbreite (abzüglich eines Rests Flanke) — dort
+  // geht die Öffnung in ein Langloch über, mehr ist geometrisch nicht drin.
+  const grenze = Math.min(rundung, (ra - ri - 0.3) / 2, armB);
 
   for (const anteil of [1, 0.75, 0.5, 0.25, 0]) {
     const schwung = schwungGrad * Math.PI / 180 * anteil;
@@ -164,6 +166,11 @@ function versuch(n, teilung, armB, ri, ra, rc, schwung) {
     if (ecken.some(e => e[0] === null)) return [];
     const [[aOutF, aOutR, aOutM], [bOutF, bOutR, bOutM],
            [bInF, bInR, bInM], [aInF, aInR, aInM]] = ecken;
+
+    // Bleibt von der Flanke nichts übrig, ist die Rundung zu groß: abbrechen
+    // und die Kaskade einen kleineren Radius probieren lassen (eine entartete
+    // Null-Kante würde das Sketch unbrauchbar machen).
+    if (laenge(sub(aOutF, aInF)) < 0.05 || laenge(sub(bOutF, bInF)) < 0.05) return [];
 
     const seg = [flankenSegment(fa, aInF, aOutF)];      // Flanke A nach außen
     if (aOutM) seg.push(bogen(aOutM, rc, aOutF, aOutR));

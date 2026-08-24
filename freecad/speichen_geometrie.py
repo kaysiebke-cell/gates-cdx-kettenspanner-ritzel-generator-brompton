@@ -197,7 +197,10 @@ def kontur(anzahl, arm_b, r_innen, r_aussen, rundung, schwung_grad):
     if not ist_sinnvoll(r_innen, r_aussen, n, arm_b):
         return leer
     teilung = 2 * math.pi / n
-    grenze = min(float(rundung), (r_aussen - r_innen) / 3.0, float(arm_b))
+    # Obergrenze ist die halbe Ringbreite (abzueglich eines Rests Flanke) —
+    # dort geht die Oeffnung in ein Langloch ueber, mehr ist geometrisch nicht
+    # drin. Wer mehr eintraegt, bekommt genau dieses Langloch.
+    grenze = min(float(rundung), (r_aussen - r_innen - 0.3) / 2.0, float(arm_b))
 
     for anteil in (1.0, 0.75, 0.5, 0.25, 0.0):
         schwung = math.radians(float(schwung_grad)) * anteil
@@ -233,6 +236,13 @@ def _kontur_versuch(n, teilung, arm_b, r_innen, r_aussen, rc, schwung):
         (b_out_f, b_out_r, b_out_m) = ecken[1]
         (b_in_f,  b_in_r,  b_in_m)  = ecken[2]
         (a_in_f,  a_in_r,  a_in_m)  = ecken[3]
+
+        # Bleibt von der Flanke nichts mehr uebrig, ist die Rundung zu gross:
+        # abbrechen und die Kaskade einen kleineren Radius probieren lassen
+        # (eine entartete Null-Kante wuerde das Sketch unbrauchbar machen).
+        if (_laenge(_sub(a_out_f, a_in_f)) < 0.05
+                or _laenge(_sub(b_out_f, b_in_f)) < 0.05):
+            return []
 
         seg = [_flanken_segment(fa, a_in_f, a_out_f)]          # Flanke A nach aussen
         if a_out_m:
