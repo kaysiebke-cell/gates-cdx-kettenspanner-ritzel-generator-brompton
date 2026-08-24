@@ -7,6 +7,7 @@
 export const MIN_RING = 6.0;       // freie Ringbreite [mm], ab der gebaut wird
 export const MIN_OEFFNUNG = 3.0;   // kleinste Bogenlänge am Innenring [mm]
 export const MIN_ARM = 2.0;        // dünnster zulässiger Arm [mm]
+export const NABEN_KRAGEN = 1.0;   // stehender Ring an der Nabe [mm], s.u.
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
@@ -60,8 +61,15 @@ export function ringRadien(rKopf, p) {
       * Math.max(0, breite / 2 - steg / 2);
     grenze = Math.min(rFuss, rFace);
   }
-  const wand = p.speichen_wand;          // gilt außen (Kranz) wie innen (Nabe)
-  return { ri: Math.max(p.nabe_d, p.bohrung_d) / 2 + wand, ra: grenze - wand };
+  // `speichen_wand` ist die Wand am ZAHNKRANZ: das Band, das unterhalb des
+  // Muldenbodens über die volle Breite steht und die Riemenspannung zwischen
+  // den Öffnungen aufnimmt. An der Nabe reicht deutlich weniger — dort läuft
+  // die Last über die Übergangsradien der Arme, nicht über den schmalen Ring.
+  const wand = p.speichen_wand;
+  return {
+    ri: Math.max(p.nabe_d, p.bohrung_d) / 2 + Math.min(wand, NABEN_KRAGEN),
+    ra: grenze - wand,
+  };
 }
 
 export function istSinnvoll(ri, ra, anzahl, armB) {

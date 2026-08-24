@@ -24,7 +24,7 @@ export const SECTIONS = [
     ['speichen_schwung', 'spokes_sweep',  0.00, 1],
     ['speichen_wand',    'spokes_wall',   2.00, 0.1],
     ['speichen_r',       'spokes_round',  2.00, 0.1],
-    ['speichen_r_nabe',  'spokes_hub_r',  4.00, 0.1],
+    ['speichen_r_nabe',  'spokes_hub_r',  4.50, 0.1],
   ]],
   ['sec2', [
     ['bohrung_d', 'bore_d',       14.00, 0.5],

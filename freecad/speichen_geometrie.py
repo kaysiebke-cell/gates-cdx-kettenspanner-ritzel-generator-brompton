@@ -12,6 +12,7 @@ import math
 MIN_RING = 6.0        # ab dieser freien Ringbreite [mm] lohnen sich Speichen
 MIN_OEFFNUNG = 3.0    # kleinste Bogenlaenge einer Oeffnung am Innenring [mm]
 MIN_ARM = 2.0         # duennster zulaessiger Arm [mm]
+NABEN_KRAGEN = 1.0    # stehen bleibender Ring an der Nabe [mm], siehe unten
 
 
 # ── kleine Vektor-Helfer ──────────────────────────────────────────────────
@@ -87,9 +88,17 @@ def ring_radien(r_kopf, p):
         grenze = min(r_fuss, r_face)
     else:
         grenze = r_fuss
-    wand = float(p['speichen_wand'])          # gilt aussen (Kranz) wie innen (Nabe)
+    # `speichen_wand` ist die Wand am ZAHNKRANZ: das Band, das unterhalb des
+    # Muldenbodens ueber die volle Breite steht und die Riemenspannung
+    # zwischen den Oeffnungen aufnimmt. An der Nabe reicht deutlich weniger --
+    # dort laeuft die Last ueber die Uebergangsradien der Arme, nicht ueber
+    # den schmalen Ring. Ein gemeinsamer Wert zwang frueher dazu, den
+    # tragenden Kranz mitzuduennen, nur um die Arme naeher an den Zylinder
+    # zu bekommen.
+    wand = float(p['speichen_wand'])
     r_aussen = grenze - wand
-    r_innen = max(float(p['nabe_d']), float(p['bohrung_d'])) / 2.0 + wand
+    r_innen = (max(float(p['nabe_d']), float(p['bohrung_d'])) / 2.0
+               + min(wand, NABEN_KRAGEN))
     return r_innen, r_aussen
 
 

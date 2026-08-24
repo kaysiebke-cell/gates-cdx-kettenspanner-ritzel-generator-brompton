@@ -46,7 +46,7 @@ In the web configurator, you can **rotate and adjust the tensioner sprocket live
 
 * **Fully Parametric:** Tooth count (**12–18**), pressure angle, pitch, tip/root radius, and tooth depth can be freely adjusted.
 * **Thoughtful Geometry:** Central ridge acting as a belt guide, lateral mud/debris ports (angle, depth, and radius adjustable), plus a bore and counterbores for the belt tensioner bearings.
-* **Spokes to Save Material:** Optionally cuts openings into the web between hub and tooth rim – straight or swept tangentially (`Sweep` parameter). At 18 teeth that saves about 6.6 cm³ (roughly 7 g of PA12-CF, a good quarter of the part). If the free ring is too narrow, the web stays solid automatically – with the default values this kicks in from 17 teeth up. See [Spokes](#spokes-save-material).
+* **Spokes to Save Material:** Optionally cuts openings into the web between hub and tooth rim – straight or swept tangentially (`Sweep` parameter). At 18 teeth that saves about 7.0 cm³ (roughly 7.5 g of PA12-CF, nearly a third of the part). If the free ring is too narrow, the web stays solid automatically – with the default values this kicks in from 17 teeth up. See [Spokes](#spokes-save-material).
 * **Smart UI:** The dock panel is clearly structured and automatically adapts to the FreeCAD theme (Light/Dark Mode).
 * **Remembers Settings:** The last used parameters are automatically reloaded on the next startup.
 * **Fillet Cache:** The tool remembers working radii. If a calculation fails, it doesn't completely reset, saving expensive processing time.
@@ -120,7 +120,7 @@ A solid web runs between hub and tooth rim across the full width. Structurally i
 | `Spokes` | Number of arms. **0 = off** (default), 4–6 make sense. |
 | `Spoke Width` | Width of one arm across the spoke (default 4.5 mm). |
 | `Sweep (°)` | 0° = straight, radial spokes. Larger values bend the arms tangentially. If the value does not fit the ring, it is reduced automatically – in the web configurator the field then visibly snaps to the value that is built. |
-| `Wall Thickness` | Material left standing at the tooth rim **and** at the hub (default 2.0 mm). |
+| `Rim wall` | Material left standing at the **tooth rim** (2.0 mm by default) – the band that spans the full width below the pocket floor and carries the belt tension between the openings. At the hub a fixed 1.0 mm remains: there the load runs through the arms' blend radii, not through the narrow ring. |
 | `Hub blend` | Corner radius **at the hub** (4.0 mm by default). Deliberately larger than the spoke rounding so the arms run tangentially into the hub cylinder instead of stopping at a collar – that is where the load path sits and where a sharp notch shows most. Limited by the spoke width. |
 | `Spoke Round` | Corner radius **at the tooth rim**, drawn directly in the sketch (not a 3D fillet). At most half the ring width – about 3.8 mm at 18 teeth, at which point the opening becomes a slot. Larger values are reduced to that, and the input field snaps to it. |
 
@@ -131,8 +131,8 @@ A solid web runs between hub and tooth rim across the full width. Structurally i
 | Teeth | Free ring | 5 straight spokes |
 |---|---|---|
 | ≤ 16 | < 6 mm | – (web stays solid) |
-| 17 | 6.4 mm | −4.9 cm³ (≈ 5.2 g) |
-| 18 | 8.0 mm | −6.6 cm³ (≈ 7.0 g) |
+| 17 | 7.4 mm | −5.3 cm³ (≈ 5.6 g, 26 %) |
+| 18 | 9.0 mm | −7.0 cm³ (≈ 7.5 g, 31 %) |
 
 To get spokes on smaller sprockets, reduce `Side Depth` or `Pocket Angle` first.
 

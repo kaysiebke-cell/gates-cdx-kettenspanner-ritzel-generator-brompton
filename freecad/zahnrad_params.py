@@ -31,9 +31,9 @@ FIELD_SECTIONS = [
         ("speichen_n",      "Speichen",        0),      # Anzahl Arme (0 = aus, sonst z.B. 5)
         ("speichen_b",      "Speichen Breite", 4.50),   # Armbreite quer zur Speiche
         ("speichen_schwung","Schwung (°)",     0.00),   # 0 = gerade, sonst gebogen
-        ("speichen_wand",   "Wandstärke",      2.00),   # Wand am Kranz UND an der Nabe
+        ("speichen_wand",   "Kranz-Wand",      2.00),   # tragendes Band am Zahnkranz
         ("speichen_r",      "Speichen-Rundung", 2.00),  # Eckenradius am Zahnkranz
-        ("speichen_r_nabe", "Nabenübergang",    4.00),  # Eckenradius an der Nabe
+        ("speichen_r_nabe", "Nabenübergang",    4.50),  # Eckenradius an der Nabe
     ]),
     ("Zylinder (Kugellager)", [
         ("bohrung_d",       "Bohrung Ø",      14.00),  # zentrale Wellenbohrung (0 = keine)

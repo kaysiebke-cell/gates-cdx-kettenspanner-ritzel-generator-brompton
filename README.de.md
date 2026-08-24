@@ -46,7 +46,7 @@ Im Web-Konfigurator kannst du das **Spannrollen-Ritzel live in 3D drehen und anp
 
 * **Komplett parametrisch:** Zähnezahl (**12–18**), Eingriffswinkel, Teilung, Kopf-/Fußradius und Zahntiefe lassen sich frei einstellen.
 * **Durchdachte Geometrie:** Zentraler Steg als Riemenführung, seitliche Schmutzmulden (Winkel, Tiefe und Rundung anpassbar), plus Bohrung und Absätze für die Kugellager des Riemenspanners.
-* **Speichen zum Materialsparen:** Auf Wunsch werden Durchbrüche in den Steg zwischen Nabe und Zahnkranz geschnitten – gerade oder tangential geschwungen (Parameter `Schwung`). Bei 18 Zähnen spart das rund 6,6 cm³ (etwa 7 g PA12-CF, gut ein Viertel des Bauteils). Ist der freie Ring zu schmal, bleibt der Steg automatisch voll – mit den Standardwerten greift das ab 17 Zähnen. Siehe [Speichen](#speichen-material-sparen).
+* **Speichen zum Materialsparen:** Auf Wunsch werden Durchbrüche in den Steg zwischen Nabe und Zahnkranz geschnitten – gerade oder tangential geschwungen (Parameter `Schwung`). Bei 18 Zähnen spart das rund 7,0 cm³ (etwa 7,5 g PA12-CF, knapp ein Drittel des Bauteils). Ist der freie Ring zu schmal, bleibt der Steg automatisch voll – mit den Standardwerten greift das ab 17 Zähnen. Siehe [Speichen](#speichen-material-sparen).
 * **Smartes UI:** Das Dock-Panel ist übersichtlich aufgeteilt und passt sich automatisch an das FreeCAD-Design (Light/Dark Mode) an.
 * **Merkt sich Einstellungen:** Die zuletzt genutzten Parameter werden beim nächsten Start automatisch wieder geladen.
 * **Verrundungs-Cache:** Das Tool merkt sich funktionierende Radien. Schlägt ein Versuch fehl, springt es nicht komplett zurück, sondern spart teure Rechenzeit.
@@ -120,7 +120,7 @@ Zwischen Nabe und Zahnkranz sitzt ein massiver Steg über die volle Breite. Trag
 | `Speichen` | Anzahl der Arme. **0 = aus** (Standard), sinnvoll sind 4–6. |
 | `Speichen Breite` | Breite eines Arms quer zur Speiche (Standard 4,5 mm). |
 | `Schwung (°)` | 0° = gerade, radiale Speichen. Größere Werte biegen die Arme tangential. Passt der Wert nicht in den Ring, wird er automatisch zurückgenommen – im Web-Konfigurator rastet das Feld dann sichtbar auf den gebauten Wert ein. |
-| `Wandstärke` | Stehen bleibendes Material am Zahnkranz **und** an der Nabe (Standard 2,0 mm). |
+| `Kranz-Wand` | Stehen bleibendes Material am **Zahnkranz** (Standard 2,0 mm) – das Band, das unterhalb des Muldenbodens über die volle Breite steht und die Riemenspannung zwischen den Öffnungen aufnimmt. An der Nabe bleibt fest 1,0 mm stehen: dort läuft die Last über die Übergangsradien der Arme, nicht über den schmalen Ring. |
 | `Nabenübergang` | Eckenradius **an der Nabe** (Standard 4,0 mm). Größer als die Speichen-Rundung gewählt, damit die Arme tangential in den Nabenzylinder einlaufen statt an einem Kragen abzubrechen – dort sitzt der Kraftfluss, und dort fällt eine scharfe Kerbe am meisten auf. Begrenzt durch die Speichenbreite. |
 | `Speichen-Rundung` | Eckenradius **am Zahnkranz**, direkt in der Skizze gezeichnet (keine 3D-Verrundung). Höchstens die halbe Ringbreite – bei 18 Zähnen also rund 3,8 mm, dann ist die Öffnung ein Langloch. Größere Werte werden auf dieses Maß zurückgenommen, und das Eingabefeld rastet darauf ein. |
 
@@ -131,8 +131,8 @@ Zwischen Nabe und Zahnkranz sitzt ein massiver Steg über die volle Breite. Trag
 | Zähne | Freier Ring | 5 gerade Speichen |
 |---|---|---|
 | ≤ 16 | < 6 mm | – (Steg bleibt voll) |
-| 17 | 6,4 mm | −4,9 cm³ (≈ 5,2 g) |
-| 18 | 8,0 mm | −6,6 cm³ (≈ 7,0 g) |
+| 17 | 7,4 mm | −5,3 cm³ (≈ 5,6 g, 26 %) |
+| 18 | 9,0 mm | −7,0 cm³ (≈ 7,5 g, 31 %) |
 
 Wer auch bei kleineren Ritzeln Speichen will, muss zuerst `Tiefe am Steg` oder `Mulden-Winkel` zurücknehmen.
 
