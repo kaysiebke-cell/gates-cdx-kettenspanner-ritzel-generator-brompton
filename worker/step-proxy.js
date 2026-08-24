@@ -53,6 +53,11 @@ const RANGES = {
   tasche_b:        [0, 30],
   mulde_winkel:    [0, 80],
   mulde_r:         [0, 10],
+  speichen_n:      [0, 12],
+  speichen_b:      [0, 20],
+  speichen_schwung:[-60, 60],
+  speichen_wand:   [0.5, 15],
+  speichen_r:      [0, 10],
 };
 
 function reinigeParams(roh) {
@@ -63,7 +68,7 @@ function reinigeParams(roh) {
       let v = Number(roh[k]);
       if (!Number.isFinite(v)) continue;
       v = Math.min(r[1], Math.max(r[0], v));
-      if (k === 'zaehne') v = Math.round(v);
+      if (k === 'zaehne' || k === 'speichen_n') v = Math.round(v);
       out[k] = v;
     }
   }

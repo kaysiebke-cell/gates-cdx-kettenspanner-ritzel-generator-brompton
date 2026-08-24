@@ -13,6 +13,7 @@ export const i18n = {
       leg1: 'Zahnrad-Körper (Grundkörper)',
       leg2: 'Zylinder (Kugellager)',
       leg3: 'Seitliche Schmutzabweiser',
+      leg4: 'Speichen (Material sparen)',
       hint1: 'Zahn- und Mulden-Rundung werden in der Vorschau angenähert dargestellt; die Release-Dateien enthalten die exakten CAD-Verrundungen.',
       series_stl: 'Verrundete STL direkt herunterladen',
       series_step: 'Gleiche Datei als STEP (für CAD)',
@@ -49,6 +50,12 @@ export const i18n = {
       pocket_width: 'Mulden-Breite',
       pocket_angle: 'Mulden-Winkel',
       pocket_round: 'Mulden-Rundung',
+      spokes_n: 'Speichen (0=aus)',
+      spokes_w: 'Speichen Breite',
+      spokes_sweep: 'Schwung (°)',
+      spokes_wall: 'Wandstärke',
+      spokes_round: 'Speichen-Rundung',
+      hint4: 'Spart Material im Steg zwischen Nabe und Zahnkranz: 0 = aus, sonst die Anzahl der Arme (z. B. 5). Schwung 0° = gerade Speichen, größere Werte biegen sie tangential. Sinnvoll ab 17 Zähnen — darunter ist der freie Ring zu schmal, dann bleibt der Steg automatisch voll. Mit Speichen weichst du vom Standard ab: die vorgebauten Release-Dateien passen dann nicht mehr, es braucht den Cloud-Bau.',
       head_circle: 'Kopfkreis-Ø',
       total_height: 'Gesamthöhe',
       teeth_label: 'Zähne',
@@ -68,6 +75,7 @@ export const i18n = {
       leg1: 'Gear Body (Base)',
       leg2: 'Cylinder (Bearing)',
       leg3: 'Side Dirt Shields',
+      leg4: 'Spokes (save material)',
       hint1: 'Tooth and pocket rounding shown approximated in preview; release files contain exact CAD roundings.',
       series_stl: 'Download rounded STL directly',
       series_step: 'Same file as STEP (for CAD)',
@@ -104,6 +112,12 @@ export const i18n = {
       pocket_width: 'Pocket width',
       pocket_angle: 'Pocket angle',
       pocket_round: 'Pocket rounding',
+      spokes_n: 'Spokes (0=off)',
+      spokes_w: 'Spoke Width',
+      spokes_sweep: 'Sweep (°)',
+      spokes_wall: 'Wall Thickness',
+      spokes_round: 'Spoke Round',
+      hint4: 'Saves material in the web between hub and tooth rim: 0 = off, otherwise the number of arms (e.g. 5). Sweep 0° = straight spokes, larger values bend them tangentially. Worthwhile from 17 teeth up — below that the free ring is too narrow and the web stays solid automatically. Spokes take you off the standard values: the pre-built release files no longer match, so the cloud build is needed.',
       head_circle: 'Head circle Ø',
       total_height: 'Total height',
       teeth_label: 'Teeth',
@@ -128,6 +142,8 @@ export function updateUI() {
   document.getElementById('leg1').textContent = t('leg1');
   document.getElementById('leg2').textContent = t('leg2');
   document.getElementById('leg3').textContent = t('leg3');
+  document.getElementById('leg4').textContent = t('leg4');
+  document.getElementById('hint4').textContent = t('hint4');
   document.getElementById('hint1').textContent = t('hint1');
   document.getElementById('hint2').textContent = t('hint2');
   document.getElementById('hint3').textContent = t('hint3');
