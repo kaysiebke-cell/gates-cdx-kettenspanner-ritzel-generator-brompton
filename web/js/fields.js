@@ -24,6 +24,7 @@ export const SECTIONS = [
     ['speichen_schwung', 'spokes_sweep',  0.00, 1],
     ['speichen_wand',    'spokes_wall',   2.00, 0.1],
     ['speichen_r',       'spokes_round',  2.00, 0.1],
+    ['speichen_r_nabe',  'spokes_hub_r',  4.00, 0.1],
   ]],
   ['sec2', [
     ['bohrung_d', 'bore_d',       14.00, 0.5],
@@ -55,12 +56,14 @@ export const inputs = {};
 // Geprueft wird nach JEDER Feldaenderung: auch Zaehnezahl, Nabe oder
 // Muldenwinkel verschieben den freien Ring und damit die Obergrenzen.
 // Felder, die einrasten: key -> Name im Kontur-Ergebnis.
-const RASTFELDER = { speichen_r: 'rundung', speichen_schwung: 'schwung' };
+const RASTFELDER = { speichen_r: 'rundung', speichen_r_nabe: 'rundungNabe',
+                     speichen_schwung: 'schwung' };
 
 function gebauteSpeichen(p) {
   const rKopf = p.spitzen_abstand / (2 * Math.sin(Math.PI / p.zaehne)) + p.spitzen_d / 2;
   const { ri, ra } = ringRadien(rKopf, p);
-  const e = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r, p.speichen_schwung);
+  const e = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r,
+                   p.speichen_schwung, p.speichen_r_nabe);
   return e.oeffnungen.length ? e : null;      // keine Speichen -> nichts einzurasten
 }
 

@@ -184,40 +184,58 @@ def _flanken_segment(flanke, p0, p1):
     return _bogen(flanke[1], flanke[2], p0, p1)
 
 
-def kontur(anzahl, arm_b, r_innen, r_aussen, rundung, schwung_grad):
+def kontur(anzahl, arm_b, r_innen, r_aussen, rundung, schwung_grad,
+           rundung_nabe=None):
     """Alle Speichen-Oeffnungen im Ring r_innen..r_aussen.
 
-    Liefert {'oeffnungen': [[segment, ...], ...], 'schwung': ..., 'rundung': ...}
-    mit den TATSAECHLICH gebauten Werten. Sind Schwung oder Verrundung fuer
-    den vorhandenen Platz zu gross, werden sie schrittweise zurueckgenommen —
-    wie die Radius-Kaskade der Verrundungen im Generator. Bleibt gar nichts
-    Baubares uebrig, ist 'oeffnungen' leer und der Steg bleibt voll."""
+    `rundung` verrundet die Ecken am Zahnkranz, `rundung_nabe` die an der Nabe
+    (ohne Angabe derselbe Wert). Ein groesserer Nabenradius laesst die Arme
+    tangential in den Nabenzylinder einlaufen, statt sie an einem Kragen
+    abbrechen zu lassen — dort sitzt der Kraftfluss, und dort faellt eine
+    scharfe Kerbe am meisten auf.
+
+    Liefert {'oeffnungen': [[segment, ...], ...], 'schwung': ..., 'rundung':
+    ..., 'rundung_nabe': ...} mit den TATSAECHLICH gebauten Werten. Passen
+    Schwung oder Rundungen nicht in den vorhandenen Platz, werden sie
+    schrittweise zurueckgenommen — wie die Radius-Kaskade der Verrundungen im
+    Generator. Bleibt gar nichts Baubares uebrig, ist 'oeffnungen' leer und
+    der Steg bleibt voll."""
     n = int(anzahl)
-    leer = {'oeffnungen': [], 'schwung': 0.0, 'rundung': 0.0}
+    leer = {'oeffnungen': [], 'schwung': 0.0, 'rundung': 0.0, 'rundung_nabe': 0.0}
     if not ist_sinnvoll(r_innen, r_aussen, n, arm_b):
         return leer
     teilung = 2 * math.pi / n
-    # Obergrenze ist die halbe Ringbreite (abzueglich eines Rests Flanke) —
-    # dort geht die Oeffnung in ein Langloch ueber, mehr ist geometrisch nicht
-    # drin. Wer mehr eintraegt, bekommt genau dieses Langloch.
-    grenze = min(float(rundung), (r_aussen - r_innen - 0.3) / 2.0, float(arm_b))
+
+    # Beide Rundungen sitzen auf derselben Flanke und duerfen sie zusammen
+    # nicht auffressen; passt die Summe nicht, werden beide im selben
+    # Verhaeltnis gekuerzt (sonst verschoebe sich das gewollte Verhaeltnis).
+    rd_a = max(float(rundung), 0.0)
+    rd_i = max(float(rundung if rundung_nabe is None else rundung_nabe), 0.0)
+    platz = max(r_aussen - r_innen - 0.3, 0.0)
+    if rd_a + rd_i > platz > 0:
+        f = platz / (rd_a + rd_i)
+        rd_a, rd_i = rd_a * f, rd_i * f
+    rd_a, rd_i = min(rd_a, float(arm_b)), min(rd_i, float(arm_b))
 
     for anteil in (1.0, 0.75, 0.5, 0.25, 0.0):
         schwung = math.radians(float(schwung_grad)) * anteil
-        for rc in (grenze, grenze * 0.6, grenze * 0.3, 0.0):
-            rc = max(rc, 0.0)
+        for stufe in (1.0, 0.6, 0.3, 0.0):
+            rc_a, rc_i = rd_a * stufe, rd_i * stufe
             oeffnungen = _kontur_versuch(n, teilung, arm_b, r_innen, r_aussen,
-                                         rc, schwung)
+                                         rc_a, rc_i, schwung)
             if oeffnungen and _plausibel(oeffnungen, r_innen, r_aussen):
                 return {'oeffnungen': oeffnungen,
-                        'schwung': math.degrees(schwung), 'rundung': rc}
+                        'schwung': math.degrees(schwung),
+                        'rundung': rc_a, 'rundung_nabe': rc_i}
         if abs(schwung_grad) < 1e-4:
             break                      # radial: Schwung-Kaskade bringt nichts
     return leer
 
 
-def _kontur_versuch(n, teilung, arm_b, r_innen, r_aussen, rc, schwung):
-    """Ein Bauversuch mit festem Schwung und fester Verrundung."""
+def _kontur_versuch(n, teilung, arm_b, r_innen, r_aussen, rc_a, rc_i,
+                    schwung):
+    """Ein Bauversuch mit festem Schwung und festen Verrundungen
+    (rc_a am Zahnkranz, rc_i an der Nabe)."""
     oeffnungen = []
     for k in range(n):
         a0 = teilung * k
@@ -226,10 +244,10 @@ def _kontur_versuch(n, teilung, arm_b, r_innen, r_aussen, rc, schwung):
                      arm_b, r_innen, r_aussen, schwung, a0)
         fb = _flanke(_arm(a1, r_innen, r_aussen, schwung), -1,
                      arm_b, r_innen, r_aussen, schwung, a1)
-        ecken = [_ecke(fa, r_aussen, True,  rc, _pol(r_aussen, a0 + schwung)),
-                 _ecke(fb, r_aussen, True,  rc, _pol(r_aussen, a1 + schwung)),
-                 _ecke(fb, r_innen,  False, rc, _pol(r_innen, a1)),
-                 _ecke(fa, r_innen,  False, rc, _pol(r_innen, a0))]
+        ecken = [_ecke(fa, r_aussen, True,  rc_a, _pol(r_aussen, a0 + schwung)),
+                 _ecke(fb, r_aussen, True,  rc_a, _pol(r_aussen, a1 + schwung)),
+                 _ecke(fb, r_innen,  False, rc_i, _pol(r_innen, a1)),
+                 _ecke(fa, r_innen,  False, rc_i, _pol(r_innen, a0))]
         if any(e[0] is None for e in ecken):
             return []
         (a_out_f, a_out_r, a_out_m) = ecken[0]
@@ -246,16 +264,16 @@ def _kontur_versuch(n, teilung, arm_b, r_innen, r_aussen, rc, schwung):
 
         seg = [_flanken_segment(fa, a_in_f, a_out_f)]          # Flanke A nach aussen
         if a_out_m:
-            seg.append(_bogen(a_out_m, rc, a_out_f, a_out_r))
+            seg.append(_bogen(a_out_m, rc_a, a_out_f, a_out_r))
         seg.append(_bogen((0.0, 0.0), r_aussen, a_out_r, b_out_r))
         if b_out_m:
-            seg.append(_bogen(b_out_m, rc, b_out_r, b_out_f))
+            seg.append(_bogen(b_out_m, rc_a, b_out_r, b_out_f))
         seg.append(_flanken_segment(fb, b_out_f, b_in_f))      # Flanke B nach innen
         if b_in_m:
-            seg.append(_bogen(b_in_m, rc, b_in_f, b_in_r))
+            seg.append(_bogen(b_in_m, rc_i, b_in_f, b_in_r))
         seg.append(_bogen((0.0, 0.0), r_innen, b_in_r, a_in_r))
         if a_in_m:
-            seg.append(_bogen(a_in_m, rc, a_in_r, a_in_f))
+            seg.append(_bogen(a_in_m, rc_i, a_in_r, a_in_f))
         oeffnungen.append(seg)
     return oeffnungen
 

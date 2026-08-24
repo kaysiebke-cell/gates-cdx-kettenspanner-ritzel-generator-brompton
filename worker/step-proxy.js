@@ -58,6 +58,7 @@ const RANGES = {
   speichen_schwung:[-60, 60],
   speichen_wand:   [0.5, 15],
   speichen_r:      [0, 10],
+  speichen_r_nabe: [0, 20],
 };
 
 function reinigeParams(roh) {

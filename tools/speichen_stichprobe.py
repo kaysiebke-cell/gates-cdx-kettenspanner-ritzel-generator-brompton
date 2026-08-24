@@ -19,6 +19,7 @@ SPITZEN_ABSTAND, SPITZEN_R = 10.20, 1.40
 
 ZAEHNE = (12, 14, 16, 17, 18)
 RUNDUNG = (0.0, 1.0, 2.0, 3.0, 4.0, 6.0)
+NABE_R = (0.0, 2.0, 4.0, 8.0)
 SCHWUNG = (0.0, 10.0, 15.0, 30.0)
 ANZAHL = (3, 4, 5, 6, 8)
 BREITE = (3.0, 4.5, 6.0)
@@ -32,11 +33,13 @@ def zeilen():
             for sw in SCHWUNG:
                 for n in ANZAHL:
                     for b in BREITE:
-                        e = sg.kontur(n, b, r_innen, r_aussen, rd, sw)
-                        yield ' '.join(f"{float(x):.4f}" for x in (
-                            z, n, b, rd, sw, r_innen, r_aussen,
-                            len(e['oeffnungen']), e['schwung'], e['rundung'],
-                            sg.flaeche(e['oeffnungen'])))
+                        for rn in NABE_R:
+                            e = sg.kontur(n, b, r_innen, r_aussen, rd, sw, rn)
+                            yield ' '.join(f"{float(x):.4f}" for x in (
+                                z, n, b, rd, sw, rn, r_innen, r_aussen,
+                                len(e['oeffnungen']), e['schwung'],
+                                e['rundung'], e['rundung_nabe'],
+                                sg.flaeche(e['oeffnungen'])))
 
 
 if __name__ == '__main__':

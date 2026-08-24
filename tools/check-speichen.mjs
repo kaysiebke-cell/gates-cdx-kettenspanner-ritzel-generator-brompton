@@ -23,6 +23,7 @@ const BASIS = { breite: 11.0, steg_w: 3.0, tiefe: 5.6, seiten_t: 6.0,
 const SPITZEN_ABSTAND = 10.20, SPITZEN_R = 1.40;
 const ZAEHNE = [12, 14, 16, 17, 18];
 const RUNDUNG = [0, 1, 2, 3, 4, 6];
+const NABE_R = [0, 2, 4, 8];
 const SCHWUNG = [0, 10, 15, 30];
 const ANZAHL = [3, 4, 5, 6, 8];
 const BREITE = [3.0, 4.5, 6.0];
@@ -35,12 +36,14 @@ function zeilen() {
     for (const rd of RUNDUNG)
       for (const sw of SCHWUNG)
         for (const n of ANZAHL)
-          for (const b of BREITE) {
-            const e = kontur(n, b, ri, ra, rd, sw);
-            out.push([z, n, b, rd, sw, ri, ra, e.oeffnungen.length,
-                      e.schwung, e.rundung, flaeche(e.oeffnungen)]
-              .map(x => Number(x).toFixed(4)).join(' '));
-          }
+          for (const b of BREITE)
+            for (const rn of NABE_R) {
+              const e = kontur(n, b, ri, ra, rd, sw, rn);
+              out.push([z, n, b, rd, sw, rn, ri, ra, e.oeffnungen.length,
+                        e.schwung, e.rundung, e.rundungNabe,
+                        flaeche(e.oeffnungen)]
+                .map(x => Number(x).toFixed(4)).join(' '));
+            }
   }
   return out;
 }
@@ -69,8 +72,8 @@ for (let i = 0; i < js.length; i++)
 if (abweichungen.length) {
   console.error(`✗ Speichen-Kontur driftet: ${abweichungen.length} von ${js.length} `
     + 'Kombinationen weichen ab.');
-  console.error('  Spalten: zaehne n breite rundung schwung ri ra '
-    + 'oeffnungen schwung_gebaut rundung_gebaut flaeche');
+  console.error('  Spalten: zaehne n breite rundung schwung nabe_r ri ra '
+    + 'oeffnungen schwung_gebaut rundung_gebaut nabe_gebaut flaeche');
   for (const a of abweichungen.slice(0, 5)) {
     console.error(`\n  #${a.i}  Python: ${a.py}`);
     console.error(`      JavaScript: ${a.js}`);

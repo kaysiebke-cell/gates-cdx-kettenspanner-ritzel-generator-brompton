@@ -129,39 +129,50 @@ function ecke(fl, rRand, randAussen, rc, referenz) {
 const flankenSegment = (fl, p0, p1) =>
   fl[0] === 'linie' ? linie(p0, p1) : bogen(fl[1], fl[2], p0, p1);
 
-export function kontur(anzahl, armB, ri, ra, rundung, schwungGrad) {
+export function kontur(anzahl, armB, ri, ra, rundung, schwungGrad, rundungNabe) {
   const n = Math.round(anzahl);
-  const leer = { oeffnungen: [], schwung: 0, rundung: 0 };
+  const leer = { oeffnungen: [], schwung: 0, rundung: 0, rundungNabe: 0 };
   if (!istSinnvoll(ri, ra, n, armB)) return leer;
   const teilung = 2 * Math.PI / n;
-  // Obergrenze ist die halbe Ringbreite (abzüglich eines Rests Flanke) — dort
-  // geht die Öffnung in ein Langloch über, mehr ist geometrisch nicht drin.
-  const grenze = Math.min(rundung, (ra - ri - 0.3) / 2, armB);
+
+  // `rundung` verrundet die Ecken am Zahnkranz, `rundungNabe` die an der Nabe.
+  // Beide sitzen auf derselben Flanke und dürfen sie zusammen nicht
+  // auffressen; passt die Summe nicht, werden beide im selben Verhältnis
+  // gekürzt (sonst verschöbe sich das gewollte Verhältnis).
+  let rdA = Math.max(rundung, 0);
+  let rdI = Math.max(rundungNabe === undefined ? rundung : rundungNabe, 0);
+  const platz = Math.max(ra - ri - 0.3, 0);
+  if (rdA + rdI > platz && platz > 0) {
+    const f = platz / (rdA + rdI);
+    rdA *= f; rdI *= f;
+  }
+  rdA = Math.min(rdA, armB); rdI = Math.min(rdI, armB);
 
   for (const anteil of [1, 0.75, 0.5, 0.25, 0]) {
     const schwung = schwungGrad * Math.PI / 180 * anteil;
-    for (const roh of [grenze, grenze * 0.6, grenze * 0.3, 0]) {
-      const rc = Math.max(roh, 0);
-      const oeffnungen = versuch(n, teilung, armB, ri, ra, rc, schwung);
+    for (const stufe of [1, 0.6, 0.3, 0]) {
+      const rcA = rdA * stufe, rcI = rdI * stufe;
+      const oeffnungen = versuch(n, teilung, armB, ri, ra, rcA, rcI, schwung);
       if (oeffnungen.length && plausibel(oeffnungen, ri, ra))
-        return { oeffnungen, schwung: schwung * 180 / Math.PI, rundung: rc };
+        return { oeffnungen, schwung: schwung * 180 / Math.PI,
+                 rundung: rcA, rundungNabe: rcI };
     }
     if (Math.abs(schwungGrad) < 1e-4) break;   // radial: Kaskade bringt nichts
   }
   return leer;
 }
 
-function versuch(n, teilung, armB, ri, ra, rc, schwung) {
+function versuch(n, teilung, armB, ri, ra, rcA, rcI, schwung) {
   const oeffnungen = [];
   for (let k = 0; k < n; k++) {
     const a0 = teilung * k, a1 = a0 + teilung;
     const fa = flanke(arm(a0, ri, ra, schwung), +1, armB, ri, ra, schwung, a0);
     const fb = flanke(arm(a1, ri, ra, schwung), -1, armB, ri, ra, schwung, a1);
     const ecken = [
-      ecke(fa, ra, true,  rc, pol(ra, a0 + schwung)),
-      ecke(fb, ra, true,  rc, pol(ra, a1 + schwung)),
-      ecke(fb, ri, false, rc, pol(ri, a1)),
-      ecke(fa, ri, false, rc, pol(ri, a0)),
+      ecke(fa, ra, true,  rcA, pol(ra, a0 + schwung)),
+      ecke(fb, ra, true,  rcA, pol(ra, a1 + schwung)),
+      ecke(fb, ri, false, rcI, pol(ri, a1)),
+      ecke(fa, ri, false, rcI, pol(ri, a0)),
     ];
     if (ecken.some(e => e[0] === null)) return [];
     const [[aOutF, aOutR, aOutM], [bOutF, bOutR, bOutM],
@@ -173,13 +184,13 @@ function versuch(n, teilung, armB, ri, ra, rc, schwung) {
     if (laenge(sub(aOutF, aInF)) < 0.05 || laenge(sub(bOutF, bInF)) < 0.05) return [];
 
     const seg = [flankenSegment(fa, aInF, aOutF)];      // Flanke A nach außen
-    if (aOutM) seg.push(bogen(aOutM, rc, aOutF, aOutR));
+    if (aOutM) seg.push(bogen(aOutM, rcA, aOutF, aOutR));
     seg.push(bogen([0, 0], ra, aOutR, bOutR));
-    if (bOutM) seg.push(bogen(bOutM, rc, bOutR, bOutF));
+    if (bOutM) seg.push(bogen(bOutM, rcA, bOutR, bOutF));
     seg.push(flankenSegment(fb, bOutF, bInF));          // Flanke B nach innen
-    if (bInM) seg.push(bogen(bInM, rc, bInF, bInR));
+    if (bInM) seg.push(bogen(bInM, rcI, bInF, bInR));
     seg.push(bogen([0, 0], ri, bInR, aInR));
-    if (aInM) seg.push(bogen(aInM, rc, aInR, aInF));
+    if (aInM) seg.push(bogen(aInM, rcI, aInR, aInF));
     oeffnungen.push(seg);
   }
   return oeffnungen;

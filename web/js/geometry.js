@@ -93,7 +93,8 @@ export function speichenGeometrie(p, rKopf) {
   if (!(p.speichen_n >= 3) || !(p.speichen_b > 0)) return null;
   const { ri, ra } = ringRadien(rKopf, p);
   const { oeffnungen } = kontur(p.speichen_n, p.speichen_b, ri, ra,
-                                p.speichen_r, p.speichen_schwung);
+                                p.speichen_r, p.speichen_schwung,
+                                p.speichen_r_nabe);
   if (!oeffnungen.length) return null;
 
   // Kantenbruch an den Stirnflächen — dieselbe Größe wie an der Zahnkontur.

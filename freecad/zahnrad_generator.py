@@ -268,7 +268,7 @@ class ZahnradVollGenerator:
                 'bohrung_d', 'nabe_d', 'nabe_l', 'lager_d', 'lager_t',
                 'fuehrung_w', 'fuehrung_d',
                 'speichen_n', 'speichen_b', 'speichen_schwung',
-                'speichen_wand', 'speichen_r')])
+                'speichen_wand', 'speichen_r', 'speichen_r_nabe')])
 
             # 3. Zahnkörper aufpolstern (symmetrisch zur XY-Ebene)
             #    Hinweis: KEIN recompute je Feature — sonst verschachteln sich
@@ -488,7 +488,8 @@ class ZahnradVollGenerator:
         r_innen, r_aussen = speichen_geometrie.ring_radien(self.r_kopf_max, params)
         ergebnis = speichen_geometrie.kontur(
             params['speichen_n'], params['speichen_b'], r_innen, r_aussen,
-            params.get('speichen_r', 0.0), params.get('speichen_schwung', 0.0))
+            params.get('speichen_r', 0.0), params.get('speichen_schwung', 0.0),
+            params.get('speichen_r_nabe'))
         oeffnungen = ergebnis['oeffnungen']
         if not oeffnungen:
             print(f"Speichen: freier Ring nur {r_aussen - r_innen:.1f} mm "

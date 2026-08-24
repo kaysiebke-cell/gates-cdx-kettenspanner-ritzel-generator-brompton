@@ -121,7 +121,8 @@ A solid web runs between hub and tooth rim across the full width. Structurally i
 | `Spoke Width` | Width of one arm across the spoke (default 4.5 mm). |
 | `Sweep (°)` | 0° = straight, radial spokes. Larger values bend the arms tangentially. If the value does not fit the ring, it is reduced automatically – in the web configurator the field then visibly snaps to the value that is built. |
 | `Wall Thickness` | Material left standing at the tooth rim **and** at the hub (default 2.0 mm). |
-| `Spoke Round` | Corner radius of the openings, drawn directly in the sketch (not a 3D fillet). At most half the ring width – about 3.8 mm at 18 teeth, at which point the opening becomes a slot. Larger values are reduced to that, and the input field snaps to it. |
+| `Hub blend` | Corner radius **at the hub** (4.0 mm by default). Deliberately larger than the spoke rounding so the arms run tangentially into the hub cylinder instead of stopping at a collar – that is where the load path sits and where a sharp notch shows most. Limited by the spoke width. |
+| `Spoke Round` | Corner radius **at the tooth rim**, drawn directly in the sketch (not a 3D fillet). At most half the ring width – about 3.8 mm at 18 teeth, at which point the opening becomes a slot. Larger values are reduced to that, and the input field snaps to it. |
 
 **Edge break:** The openings are cut all the way through, so their walls meet the faces at 90°. Both edge loops are therefore broken using the `Tooth rounding` value (0.4 mm by default); without it the printed part is sharp to handle. The value is deliberately the same one used on the tooth contour – raising it also changes the rounding of the teeth.
 

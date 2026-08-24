@@ -121,7 +121,8 @@ Zwischen Nabe und Zahnkranz sitzt ein massiver Steg über die volle Breite. Trag
 | `Speichen Breite` | Breite eines Arms quer zur Speiche (Standard 4,5 mm). |
 | `Schwung (°)` | 0° = gerade, radiale Speichen. Größere Werte biegen die Arme tangential. Passt der Wert nicht in den Ring, wird er automatisch zurückgenommen – im Web-Konfigurator rastet das Feld dann sichtbar auf den gebauten Wert ein. |
 | `Wandstärke` | Stehen bleibendes Material am Zahnkranz **und** an der Nabe (Standard 2,0 mm). |
-| `Speichen-Rundung` | Eckenradius der Öffnungen, direkt in der Skizze gezeichnet (keine 3D-Verrundung). Höchstens die halbe Ringbreite – bei 18 Zähnen also rund 3,8 mm, dann ist die Öffnung ein Langloch. Größere Werte werden auf dieses Maß zurückgenommen, und das Eingabefeld rastet darauf ein. |
+| `Nabenübergang` | Eckenradius **an der Nabe** (Standard 4,0 mm). Größer als die Speichen-Rundung gewählt, damit die Arme tangential in den Nabenzylinder einlaufen statt an einem Kragen abzubrechen – dort sitzt der Kraftfluss, und dort fällt eine scharfe Kerbe am meisten auf. Begrenzt durch die Speichenbreite. |
+| `Speichen-Rundung` | Eckenradius **am Zahnkranz**, direkt in der Skizze gezeichnet (keine 3D-Verrundung). Höchstens die halbe Ringbreite – bei 18 Zähnen also rund 3,8 mm, dann ist die Öffnung ein Langloch. Größere Werte werden auf dieses Maß zurückgenommen, und das Eingabefeld rastet darauf ein. |
 
 **Kantenbruch:** Die Öffnungen sind durchgehend geschnitten – ihre Wände stoßen also mit 90° auf die Stirnflächen. Beide Kantenkränze werden deshalb mit dem Wert aus `Zahn-Rundung` gebrochen (Standard 0,4 mm); ohne das schneidet man sich am gedruckten Teil beim Anfassen. Der Wert ist bewusst derselbe wie an der Zahnkontur – wer ihn erhöht, verändert damit auch die Verrundung der Zähne.
 
