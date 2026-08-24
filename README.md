@@ -119,9 +119,9 @@ A solid web runs between hub and tooth rim across the full width. Structurally i
 |---|---|
 | `Spokes` | Number of arms. **0 = off** (default), 4–6 make sense. |
 | `Spoke Width` | Width of one arm across the spoke (default 4.5 mm). |
-| `Sweep (°)` | 0° = straight, radial spokes. Larger values bend the arms tangentially. If the value does not fit the ring, it is reduced automatically. |
+| `Sweep (°)` | 0° = straight, radial spokes. Larger values bend the arms tangentially. If the value does not fit the ring, it is reduced automatically – in the web configurator the field then visibly snaps to the value that is built. |
 | `Wall Thickness` | Material left standing at the tooth rim **and** at the hub (default 2.0 mm). |
-| `Spoke Round` | Corner radius of the openings, drawn directly in the sketch (not a 3D fillet). At most half the ring width – about 3.8 mm at 18 teeth, at which point the opening becomes a slot. Larger values are reduced to that. |
+| `Spoke Round` | Corner radius of the openings, drawn directly in the sketch (not a 3D fillet). At most half the ring width – about 3.8 mm at 18 teeth, at which point the opening becomes a slot. Larger values are reduced to that, and the input field snaps to it. |
 
 **When it pays off:** What limits the spokes is not the tooth root but the dirt pocket. It deepens towards the face by `Pocket Angle` and ends there about 2.8 mm further in than at the central ridge – only below that does material span the full width. If less than 6 mm of free ring remains between hub collar and rim, no spokes are built at all and the web stays solid. With the default values the limit sits at 17 teeth:
 

@@ -1,4 +1,5 @@
 import { t } from './i18n.js';
+import { ringRadien, kontur } from './speichen.js';
 
 // Harte Zähnezahl-Grenzen (identisch zu zahnrad_params.py: ZAEHNE_MIN/MAX)
 export const ZAEHNE_MIN = 12, ZAEHNE_MAX = 18;
@@ -46,6 +47,43 @@ for (const [, felder] of SECTIONS)
 
 export const inputs = {};
 
+// Schwung und Rundung nimmt die Kontur-Kaskade zurueck, wenn sie nicht in den
+// freien Ring passen (siehe speichen.js). Ohne Rueckmeldung sieht das aus, als
+// taete das Feld nichts: Eintrag 6, gebaut werden 3,8 — und wer testweise auf 8
+// erhoeht, sieht gar keinen Unterschied mehr. Darum den Wert nach der Eingabe
+// sichtbar auf das einrasten lassen, was tatsaechlich geschnitten wird.
+// Geprueft wird nach JEDER Feldaenderung: auch Zaehnezahl, Nabe oder
+// Muldenwinkel verschieben den freien Ring und damit die Obergrenzen.
+// Felder, die einrasten: key -> Name im Kontur-Ergebnis.
+const RASTFELDER = { speichen_r: 'rundung', speichen_schwung: 'schwung' };
+
+function gebauteSpeichen(p) {
+  const rKopf = p.spitzen_abstand / (2 * Math.sin(Math.PI / p.zaehne)) + p.spitzen_d / 2;
+  const { ri, ra } = ringRadien(rKopf, p);
+  const e = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r, p.speichen_schwung);
+  return e.oeffnungen.length ? e : null;      // keine Speichen -> nichts einzurasten
+}
+
+function einrasten(onChange) {
+  const p = params();
+  const e = gebauteSpeichen(p);
+  if (!e) return;                          // keine Speichen -> nichts einzurasten
+  let geaendert = false;
+  for (const [key, feld] of Object.entries(RASTFELDER)) {
+    const gebaut = e[feld];
+    if (Math.abs(gebaut - p[key]) < 0.01) continue;   // nichts zurueckgenommen
+    const el = document.getElementById(key);
+    if (!el) continue;
+    // Zur Null hin abschneiden, damit der angezeigte Wert selbst wieder baubar
+    // ist — sonst rastet das Feld bei jeder weiteren Eingabe erneut. Das
+    // Epsilon faengt die Fliesskomma-Kruemel des Grad->Bogenmass->Grad-Wegs
+    // ab: aus 15.000000000000002 wuerde sonst ein befremdliches 14,99.
+    el.value = Math.trunc((gebaut + 1e-9) * 100) / 100;
+    geaendert = true;
+  }
+  if (geaendert) onChange();
+}
+
 export function buildFormFields(onChange) {
   for (const [secId, felder] of SECTIONS) {
     const sec = document.getElementById(secId);
@@ -68,6 +106,8 @@ export function buildFormFields(onChange) {
           onChange();
         });
       }
+      // Nach dem Zaehne-Handler registrieren, damit dort schon geklemmt wurde.
+      inp.addEventListener('change', () => einrasten(onChange));
       inp.addEventListener('input', onChange);
       row.append(lab, inp); sec.append(row);
       inputs[key] = inp;

@@ -119,9 +119,9 @@ Zwischen Nabe und Zahnkranz sitzt ein massiver Steg über die volle Breite. Trag
 |---|---|
 | `Speichen` | Anzahl der Arme. **0 = aus** (Standard), sinnvoll sind 4–6. |
 | `Speichen Breite` | Breite eines Arms quer zur Speiche (Standard 4,5 mm). |
-| `Schwung (°)` | 0° = gerade, radiale Speichen. Größere Werte biegen die Arme tangential. Passt der Wert nicht in den Ring, wird er automatisch zurückgenommen. |
+| `Schwung (°)` | 0° = gerade, radiale Speichen. Größere Werte biegen die Arme tangential. Passt der Wert nicht in den Ring, wird er automatisch zurückgenommen – im Web-Konfigurator rastet das Feld dann sichtbar auf den gebauten Wert ein. |
 | `Wandstärke` | Stehen bleibendes Material am Zahnkranz **und** an der Nabe (Standard 2,0 mm). |
-| `Speichen-Rundung` | Eckenradius der Öffnungen, direkt in der Skizze gezeichnet (keine 3D-Verrundung). Höchstens die halbe Ringbreite – bei 18 Zähnen also rund 3,8 mm, dann ist die Öffnung ein Langloch. Größere Werte werden auf dieses Maß zurückgenommen. |
+| `Speichen-Rundung` | Eckenradius der Öffnungen, direkt in der Skizze gezeichnet (keine 3D-Verrundung). Höchstens die halbe Ringbreite – bei 18 Zähnen also rund 3,8 mm, dann ist die Öffnung ein Langloch. Größere Werte werden auf dieses Maß zurückgenommen, und das Eingabefeld rastet darauf ein. |
 
 **Ab wann es sich lohnt:** Maßgeblich ist nicht der Zahnfuß, sondern die Schmutzmulde. Sie wird mit `Mulden-Winkel` zur Stirnfläche hin tiefer und endet dort rund 2,8 mm weiter innen als am Mittelsteg – erst darunter steht Material über die volle Breite. Bleiben zwischen Nabenkragen und Kranz weniger als 6 mm frei, werden gar keine Speichen gebaut und der Steg bleibt voll. Mit den Standardwerten liegt die Grenze bei 17 Zähnen:
 
