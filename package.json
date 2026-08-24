@@ -9,7 +9,7 @@
     "build:shell": "esbuild web/js/shell.js --bundle --format=iife --minify --outfile=web/js/shell.bundle.js",
     "build:viewer": "esbuild web/js/viewer.js --bundle --format=iife --minify --alias:three/addons=three/examples/jsm --outfile=web/js/viewer.bundle.js",
     "docs": "node tools/gen-readme.mjs",
-    "check": "node tools/check-speichen.mjs"
+    "check": "node tools/check-speichen.mjs && python3 tools/test_generator_logik.py"
   },
   "devDependencies": {
     "esbuild": "0.21.5",

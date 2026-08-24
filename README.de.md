@@ -123,6 +123,8 @@ Zwischen Nabe und Zahnkranz sitzt ein massiver Steg über die volle Breite. Trag
 | `Wandstärke` | Stehen bleibendes Material am Zahnkranz **und** an der Nabe (Standard 2,0 mm). |
 | `Speichen-Rundung` | Eckenradius der Öffnungen, direkt in der Skizze gezeichnet (keine 3D-Verrundung). Höchstens die halbe Ringbreite – bei 18 Zähnen also rund 3,8 mm, dann ist die Öffnung ein Langloch. Größere Werte werden auf dieses Maß zurückgenommen, und das Eingabefeld rastet darauf ein. |
 
+**Kantenbruch:** Die Öffnungen sind durchgehend geschnitten – ihre Wände stoßen also mit 90° auf die Stirnflächen. Beide Kantenkränze werden deshalb mit dem Wert aus `Zahn-Rundung` gebrochen (Standard 0,4 mm); ohne das schneidet man sich am gedruckten Teil beim Anfassen. Der Wert ist bewusst derselbe wie an der Zahnkontur – wer ihn erhöht, verändert damit auch die Verrundung der Zähne.
+
 **Ab wann es sich lohnt:** Maßgeblich ist nicht der Zahnfuß, sondern die Schmutzmulde. Sie wird mit `Mulden-Winkel` zur Stirnfläche hin tiefer und endet dort rund 2,8 mm weiter innen als am Mittelsteg – erst darunter steht Material über die volle Breite. Bleiben zwischen Nabenkragen und Kranz weniger als 6 mm frei, werden gar keine Speichen gebaut und der Steg bleibt voll. Mit den Standardwerten liegt die Grenze bei 17 Zähnen:
 
 | Zähne | Freier Ring | 5 gerade Speichen |
@@ -158,6 +160,7 @@ Bezugsquelle für Deutschland: [F605-2RS bei Kugellager-Express](https://www.kug
 | `freecad/zahnrad_params.py` | Definition der Variablen und Standardwerte. |
 | `freecad/speichen_geometrie.py` | Kontur-Mathematik der Speichen-Durchbrüche (ohne FreeCAD-Import). |
 | `tools/check-speichen.mjs` | `npm run check`: prüft, dass Python- und JS-Fassung dieselbe Kontur rechnen. |
+| `tools/test_generator_logik.py` | Prüft Kantenauswahl und Radius-Kaskade des Generators gegen eine FreeCAD-Attrappe. |
 | `web/js/speichen.js` | Derselbe Code für die Web-Vorschau – muss zur Python-Fassung passen. |
 | `web/index.html` | Der Web-Konfigurator (läuft über GitHub Pages). |
 | `freecad/build_headless.py` | Hilfsskript: Baut die Release-Serie (STEP/STL) im Hintergrund ohne GUI. |

@@ -123,6 +123,8 @@ A solid web runs between hub and tooth rim across the full width. Structurally i
 | `Wall Thickness` | Material left standing at the tooth rim **and** at the hub (default 2.0 mm). |
 | `Spoke Round` | Corner radius of the openings, drawn directly in the sketch (not a 3D fillet). At most half the ring width – about 3.8 mm at 18 teeth, at which point the opening becomes a slot. Larger values are reduced to that, and the input field snaps to it. |
 
+**Edge break:** The openings are cut all the way through, so their walls meet the faces at 90°. Both edge loops are therefore broken using the `Tooth rounding` value (0.4 mm by default); without it the printed part is sharp to handle. The value is deliberately the same one used on the tooth contour – raising it also changes the rounding of the teeth.
+
 **When it pays off:** What limits the spokes is not the tooth root but the dirt pocket. It deepens towards the face by `Pocket Angle` and ends there about 2.8 mm further in than at the central ridge – only below that does material span the full width. If less than 6 mm of free ring remains between hub collar and rim, no spokes are built at all and the web stays solid. With the default values the limit sits at 17 teeth:
 
 | Teeth | Free ring | 5 straight spokes |
@@ -156,6 +158,7 @@ The default values (Bore Ø 14 mm, bearing seat Ø 16 mm × 1 mm) are designed e
 | `freecad/zahnrad_params.py` | Definition of variables and default values. |
 | `freecad/speichen_geometrie.py` | Contour maths for the spoke openings (no FreeCAD import). |
 | `tools/check-speichen.mjs` | `npm run check`: verifies that the Python and JS versions compute the same contour. |
+| `tools/test_generator_logik.py` | Checks the generator's edge selection and radius cascade against a FreeCAD mock. |
 | `web/js/speichen.js` | The same code for the web preview – must match the Python version. |
 | `web/index.html` | The web configurator (hosted via GitHub Pages). |
 | `freecad/build_headless.py` | Helper script: Builds the release series (STEP/STL) in the background without a GUI. |

@@ -157,6 +157,7 @@ class ZahnradVollGenerator:
     # Namenspräfix entfernt, da ihre Anzahl von der Zähnezahl abhängt.
     _SOLID_OBJECTS = [
         'ZahnVerrundung',
+        'SpeichenFillet',
         'MuldenFillet',
         'ZahnPad',
         'FuehrungRingPad', 'FuehrungRingSketch',
@@ -334,6 +335,11 @@ class ZahnradVollGenerator:
             if rundungen and zahn_r > 0:
                 print("Zahnrad: Zahn-Rundung …")
                 self._add_zahn_verrundung(doc, body, breite, zahn_r)
+
+            # 10. Kanten der Speichen-Durchbrüche brechen (eigenes Feature,
+            #     eigene Kaskade — siehe _add_speichen_verrundung).
+            if rundungen and zahn_r > 0 and speichen_n >= 3:
+                self._add_speichen_verrundung(doc, body, breite, zahn_r)
 
             doc.recompute()
             if App.GuiUp:
@@ -519,19 +525,13 @@ class ZahnradVollGenerator:
         sk.Visibility = False
         self._speichen_ring = (r_innen, r_aussen)
 
-    def _add_zahn_verrundung(self, doc, body, breite, radius):
-        """Verrundet die Kanten der beiden Stirnflächen (Zahnkontur UND
-        Muldenöffnungen) — als LETZTES Feature auf dem fertigen Körper, die
-        zentrale Kreiskante (Nabe/Bohrung) ausgenommen. Methode nach dem
-        bewährten User-Makro 'flächen abrundung.py': die explizite Kantenliste
-        mit Zentral-Ausschluss verkraftet größere Radien als ein
-        Ganze-Flächen-Fillet mitten im Feature-Baum.
-        Robuster Fallback: schlägt der Fillet fehl, wird er entfernt."""
-        doc.recompute()                        # fertiger Körper muss da sein
-        tip = body.Tip
-        sh = tip.Shape
+    def _stirnflaechen_kanten(self, sh, breite, nimm):
+        """Kantennamen ('EdgeN') der beiden großen Stirnflächen, gefiltert
+        durch `nimm(kante)`. Beide Verrundungen am fertigen Körper picken sich
+        ihre Kanten hier heraus — eine explizite Liste verkraftet größere
+        Radien als ein Fillet über ganze Flächen mitten im Feature-Baum."""
         zmax = breite / 2.0
-        names = []
+        namen = []
         for ziel in (zmax, -zmax):
             # größte planare Stirnfläche bei z=±breite/2 finden
             best = None
@@ -544,46 +544,92 @@ class ZahnradVollGenerator:
                         best = (f.Area, idx)
             if best is None:
                 continue
-            # deren Kanten einzeln übernehmen — ohne die zentrale Kreiskante
-            face = sh.Faces[best[1]]
-            for fe in face.Edges:
-                if self._ist_zentrale_kreiskante(fe) or self._ist_speichen_kante(fe):
+            for fe in sh.Faces[best[1]].Edges:
+                if not nimm(fe):
                     continue
                 for i, oe in enumerate(sh.Edges):
                     if fe.isSame(oe):
                         name = f'Edge{i + 1}'
-                        if name not in names:
-                            names.append(name)
+                        if name not in namen:
+                            namen.append(name)
                         break
-        if not names:
-            return
-        # Radius-Kaskade wie bei der Mulden-Verrundung: zu großer Radius wird
-        # schrittweise reduziert statt die Rundung ganz wegzulassen.
+        return namen
+
+    def _kaskade(self, doc, body, name, label, tip, namen, radius,
+                 schluessel, schritt, untergrenze=0.1):
+        """Fillet auf `namen` legen und den Radius so lange verkleinern, bis
+        OCC ihn akzeptiert. Startet beim zuletzt erfolgreichen Radius (Cache) —
+        fehlschlagende OCC-Fillets sind sehr langsam, das spart bei
+        Wiederhol-Builds viel Zeit. Klappt gar nichts, wird das Feature wieder
+        entfernt: lieber eine scharfe Kante als ein kaputter Körper."""
         prev_tip = body.Tip
-        fil = body.newObject('PartDesign::Fillet', 'ZahnVerrundung')
-        fil.Base = (tip, names)
-        r = self._cache_startradius('zahn_r', radius)
-        while r >= 0.1:
+        fil = body.newObject('PartDesign::Fillet', name)
+        fil.Base = (tip, namen)
+        r = self._cache_startradius(schluessel, radius)
+        while r >= untergrenze:
             try:
                 fil.Radius = r
                 doc.recompute()
                 if body.Shape.isValid() and 'Invalid' not in ' '.join(fil.State):
                     if r < radius:
-                        print(f"Zahn-Rundung: Radius {radius} zu groß für diese "
+                        print(f"{label}: Radius {radius} zu groß für diese "
                               f"Geometrie — mit {r:.2f} angewendet.")
-                    self._cache_merken('zahn_r', {
+                    self._cache_merken(schluessel, {
                         'fp': self._geo_fp, 'wunsch': radius, 'ok': r})
-                    return
+                    return True
             except Exception:
                 pass
-            # große Radien schnell halbieren, kleine in 0,1er-Schritten absteigen.
-            # OCC-Fillets sind nicht monoton (0,4 baut, wo 0,5 fehlschlägt) —
-            # grobe Schritte würden machbare Radien überspringen.
-            r = round(r / 2.0, 2) if r > 1.2 else round(r - 0.1, 2)
-        print(f"Zahn-Rundung übersprungen (kein gültiger Radius ≤ {radius}).")
+            r = schritt(r)
+        print(f"{label} übersprungen (kein gültiger Radius ≤ {radius}).")
         doc.removeObject(fil.Name)
         body.Tip = prev_tip
         doc.recompute()
+        return False
+
+    def _add_speichen_verrundung(self, doc, body, breite, radius):
+        """Bricht die Kanten der Speichen-Durchbrüche an beiden Stirnflächen.
+
+        Ohne das stoßen die Öffnungswände mit 90° auf die Stirnfläche — am
+        gedruckten Teil scharfe Kanten, an denen man sich beim Anfassen
+        schneidet. Bewusst ein EIGENES Feature nach der Zahn-Rundung: die
+        Öffnungskanten in deren Liste zu werfen würde die Radius-Kaskade
+        häufiger scheitern lassen und den Radius fürs GANZE Teil drücken."""
+        if radius <= 0 or not getattr(self, '_speichen_ring', None):
+            return
+        doc.recompute()
+        tip = body.Tip
+        namen = self._stirnflaechen_kanten(tip.Shape, breite,
+                                           self._ist_speichen_kante)
+        if not namen:
+            print("Speichen-Kantenbruch: keine Öffnungskanten gefunden.")
+            return
+        print("Zahnrad: Speichen-Kantenbruch …")
+        self._kaskade(doc, body, 'SpeichenFillet', 'Speichen-Kantenbruch', tip,
+                      namen, radius, 'speichen_kante',
+                      lambda r: round(r - 0.1, 2))
+
+    def _add_zahn_verrundung(self, doc, body, breite, radius):
+        """Verrundet die Kanten der beiden Stirnflächen (Zahnkontur UND
+        Muldenöffnungen) — als LETZTES Feature auf dem fertigen Körper, die
+        zentrale Kreiskante (Nabe/Bohrung) ausgenommen. Methode nach dem
+        bewährten User-Makro 'flächen abrundung.py': die explizite Kantenliste
+        mit Zentral-Ausschluss verkraftet größere Radien als ein
+        Ganze-Flächen-Fillet mitten im Feature-Baum.
+        Robuster Fallback: schlägt der Fillet fehl, wird er entfernt."""
+        doc.recompute()                        # fertiger Körper muss da sein
+        tip = body.Tip
+        names = self._stirnflaechen_kanten(
+            tip.Shape, breite,
+            lambda e: not (self._ist_zentrale_kreiskante(e)
+                           or self._ist_speichen_kante(e)))
+        if not names:
+            return
+        # Große Radien schnell halbieren, kleine in 0,1er-Schritten absteigen.
+        # OCC-Fillets sind nicht monoton (0,4 baut, wo 0,5 fehlschlägt) —
+        # grobe Schritte würden machbare Radien überspringen.
+        self._kaskade(doc, body, 'ZahnVerrundung', 'Zahn-Rundung', tip, names,
+                      radius, 'zahn_r',
+                      lambda r: round(r / 2.0, 2) if r > 1.2 else round(r - 0.1, 2))
 
     def _add_flanken_fillet(self, doc, body, radius):
         """Verrundet die schrägen SEITENkanten der Winkelfläche (Muldenboden) —
@@ -627,32 +673,9 @@ class ZahnradVollGenerator:
         if not names:
             print("Mulden-Verrundung: keine Flankenkanten gefunden — übersprungen.")
             return
-        # Radius-Kaskade: ist der Wunschradius für die Geometrie zu groß
-        # (OCC-Fillet ungültig), schrittweise verkleinern statt aufgeben.
-        # Startet beim zuletzt erfolgreichen Radius (Cache) — fehlschlagende
-        # OCC-Fillets sind sehr langsam, das spart bei Wiederhol-Builds viel Zeit.
-        prev_tip = body.Tip
-        fil = body.newObject('PartDesign::Fillet', 'MuldenFillet')
-        fil.Base = (tip, names)
-        r = self._cache_startradius('mulde_r', radius)
-        while r >= 0.2:
-            try:
-                fil.Radius = r
-                doc.recompute()
-                if body.Shape.isValid() and 'Invalid' not in ' '.join(fil.State):
-                    if r < radius:
-                        print(f"Mulden-Verrundung: Radius {radius} zu groß für "
-                              f"diese Geometrie — mit {r:.2f} angewendet.")
-                    self._cache_merken('mulde_r', {
-                        'fp': self._geo_fp, 'wunsch': radius, 'ok': r})
-                    return
-            except Exception:
-                pass
-            r = round(r - 0.25, 2)
-        print(f"Mulden-Verrundung übersprungen (kein gültiger Radius ≤ {radius}).")
-        doc.removeObject(fil.Name)
-        body.Tip = prev_tip
-        doc.recompute()
+        self._kaskade(doc, body, 'MuldenFillet', 'Mulden-Verrundung', tip, names,
+                      radius, 'mulde_r', lambda r: round(r - 0.25, 2),
+                      untergrenze=0.2)
 
     def _add_fuehrungsring(self, doc, body, r_guide, ring_w, z, rotation):
         """Additive Riemenführung im Zentrum (Z=0), Dicke ring_w: ein

@@ -96,7 +96,16 @@ export function speichenGeometrie(p, rKopf) {
                                 p.speichen_r, p.speichen_schwung);
   if (!oeffnungen.length) return null;
 
-  const tiefe = p.breite + 2;          // sicher durch beide Stirnflächen
+  // Kantenbruch an den Stirnflächen — dieselbe Größe wie an der Zahnkontur.
+  // Ohne ihn stoßen die Öffnungswände mit 90° auf die Stirnfläche: gedruckt
+  // sind das scharfe Kanten, an denen man sich beim Anfassen schneidet.
+  // Umgesetzt am Schneidkörper statt als Nachbearbeitung: bevelSize negativ
+  // und bevelOffset positiv lassen den geraden Teil nominal und weiten nur
+  // die beiden Enden um kb auf (in dieser Three-Version gemessen).
+  // Begrenzt durch die Wand zum Kranz/zur Nabe — die soll nicht auffressen.
+  const kb = Math.max(0, Math.min(p.zahn_r, p.speichen_wand / 2, (ra - ri) / 4));
+  const gerade = p.breite - 2 * kb + 0.04;   // Aufweitung sitzt auf den Flächen
+  const tiefe = kb > 0.01 ? gerade : p.breite + 2;
   const teile = [];
   for (const oef of oeffnungen) {
     const shape = new THREE.Shape();
@@ -109,8 +118,11 @@ export function speichenGeometrie(p, rKopf) {
                    seg.ccw ? seg.a0 : seg.a1,
                    seg.ccw ? seg.a1 : seg.a0, !seg.ccw);
     }
-    const geo = new THREE.ExtrudeGeometry(shape, {
-      depth: tiefe, bevelEnabled: false, curveSegments: 24 });
+    const geo = new THREE.ExtrudeGeometry(shape, kb > 0.01 ? {
+      depth: tiefe, curveSegments: 24,
+      bevelEnabled: true, bevelSegments: 3,
+      bevelSize: -kb, bevelThickness: kb, bevelOffset: kb,
+    } : { depth: tiefe, bevelEnabled: false, curveSegments: 24 });
     geo.translate(0, 0, -tiefe / 2);
     teile.push(geo);
   }
