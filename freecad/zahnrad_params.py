@@ -27,6 +27,13 @@ FIELD_SECTIONS = [
         ("mulde_winkel",    "Mulden-Winkel",  35.00),  # dreht an der Steg-Kante, nach außen tiefer (0 = gerade)
         ("mulde_r",         "Mulden-Rundung",  2.00),  # Radius der Winkelflächen-Verrundung
     ]),
+    ("Speichen (Material sparen)", [
+        ("speichen_n",      "Speichen",        0),      # Anzahl Arme (0 = aus, sonst z.B. 5)
+        ("speichen_b",      "Speichen Breite", 4.50),   # Armbreite quer zur Speiche
+        ("speichen_schwung","Schwung (°)",     0.00),   # 0 = gerade, sonst gebogen
+        ("speichen_wand",   "Wandstärke",      2.00),   # Wand am Kranz UND an der Nabe
+        ("speichen_r",      "Speichen-Rundung", 2.00),  # Eckenradius der Öffnungen
+    ]),
     ("Zylinder (Kugellager)", [
         ("bohrung_d",       "Bohrung Ø",      14.00),  # zentrale Wellenbohrung (0 = keine)
         ("nabe_d",          "Nabe Ø",         20.00),  # Außen-Ø der Nabe (0 = keine)

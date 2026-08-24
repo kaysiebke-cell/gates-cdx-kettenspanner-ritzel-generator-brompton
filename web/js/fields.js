@@ -17,6 +17,13 @@ export const SECTIONS = [
     ['fuehrung_w',      'guide_width',   1.00, 0.1],
     ['fuehrung_d',      'guide_d', 46.50, 0.5],
   ]],
+  ['sec4', [
+    ['speichen_n',       'spokes_n',      0,    1],
+    ['speichen_b',       'spokes_w',      4.50, 0.1],
+    ['speichen_schwung', 'spokes_sweep',  0.00, 1],
+    ['speichen_wand',    'spokes_wall',   2.00, 0.1],
+    ['speichen_r',       'spokes_round',  2.00, 0.1],
+  ]],
   ['sec2', [
     ['bohrung_d', 'bore_d',       14.00, 0.5],
     ['nabe_d',    'hub_d',          20.00, 0.5],

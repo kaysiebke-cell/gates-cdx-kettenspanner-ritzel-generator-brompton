@@ -8,6 +8,8 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import Part
 
+import speichen_geometrie
+
 try:
     from zahnrad_params import ZAEHNE_MIN, ZAEHNE_MAX
 except Exception:               # Fallback, falls Modul (noch) nicht auf dem Pfad
@@ -158,6 +160,7 @@ class ZahnradVollGenerator:
         'MuldenFillet',
         'ZahnPad',
         'FuehrungRingPad', 'FuehrungRingSketch',
+        'SpeichenPocket', 'SpeichenSketch',
         'NabePad', 'NabeSketch',
         'LagerObenPocket', 'LagerUntenPocket',
         'LagerObenSketch', 'LagerUntenSketch',
@@ -251,6 +254,7 @@ class ZahnradVollGenerator:
             m_winkel  = params['mulde_winkel']     # Neigung der Muldenflanke [Grad]
             m_rund    = params['mulde_r']          # Verrundungsradius der Mulde [mm]
             zahn_r    = params.get('zahn_r', 0.0)  # Verrundung der Zahnkontur beidseitig
+            speichen_n = int(params.get('speichen_n', 0))   # Anzahl Speichen (0 = keine)
             rundungen = params.get('rundungen', True)  # False = Entwurfsmodus (schnell)
 
             # Geometrie-Fingerabdruck für den Radius-Cache: nur Werte, die die
@@ -261,7 +265,9 @@ class ZahnradVollGenerator:
                 'fuss_d', 'tiefe', 'breite', 'steg_w', 'seiten_t',
                 'tasche_b', 'mulde_winkel', 'mulde_r',
                 'bohrung_d', 'nabe_d', 'nabe_l', 'lager_d', 'lager_t',
-                'fuehrung_w', 'fuehrung_d')])
+                'fuehrung_w', 'fuehrung_d',
+                'speichen_n', 'speichen_b', 'speichen_schwung',
+                'speichen_wand', 'speichen_r')])
 
             # 3. Zahnkörper aufpolstern (symmetrisch zur XY-Ebene)
             #    Hinweis: KEIN recompute je Feature — sonst verschachteln sich
@@ -296,6 +302,15 @@ class ZahnradVollGenerator:
                 r_guide = (fuehr_d / 2.0) if fuehr_d > 0 else (self.r_kopf_max - 1.1)
                 self._add_fuehrungsring(doc, body, r_guide, fuehr_w, z,
                                         params.get('rotation', 0.0))
+
+            # 5b. Speichen: Durchbrüche im Steg zwischen Nabe und Zahnkranz.
+            #     MUSS nach dem Führungsring kommen — der ist eine geschlossene
+            #     Scheibe bis zur Nabe und würde die Öffnungen sonst wieder
+            #     zupolstern (übrig bliebe eine dünne Haut auf halber Höhe,
+            #     die beim flach liegenden Druck frei in der Luft hängt).
+            self._speichen_ring = None
+            if speichen_n >= 3:
+                self._add_speichen(doc, body, params)
 
             # 6. Kugellager-Nabe: additiver Boss um die Bohrung (Sitz fürs
             #    Flansch-Kugellager, steht ggf. über die Flanken hinaus).
@@ -444,6 +459,66 @@ class ZahnradVollGenerator:
             return math.hypot(c.x, c.y) < 1.0
         return False
 
+    def _ist_speichen_kante(self, edge):
+        """True für die Kanten der Speichen-Durchbrüche. Sie bleiben von der
+        Zahn-Rundung ausgenommen: ihre Ecken sind bereits im Sketch verrundet,
+        und die zusätzlichen Kanten würden die Radius-Kaskade am Ende des
+        Baums unnötig scheitern lassen (kleinerer Radius fürs GANZE Teil)."""
+        ring = getattr(self, '_speichen_ring', None)
+        if not ring or not edge.Vertexes:
+            return False
+        r_innen, r_aussen = ring
+        for v in edge.Vertexes:
+            r = math.hypot(v.Point.x, v.Point.y)
+            if not (r_innen - 0.3 <= r <= r_aussen + 0.3):
+                return False
+        return True
+
+    def _add_speichen(self, doc, body, params):
+        """Schneidet die Speichen-Durchbrüche als EINEN Pocket 'ThroughAll'
+        durch den Steg. Die Kontur kommt aus speichen_geometrie (dieselben
+        Formeln wie in der Web-Vorschau) und besteht aus echten Linien und
+        Kreisbögen — kein Polygonzug, damit STEP/CNC sauber bleiben."""
+        r_innen, r_aussen = speichen_geometrie.ring_radien(self.r_kopf_max, params)
+        ergebnis = speichen_geometrie.kontur(
+            params['speichen_n'], params['speichen_b'], r_innen, r_aussen,
+            params.get('speichen_r', 0.0), params.get('speichen_schwung', 0.0))
+        oeffnungen = ergebnis['oeffnungen']
+        if not oeffnungen:
+            print(f"Speichen: freier Ring nur {r_aussen - r_innen:.1f} mm "
+                  f"(nötig {speichen_geometrie.MIN_RING:.0f} mm) — Steg bleibt voll.")
+            return
+        wunsch = float(params.get('speichen_schwung', 0.0))
+        if abs(ergebnis['schwung'] - wunsch) > 0.05:
+            print(f"Speichen: Schwung {wunsch:.0f}° zu viel für diesen Ring — "
+                  f"mit {ergebnis['schwung']:.1f}° gebaut.")
+
+        xy = self._xy_plane(body)
+        sk = body.newObject('Sketcher::SketchObject', 'SpeichenSketch')
+        sk.AttachmentSupport = [(xy, '')]
+        sk.MapMode = 'FlatFace'
+        normal = App.Vector(0, 0, 1)
+        for oeffnung in oeffnungen:
+            for seg in oeffnung:
+                if seg['typ'] == 'linie':
+                    sk.addGeometry(Part.LineSegment(
+                        App.Vector(seg['p0'][0], seg['p0'][1], 0),
+                        App.Vector(seg['p1'][0], seg['p1'][1], 0)), False)
+                    continue
+                mitte = App.Vector(seg['c'][0], seg['c'][1], 0)
+                a0, a1 = seg['a0'], seg['a1']
+                if a1 <= a0:
+                    a1 += 2 * math.pi          # ArcOfCircle läuft gegen den UZS
+                sk.addGeometry(Part.ArcOfCircle(
+                    Part.Circle(mitte, normal, seg['r']), a0, a1), False)
+
+        pocket = body.newObject('PartDesign::Pocket', 'SpeichenPocket')
+        pocket.Profile  = sk
+        pocket.Type     = 'ThroughAll'
+        pocket.SideType = 'Symmetric'      # in beide Richtungen durch
+        sk.Visibility = False
+        self._speichen_ring = (r_innen, r_aussen)
+
     def _add_zahn_verrundung(self, doc, body, breite, radius):
         """Verrundet die Kanten der beiden Stirnflächen (Zahnkontur UND
         Muldenöffnungen) — als LETZTES Feature auf dem fertigen Körper, die
@@ -472,7 +547,7 @@ class ZahnradVollGenerator:
             # deren Kanten einzeln übernehmen — ohne die zentrale Kreiskante
             face = sh.Faces[best[1]]
             for fe in face.Edges:
-                if self._ist_zentrale_kreiskante(fe):
+                if self._ist_zentrale_kreiskante(fe) or self._ist_speichen_kante(fe):
                     continue
                 for i, oe in enumerate(sh.Edges):
                     if fe.isSame(oe):

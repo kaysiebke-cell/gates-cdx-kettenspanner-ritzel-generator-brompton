@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
+import { ringRadien, kontur } from './speichen.js';
 
 const dir2 = t => new THREE.Vector2(Math.cos(t), Math.sin(t));
 
@@ -86,6 +87,36 @@ export function muldenGeometrie(p, rKopf) {
   return mergeGeometries(teile);
 }
 
+// Speichen-Durchbrüche — Kontur aus speichen.js, identisch zum Generator
+// (_add_speichen). Ein Schneidkörper über die volle Breite je Öffnung.
+export function speichenGeometrie(p, rKopf) {
+  if (!(p.speichen_n >= 3) || !(p.speichen_b > 0)) return null;
+  const { ri, ra } = ringRadien(rKopf, p);
+  const { oeffnungen } = kontur(p.speichen_n, p.speichen_b, ri, ra,
+                                p.speichen_r, p.speichen_schwung);
+  if (!oeffnungen.length) return null;
+
+  const tiefe = p.breite + 2;          // sicher durch beide Stirnflächen
+  const teile = [];
+  for (const oef of oeffnungen) {
+    const shape = new THREE.Shape();
+    shape.moveTo(oef[0].p0[0], oef[0].p0[1]);
+    for (const seg of oef) {
+      if (seg.typ === 'linie') { shape.lineTo(seg.p1[0], seg.p1[1]); continue; }
+      // a0/a1 sind gegen den Uhrzeigersinn sortiert; `ccw` sagt, wie der
+      // Umlauf tatsächlich läuft — sonst zieht die Kurve die falsche Seite.
+      shape.absarc(seg.c[0], seg.c[1], seg.r,
+                   seg.ccw ? seg.a0 : seg.a1,
+                   seg.ccw ? seg.a1 : seg.a0, !seg.ccw);
+    }
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth: tiefe, bevelEnabled: false, curveSegments: 24 });
+    geo.translate(0, 0, -tiefe / 2);
+    teile.push(geo);
+  }
+  return mergeGeometries(teile);
+}
+
 const evaluator = new Evaluator();
 evaluator.useGroups = false;   // ein Material für das Ergebnis, keine Gruppen
 
@@ -160,6 +191,12 @@ export function buildMeshes(p, mat) {
     lathe.rotateX(Math.PI / 2);   // Lathe dreht um Y → auf Z-Achse kippen
     gear = csgOp(gear, lathe, ADDITION);
   }
+
+  // Speichen zuletzt schneiden — nach Führungsring und Nabe. Andersherum
+  // legt der Führungsring (geschlossene Scheibe bis zur Nabe) eine dünne
+  // Haut über jede Öffnung, die beim flachen Druck in der Luft hinge.
+  const speichen = speichenGeometrie(p, rKopf);
+  if (speichen) gear = csgOp(gear, speichen, SUBTRACTION);
 
   // Ein einziger wasserdichter Körper — sauber für STL/Slicer
   const koerper = new THREE.Mesh(gear, mat);
