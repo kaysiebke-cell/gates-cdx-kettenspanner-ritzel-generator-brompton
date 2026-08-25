@@ -33,7 +33,7 @@ const TOLERANZ = 1e-9;
 const VARIANTEN = [
   ['Standardwerte',            {}],
   ['kleinstes Rad',            { zaehne: 12 }],
-  ['groesstes Rad',            { zaehne: 18 }],
+  ['groesstes Rad',            { zaehne: 19 }],
   ['Winkel 0 (scharfe Ecken)', { eingriffswinkel: 0 }],
   ['Winkel 35',                { eingriffswinkel: 35 }],
   ['feine Zahnform',           { spitzen_abstand: 9.5, spitzen_d: 3.4, fuss_d: 6.0, tiefe: 4.9 }],
@@ -43,6 +43,7 @@ const VARIANTEN = [
   ['Speichen gegenlaeufig',    { zaehne: 18, speichen_n: 5, speichen_schwung: -25 }],
   ['viele schmale Speichen',   { zaehne: 18, speichen_n: 8, speichen_b: 2.5 }],
   ['breite Speichen',          { zaehne: 18, speichen_n: 6, speichen_b: 6.0, speichen_r: 3.0, speichen_wand: 1.5 }],
+  ['dicke Wand am groessten',  { zaehne: 19, speichen_n: 5, speichen_wand: 3.0 }],
   ['Speichen ohne Mulden',     { zaehne: 18, speichen_n: 5, tasche_b: 0 }],
   ['Speichen, Mulde gerade',   { zaehne: 18, speichen_n: 3, mulde_winkel: 0 }],
   ['Speichen, dicke Nabe',     { zaehne: 18, speichen_n: 5, nabe_d: 26, bohrung_d: 20 }],

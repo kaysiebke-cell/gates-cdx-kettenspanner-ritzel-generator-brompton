@@ -22,8 +22,8 @@ The same tool is available as an **installable app** for phones — it ships eve
 In the web configurator, you can **rotate and adjust the tensioner sprocket live in 3D**. The tooth profile, debris mud ports, belt guide, hub, and ball bearing seats update instantly based on your preferences.
 
 **Two ways to download:**
-* **Download ready-made STLs:** Pre-rounded files are available for standard sizes from **12 to 18 teeth** (also available with STEP files in the [Release "stl-serie"](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/tag/stl-serie)).
-* **Generate custom dimensions:** You can enter the parameters freely (tooth count **12–18**) and drag the STL directly out of your browser (fillets are approximated here; the exact CAD fillets are included in the release files).
+* **Download ready-made STLs:** Pre-rounded files are available for standard sizes from **12 to 19 teeth** (also available with STEP files in the [Release "stl-serie"](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/tag/stl-serie)).
+* **Generate custom dimensions:** You can enter the parameters freely (tooth count **12–19**) and drag the STL directly out of your browser (fillets are approximated here; the exact CAD fillets are included in the release files).
 
 ## Direct Usage in FreeCAD
 
@@ -44,9 +44,9 @@ In the web configurator, you can **rotate and adjust the tensioner sprocket live
 
 ## Features
 
-* **Fully Parametric:** Tooth count (**12–18**), pressure angle, pitch, tip/root radius, and tooth depth can be freely adjusted.
+* **Fully Parametric:** Tooth count (**12–19**), pressure angle, pitch, tip/root radius, and tooth depth can be freely adjusted.
 * **Thoughtful Geometry:** Central ridge acting as a belt guide, lateral mud/debris ports (angle, depth, and radius adjustable), plus a bore and counterbores for the belt tensioner bearings.
-* **Spokes to Save Material:** Optionally cuts openings into the web between hub and tooth rim – straight or swept tangentially (`Sweep` parameter). At 18 teeth that saves about 6.6 cm³ (roughly 7 g of PA12-CF, a good quarter of the part). If the free ring is too narrow, the web stays solid automatically – with the default values this kicks in from 17 teeth up. See [Spokes](#spokes-save-material).
+* **Spokes to Save Material:** Optionally cuts openings into the web between hub and tooth rim – straight or swept tangentially (`Sweep` parameter). At 19 teeth that saves about 8.6 cm³ (roughly 9 g of PA12-CF, a good quarter of the part). If the free ring is too narrow, the web stays solid automatically – with the default values this kicks in from 17 teeth up. See [Spokes](#spokes-save-material).
 * **Smart UI:** The dock panel is clearly structured and automatically adapts to the FreeCAD theme (Light/Dark Mode).
 * **Remembers Settings:** The last used parameters are automatically reloaded on the next startup.
 * **Fillet Cache:** The tool remembers working radii. If a calculation fails, it doesn't completely reset, saving expensive processing time.
@@ -120,7 +120,7 @@ A solid web runs between hub and tooth rim across the full width. Structurally i
 | `Spokes` | Number of arms. **0 = off** (default), 4–6 make sense. |
 | `Spoke Width` | Width of one arm across the spoke (default 4.5 mm). |
 | `Sweep (°)` | 0° = straight, radial spokes. Larger values bend the arms tangentially. If the value does not fit the ring, it is reduced automatically. |
-| `Wall Thickness` | Material left standing at the tooth rim **and** at the hub (default 2.0 mm). |
+| `Wall Thickness` | Material left standing at the tooth rim **and** at the hub (default 2.0 mm). Every extra millimetre costs the free ring 2 mm: at 18 teeth 2.5 mm is the limit, at 19 teeth 3.5 mm still works – above that the web stays solid. |
 | `Spoke Round` | Corner radius of the openings. Drawn directly in the sketch, not as a 3D fillet. |
 
 **When it pays off:** What limits the spokes is not the tooth root but the dirt pocket. It deepens towards the face by `Pocket Angle` and ends there about 2.8 mm further in than at the central ridge – only below that does material span the full width. If less than 6 mm of free ring remains between hub collar and rim, no spokes are built at all and the web stays solid. With the default values the limit sits at 17 teeth:
@@ -130,10 +130,11 @@ A solid web runs between hub and tooth rim across the full width. Structurally i
 | ≤ 16 | < 6 mm | – (web stays solid) |
 | 17 | 6.4 mm | −4.9 cm³ (≈ 5.2 g) |
 | 18 | 8.0 mm | −6.6 cm³ (≈ 7.0 g) |
+| 19 | 9.6 mm | −8.6 cm³ (≈ 9.1 g) |
 
 To get spokes on smaller sprockets, reduce `Side Depth` or `Pocket Angle` first.
 
-> **Note:** The pre-built release files (12–18 teeth) are built without spokes. As soon as you enable spokes your values differ from the standard – download the STL straight from the browser and the STEP via the cloud build.
+> **Note:** The pre-built release files (12–19 teeth) are built without spokes. As soon as you enable spokes your values differ from the standard – download the STL straight from the browser and the STEP via the cloud build.
 
 ## Matching Ball Bearings
 

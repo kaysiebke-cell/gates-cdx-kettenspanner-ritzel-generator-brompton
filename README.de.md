@@ -22,8 +22,8 @@ Fürs Handy gibt es dieselbe Anwendung als **installierbare App** — sie bringt
 Im Web-Konfigurator kannst du das **Spannrollen-Ritzel live in 3D drehen und anpassen**. Zahnprofil, Schmutzöffnungen, Riemenführung, Nabe und Kugellagersitze verändern sich direkt mit deinen Wünschen.
 
 **Zwei Wege zum Download:**
-* **Fertige STL direkt laden:** Für Standardgrößen von **12 bis 18 Zähnen** liegen fertig verrundete Dateien bereit (gibt es auch inklusive STEP-Dateien im [Release "stl-serie"](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/tag/stl-serie)).
-* **Eigene Maße generieren:** Du kannst die Parameter frei eintragen (Zähnezahl **12–18**) und das STL direkt aus dem Browser ziehen (die Verrundungen werden hierbei angenähert; die exakten CAD-Verrundungen gibt es in den Release-Dateien).
+* **Fertige STL direkt laden:** Für Standardgrößen von **12 bis 19 Zähnen** liegen fertig verrundete Dateien bereit (gibt es auch inklusive STEP-Dateien im [Release "stl-serie"](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/tag/stl-serie)).
+* **Eigene Maße generieren:** Du kannst die Parameter frei eintragen (Zähnezahl **12–19**) und das STL direkt aus dem Browser ziehen (die Verrundungen werden hierbei angenähert; die exakten CAD-Verrundungen gibt es in den Release-Dateien).
 
 ## Nutzung direkt in FreeCAD
 
@@ -44,9 +44,9 @@ Im Web-Konfigurator kannst du das **Spannrollen-Ritzel live in 3D drehen und anp
 
 ## Features
 
-* **Komplett parametrisch:** Zähnezahl (**12–18**), Eingriffswinkel, Teilung, Kopf-/Fußradius und Zahntiefe lassen sich frei einstellen.
+* **Komplett parametrisch:** Zähnezahl (**12–19**), Eingriffswinkel, Teilung, Kopf-/Fußradius und Zahntiefe lassen sich frei einstellen.
 * **Durchdachte Geometrie:** Zentraler Steg als Riemenführung, seitliche Schmutzmulden (Winkel, Tiefe und Rundung anpassbar), plus Bohrung und Absätze für die Kugellager des Riemenspanners.
-* **Speichen zum Materialsparen:** Auf Wunsch werden Durchbrüche in den Steg zwischen Nabe und Zahnkranz geschnitten – gerade oder tangential geschwungen (Parameter `Schwung`). Bei 18 Zähnen spart das rund 6,6 cm³ (etwa 7 g PA12-CF, gut ein Viertel des Bauteils). Ist der freie Ring zu schmal, bleibt der Steg automatisch voll – mit den Standardwerten greift das ab 17 Zähnen. Siehe [Speichen](#speichen-material-sparen).
+* **Speichen zum Materialsparen:** Auf Wunsch werden Durchbrüche in den Steg zwischen Nabe und Zahnkranz geschnitten – gerade oder tangential geschwungen (Parameter `Schwung`). Bei 19 Zähnen spart das rund 8,6 cm³ (etwa 9 g PA12-CF, gut ein Viertel des Bauteils). Ist der freie Ring zu schmal, bleibt der Steg automatisch voll – mit den Standardwerten greift das ab 17 Zähnen. Siehe [Speichen](#speichen-material-sparen).
 * **Smartes UI:** Das Dock-Panel ist übersichtlich aufgeteilt und passt sich automatisch an das FreeCAD-Design (Light/Dark Mode) an.
 * **Merkt sich Einstellungen:** Die zuletzt genutzten Parameter werden beim nächsten Start automatisch wieder geladen.
 * **Verrundungs-Cache:** Das Tool merkt sich funktionierende Radien. Schlägt ein Versuch fehl, springt es nicht komplett zurück, sondern spart teure Rechenzeit.
@@ -120,7 +120,7 @@ Zwischen Nabe und Zahnkranz sitzt ein massiver Steg über die volle Breite. Trag
 | `Speichen` | Anzahl der Arme. **0 = aus** (Standard), sinnvoll sind 4–6. |
 | `Speichen Breite` | Breite eines Arms quer zur Speiche (Standard 4,5 mm). |
 | `Schwung (°)` | 0° = gerade, radiale Speichen. Größere Werte biegen die Arme tangential. Passt der Wert nicht in den Ring, wird er automatisch zurückgenommen. |
-| `Wandstärke` | Stehen bleibendes Material am Zahnkranz **und** an der Nabe (Standard 2,0 mm). |
+| `Wandstärke` | Stehen bleibendes Material am Zahnkranz **und** an der Nabe (Standard 2,0 mm). Jeder Millimeter mehr nimmt dem freien Ring 2 mm weg: bei 18 Zähnen ist bei 2,5 mm Schluss, bei 19 Zähnen sind 3,5 mm drin – darüber bleibt der Steg voll. |
 | `Speichen-Rundung` | Eckenradius der Öffnungen. Wird direkt in der Skizze gezeichnet, nicht als 3D-Verrundung. |
 
 **Ab wann es sich lohnt:** Maßgeblich ist nicht der Zahnfuß, sondern die Schmutzmulde. Sie wird mit `Mulden-Winkel` zur Stirnfläche hin tiefer und endet dort rund 2,8 mm weiter innen als am Mittelsteg – erst darunter steht Material über die volle Breite. Bleiben zwischen Nabenkragen und Kranz weniger als 6 mm frei, werden gar keine Speichen gebaut und der Steg bleibt voll. Mit den Standardwerten liegt die Grenze bei 17 Zähnen:
@@ -130,10 +130,11 @@ Zwischen Nabe und Zahnkranz sitzt ein massiver Steg über die volle Breite. Trag
 | ≤ 16 | < 6 mm | – (Steg bleibt voll) |
 | 17 | 6,4 mm | −4,9 cm³ (≈ 5,2 g) |
 | 18 | 8,0 mm | −6,6 cm³ (≈ 7,0 g) |
+| 19 | 9,6 mm | −8,6 cm³ (≈ 9,1 g) |
 
 Wer auch bei kleineren Ritzeln Speichen will, muss zuerst `Tiefe am Steg` oder `Mulden-Winkel` zurücknehmen.
 
-> **Hinweis:** Die vorgebauten Release-Dateien (12–18 Zähne) sind ohne Speichen gebaut. Sobald du Speichen aktivierst, weichen deine Werte vom Standard ab – die STL lädst du dann direkt aus dem Browser, die STEP über den Cloud-Bau.
+> **Hinweis:** Die vorgebauten Release-Dateien (12–19 Zähne) sind ohne Speichen gebaut. Sobald du Speichen aktivierst, weichen deine Werte vom Standard ab – die STL lädst du dann direkt aus dem Browser, die STEP über den Cloud-Bau.
 
 ## Passende Kugellager
 

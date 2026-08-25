@@ -8,7 +8,7 @@ from PySide6 import QtCore, QtWidgets
 import FreeCADGui as Gui
 
 from zahnrad_generator import ZahnradVollGenerator
-from zahnrad_params import DEFAULT_FIELDS, FIELD_SECTIONS
+from zahnrad_params import DEFAULT_FIELDS, FIELD_SECTIONS, ZAEHNE_MIN, ZAEHNE_MAX
 
 # Datei, in der die zuletzt benutzten Feldwerte gespeichert werden
 try:
@@ -217,7 +217,8 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
             import FreeCAD as App
             from riemenschutz_generator import baue_buegel
             p = self._collect_params()
-            z = max(12, min(18, int(p['zaehne'])))   # Bügel-Serie 12..18
+            # Bügel-Serie: dieselben Grenzen wie das Ritzel (params.json)
+            z = max(ZAEHNE_MIN, min(ZAEHNE_MAX, int(p['zaehne'])))
             shape = baue_buegel(z, p['spitzen_abstand'], p['spitzen_d'])
 
             doc = App.ActiveDocument or App.newDocument("ZahnradDokument")
