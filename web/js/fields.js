@@ -1,44 +1,17 @@
 import { t } from './i18n.js';
+// Eingabefelder, Standardwerte und Zähnezahl-Grenzen kommen aus der
+// gemeinsamen Quelle params.json — dieselbe Datei liest auch
+// freecad/zahnrad_params.py. esbuild bettet den Inhalt beim Bauen ins
+// Bundle ein, der Browser lädt also nichts nach (siehe package.json).
+import PARAMS from '../../params.json' with { type: 'json' };
 
-// Harte Zähnezahl-Grenzen (identisch zu zahnrad_params.py: ZAEHNE_MIN/MAX)
-export const ZAEHNE_MIN = 12, ZAEHNE_MAX = 18;
+// Harte Zähnezahl-Grenzen.
+export const ZAEHNE_MIN = PARAMS.zaehne_min, ZAEHNE_MAX = PARAMS.zaehne_max;
 
-// ── Felddefinitionen: identisch zu zahnrad_params.py, Labels als i18n-Keys ────
-export const SECTIONS = [
-  ['sec1', [
-    ['zaehne',          'teeth',           14,   1],
-    ['eingriffswinkel', 'angle',      20.0, 0.5],
-    ['spitzen_abstand', 'center_dist',     10.20, 0.05],
-    ['spitzen_d',       'head_d',           2.80, 0.05],
-    ['fuss_d',          'foot_d',            7.00, 0.05],
-    ['tiefe',           'depth',            5.60, 0.05],
-    ['breite',          'width_z',        11.00, 0.5],
-    ['zahn_r',          'tooth_round',     0.40, 0.05],
-    ['fuehrung_w',      'guide_width',   1.00, 0.1],
-    ['fuehrung_d',      'guide_d', 46.50, 0.5],
-  ]],
-  ['sec4', [
-    ['speichen_n',       'spokes_n',      0,    1],
-    ['speichen_b',       'spokes_w',      4.50, 0.1],
-    ['speichen_schwung', 'spokes_sweep',  0.00, 1],
-    ['speichen_wand',    'spokes_wall',   2.00, 0.1],
-    ['speichen_r',       'spokes_round',  2.00, 0.1],
-  ]],
-  ['sec2', [
-    ['bohrung_d', 'bore_d',       14.00, 0.5],
-    ['nabe_d',    'hub_d',          20.00, 0.5],
-    ['nabe_l',    'hub_len',      13.00, 0.5],
-    ['lager_d',   'bearing_d',     16.00, 0.5],
-    ['lager_t',   'bearing_depth',  1.00, 0.1],
-  ]],
-  ['sec3', [
-    ['steg_w',       'web_width',    3.00, 0.1],
-    ['seiten_t',     'side_depth',  6.00, 0.1],
-    ['tasche_b',     'pocket_width',  5.00, 0.1],
-    ['mulde_winkel', 'pocket_angle', 35.00, 1],
-    ['mulde_r',      'pocket_round', 2.00, 0.1],
-  ]],
-];
+// ── Felddefinitionen ────────────────────────────────────────────────────────
+// Form je Abschnitt: [fieldset-Id, [ [key, i18n-Schlüssel, Standard, Schritt] ]]
+export const SECTIONS = PARAMS.abschnitte.map(
+  a => [a.id, a.felder.map(f => [f.key, f.i18n, f.standard, f.schritt])]);
 
 export const DEFAULTS = {};
 for (const [, felder] of SECTIONS)

@@ -2,31 +2,16 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
 import { ringRadien, kontur } from './speichen.js';
+import { radien, konturPunkte } from './zahnprofil.js';
 
 const dir2 = t => new THREE.Vector2(Math.cos(t), Math.sin(t));
 
-// Zahnprofil — Formeln 1:1 aus zahnrad_generator.py
+// Zahnprofil. Die Kontur-Mathematik steht in zahnprofil.js — dieselben
+// Formeln liegen in freecad/zahnprofil.py, `npm test` haelt beide gleich.
 export function zahnShape(p) {
-  const z = p.zaehne, off = (p.eingriffswinkel * Math.PI / 180) * 0.5;
-  const rS = p.spitzen_d / 2, rF = p.fuss_d / 2;
-  const rBahn = p.spitzen_abstand / (2 * Math.sin(Math.PI / z));
-  const rKopf = rBahn + rS;
-  const rFussBahn = rKopf - p.tiefe + rF;
-  const pts = [], N = 16;
-  for (let i = 0; i < z; i++) {
-    const wZ = 2 * Math.PI * i / z, wF = 2 * Math.PI * (i + 0.5) / z;
-    const cpS = dir2(wZ).multiplyScalar(rBahn);
-    const cpF = dir2(wF).multiplyScalar(rFussBahn);
-    for (let k = 0; k <= N; k++) {           // Zahnkopf-Bogen (außen)
-      const t = wZ - Math.PI / 2 + off + (Math.PI - 2 * off) * k / N;
-      pts.push(cpS.clone().addScaledVector(dir2(t), rS));
-    }
-    for (let k = 0; k <= N; k++) {           // Fußrundung (innen, rückwärts)
-      const t = wF + 1.5 * Math.PI - off - (Math.PI - 2 * off) * k / N;
-      pts.push(cpF.clone().addScaledVector(dir2(t), rF));
-    }
-  }
-  const shape = new THREE.Shape(pts);
+  const { rKopf } = radien(p);
+  const shape = new THREE.Shape(
+    konturPunkte(p).map(([x, y]) => new THREE.Vector2(x, y)));
   if (p.bohrung_d > 0) {
     const hole = new THREE.Path();
     hole.absarc(0, 0, p.bohrung_d / 2, 0, Math.PI * 2, true);

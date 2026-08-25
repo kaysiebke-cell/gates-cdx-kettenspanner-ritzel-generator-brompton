@@ -15,6 +15,7 @@ on:
     branches: [ "**" ]
     paths:
       - "web/**"
+      - "params.json"
       - "android/**"
       - "package.json"
       - ".github/workflows/android.yml"

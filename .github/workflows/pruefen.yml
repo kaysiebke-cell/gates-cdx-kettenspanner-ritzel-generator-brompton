@@ -1,0 +1,55 @@
+name: JS und Python abgleichen
+
+# Zwei Fassungen derselben Geometrie: die Web-Vorschau rechnet in JavaScript,
+# der CAD-Koerper in Python. Dieser Lauf rechnet beide durch und schlaegt an,
+# sobald sie auseinanderlaufen — damit der Konfigurator nie etwas anderes
+# zeigt, als die STEP-Datei enthaelt. Siehe tools/golden-test.mjs.
+
+on:
+  push:
+    branches: [ "**" ]
+    paths:
+      - "params.json"
+      - "web/js/**"
+      - "freecad/**"
+      - "tools/**"
+      - "package.json"
+      - ".github/workflows/pruefen.yml"
+  pull_request:
+    paths:
+      - "params.json"
+      - "web/js/**"
+      - "freecad/**"
+      - "tools/**"
+      - "package.json"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  abgleich:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 wegen `import ... with { type: 'json' }` in web/js/fields.js.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Der Abgleich selbst braucht keine Abhaengigkeiten (weder Three.js noch
+      # FreeCAD) — genau darum sind die geteilten Formeln eigene Module.
+      - name: JS und Python vergleichen
+        run: npm test
+
+      # Zusaetzlich: baut das Bundle noch? params.json wandert beim Bauen
+      # hinein, ein Tippfehler darin faellt sonst erst im Deploy auf.
+      - name: Bundles probeweise bauen
+        run: |
+          npm install
+          npm run build:shell && npm run build:viewer
