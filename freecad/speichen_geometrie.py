@@ -9,7 +9,7 @@
 
 import math
 
-MIN_RING = 6.0        # ab dieser freien Ringbreite [mm] lohnen sich Speichen
+MIN_RING = 5.0        # ab dieser freien Ringbreite [mm] lohnen sich Speichen
 MIN_OEFFNUNG = 3.0    # kleinste Bogenlaenge einer Oeffnung am Innenring [mm]
 MIN_ARM = 2.0         # duennster zulaessiger Arm [mm]
 
