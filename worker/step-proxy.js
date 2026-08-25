@@ -33,7 +33,7 @@ const repoOf = (env) => env.REPO || DEFAULT_REPO;
 // Werte auf sinnvolle Grenzen geklemmt — so kann der oeffentliche Endpunkt
 // keine entarteten oder missbraeuchlichen Builds ausloesen.
 const RANGES = {
-  zaehne:          [12, 18],
+  zaehne:          [12, 19],
   eingriffswinkel: [5, 45],
   spitzen_abstand: [1, 50],
   spitzen_d:       [0, 20],

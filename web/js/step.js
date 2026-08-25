@@ -2,7 +2,7 @@
 // STEP kann der Browser nicht selbst erzeugen. Es gibt zwei Quellen:
 //
 //   1. Standardwerte  → eine vorgebaute ZIP aus dem Release "serie"
-//      (Zähne 12–18, sonst Default). Sofort, ein Link.
+//      (Zähne 12–19, sonst Default). Sofort, ein Link.
 //   2. Eigene Werte   → On-Demand-Build: ein kleiner Serverless-Vermittler
 //      (STEP_API) löst den GitHub-Actions-Build build-ritzel.yml mit genau
 //      diesen Parametern aus. Dauert ein paar Minuten, liefert dann Ritzel
@@ -15,8 +15,8 @@ import { t } from './i18n.js';
 import { params, DEFAULTS } from './fields.js';
 import { STEP_API } from './config.js';
 
-// STEP-Serie: Zähne 12–18 bei Standardwerten. Muss zur release-serie.yml passen.
-const SERIE_MIN = 12, SERIE_MAX = 18;
+// STEP-Serie: Zähne 12–19 bei Standardwerten. Muss zur release-serie.yml passen.
+const SERIE_MIN = 12, SERIE_MAX = 19;
 const RELEASE_URL = (name) =>
   `https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/download/serie/${name}`;
 

@@ -1,6 +1,6 @@
 name: Serie bauen & Release (Ritzel + Bügel, STL + STEP)
 
-# Baut die komplette Serie 12–18 Zähne (Ritzel UND Riemenschutz-Bügel) headless
+# Baut die komplette Serie 12–19 Zähne (Ritzel UND Riemenschutz-Bügel) headless
 # in FreeCAD und lädt STEP + STL aller Größen in das Release "serie" hoch.
 # Der Web-STEP-Download zeigt auf diese Release-Dateien.
 
@@ -14,6 +14,7 @@ on:
       - "freecad/riemenschutz_generator.py"
       - "freecad/zahnrad_generator.py"
       - "freecad/zahnrad_params.py"
+      - "params.json"              # Zähnezahl-Grenzen der Serie
       - "freecad/ritzel_params.py"
 
 permissions:
@@ -39,17 +40,17 @@ jobs:
           ./FreeCAD.AppImage --appimage-extract > /dev/null
           echo "$PWD/squashfs-root/usr/bin" >> "$GITHUB_PATH"
 
-      - name: Serie 12–18 bauen (Ritzel + Bügel, STEP + STL)
+      - name: Serie 12–19 bauen (Ritzel + Bügel, STEP + STL)
         run: |
           sudo apt-get install -y zip
           mkdir -p "$OUTPUT_DIR"
-          for Z in 12 13 14 15 16 17 18; do
+          for Z in 12 13 14 15 16 17 18 19; do
             echo "::group::Zähnezahl $Z"
             PARAMS_JSON="{\"zaehne\": $Z}" freecadcmd freecad/build_headless.py
             echo "::endgroup::"
           done
           # Pro Größe eine ZIP mit Ritzel- + Bügel-STEP (für den Web-Download).
-          for Z in 12 13 14 15 16 17 18; do
+          for Z in 12 13 14 15 16 17 18 19; do
             (cd "$OUTPUT_DIR" && zip -q "cdx_ritzel_buegel_z${Z}_step.zip" \
               "ritzel_z${Z}.step" "riemenschutz_z${Z}.step")
           done
@@ -62,7 +63,7 @@ jobs:
           tag_name: serie
           name: Serie — Ritzel + Bügel (STL + STEP)
           body: >
-            Automatisch gebaute Serie 12–18 Zähne: Ritzel und Riemenschutz-Bügel,
+            Automatisch gebaute Serie 12–19 Zähne: Ritzel und Riemenschutz-Bügel,
             je als STEP (exakt) und STL. Erzeugt vom Workflow release-serie.yml.
           files: |
             output/ritzel_z*.step
