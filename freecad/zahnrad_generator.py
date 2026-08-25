@@ -9,6 +9,7 @@ import FreeCADGui as Gui
 import Part
 
 import speichen_geometrie
+import zahnprofil
 
 try:
     from zahnrad_params import ZAEHNE_MIN, ZAEHNE_MAX
@@ -56,20 +57,20 @@ class ZahnradVollGenerator:
                       f"(erlaubt {ZAEHNE_MIN}..{ZAEHNE_MAX}).")
             params['zaehne'] = z
             alpha  = math.radians(params['eingriffswinkel'])
-            s_mt   = params['spitzen_abstand']
             r_s    = params['spitzen_d'] / 2.0
             r_f    = params['fuss_d'] / 2.0
-            tiefe  = params['tiefe']
             # 'rotation'/'z_offset' sind veraltete Felder — falls nicht mehr
             # vorhanden, mit 0 rechnen (Standardorientierung, planares Profil).
             rot    = math.radians(params.get('rotation', 0.0))
             z_off  = params.get('z_offset', 0.0)
 
-            # Radiale Abstände
-            r_bahn     = s_mt / (2 * math.sin(math.pi / z))
-            r_kopf_max = r_bahn + r_s
-            r_fuss_min = r_kopf_max - tiefe
-            r_fuss_bahn = r_fuss_min + r_f
+            # Radiale Abstände — Formeln in zahnprofil.py (Zwilling:
+            # web/js/zahnprofil.js), damit Vorschau und CAD nicht driften.
+            _r = zahnprofil.radien(params)
+            r_bahn      = _r['r_bahn']
+            r_kopf_max  = _r['r_kopf_max']
+            r_fuss_min  = _r['r_fuss_min']
+            r_fuss_bahn = _r['r_fuss_bahn']
 
             # Für den Körper-Aufbau merken
             self.r_kopf_max = r_kopf_max
@@ -81,7 +82,7 @@ class ZahnradVollGenerator:
             # Zahnprofile
             for i in range(z):
                 self._add_tooth(i, z, alpha, rot, z_off,
-                                r_bahn, r_kopf_max, r_fuss_bahn, r_s, r_f)
+                                r_bahn, r_fuss_bahn, r_s, r_f)
 
             App.ActiveDocument.recompute()
 
@@ -102,51 +103,41 @@ class ZahnradVollGenerator:
             )
 
     def _add_tooth(self, i, z, alpha, rot, z_off,
-                   r_bahn, r_kopf_max, r_fuss_bahn, r_s, r_f):
-        """Zeichnet einen einzelnen Zahn (Arc + Linie + Arc + Linie)."""
-        w_zahn = 2 * math.pi * i / z + rot
-        w_fuss = 2 * math.pi * (i + 0.5) / z + rot
-        w_next = 2 * math.pi * (i + 1) / z + rot
+                   r_bahn, r_fuss_bahn, r_s, r_f):
+        """Zeichnet einen einzelnen Zahn (Arc + Linie + Arc + Linie).
 
-        cp_s      = App.Vector(r_bahn * math.cos(w_zahn), r_bahn * math.sin(w_zahn), z_off)
-        cp_s_next = App.Vector(r_bahn * math.cos(w_next), r_bahn * math.sin(w_next), z_off)
-        cp_f      = App.Vector(r_fuss_bahn * math.cos(w_fuss), r_fuss_bahn * math.sin(w_fuss), z_off)
+        Wo die Kanten liegen, rechnet zahnprofil.zahn_kanten(); hier wird
+        daraus nur noch FreeCAD-Geometrie gebaut.
+        """
+        k = zahnprofil.zahn_kanten(i, z, alpha, r_bahn, r_fuss_bahn,
+                                   r_s, r_f, rot)
 
-        off = alpha * 0.5
-        HALF_PI = math.pi / 2
-
-        p_zahn_r     = cp_s      + App.Vector(r_s * math.cos(w_zahn + HALF_PI - off),
-                                               r_s * math.sin(w_zahn + HALF_PI - off), 0)
-        p_fuss_l     = cp_f      + App.Vector(r_f * math.cos(w_fuss - HALF_PI - off),
-                                               r_f * math.sin(w_fuss - HALF_PI - off), 0)
-        p_fuss_r     = cp_f      + App.Vector(r_f * math.cos(w_fuss + HALF_PI + off),
-                                               r_f * math.sin(w_fuss + HALF_PI + off), 0)
-        p_zahn_next_l = cp_s_next + App.Vector(r_s * math.cos(w_next - HALF_PI + off),
-                                                r_s * math.sin(w_next - HALF_PI + off), 0)
+        def vec(pt):
+            return App.Vector(pt[0], pt[1], z_off)
 
         normal = App.Vector(0, 0, 1)
 
         # Zahnkopf-Arc
         self.sketch.addGeometry(
             Part.ArcOfCircle(
-                Part.Circle(cp_s, normal, r_s),
-                w_zahn - HALF_PI + off,
-                w_zahn + HALF_PI - off
+                Part.Circle(vec(k['cp_s']), normal, r_s),
+                k['kopf_a0'], k['kopf_a1']
             ), False
         )
         # Flanke rechts → Fußrunden-Mittelpunkt links
-        self.sketch.addGeometry(Part.LineSegment(p_zahn_r, p_fuss_l), False)
+        self.sketch.addGeometry(
+            Part.LineSegment(vec(k['p_zahn_r']), vec(k['p_fuss_l'])), False)
 
         # Fußrunden-Arc
         self.sketch.addGeometry(
             Part.ArcOfCircle(
-                Part.Circle(cp_f, normal, r_f),
-                w_fuss + HALF_PI + off,
-                w_fuss + HALF_PI + math.pi - off
+                Part.Circle(vec(k['cp_f']), normal, r_f),
+                k['fuss_a0'], k['fuss_a1']
             ), False
         )
         # Flanke links → nächster Zahnkopf
-        self.sketch.addGeometry(Part.LineSegment(p_fuss_r, p_zahn_next_l), False)
+        self.sketch.addGeometry(
+            Part.LineSegment(vec(k['p_fuss_r']), vec(k['p_zahn_next_l'])), False)
 
     # ==================================================================
     # Volumenkörper-Aufbau  ("Körper erzeugen")

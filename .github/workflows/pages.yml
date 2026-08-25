@@ -12,6 +12,7 @@ on:
     branches: [main]
     paths:
       - "web/**"
+      - "params.json"
       - "package.json"
       - ".github/workflows/pages.yml"
   workflow_dispatch:

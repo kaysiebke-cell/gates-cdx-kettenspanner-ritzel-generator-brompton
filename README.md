@@ -148,19 +148,39 @@ The default values (Bore Ø 14 mm, bearing seat Ø 16 mm × 1 mm) are designed e
 
 ## File Structure
 
+The CAD body is built in Python, the live preview in JavaScript. So that both describe the same part, everything they share has **one** source or a checked twin pair – see [One source, not two](#one-source-not-two).
+
 | File | Content |
 |---|---|
+| `params.json` | **Single source** for input fields, default values and the tooth-count limits – read by both web and FreeCAD. |
 | `freecad/main.py` | The entry point for FreeCAD, cleanly imports all modules. |
 | `freecad/zahnrad_ui.py` | The control panel (inputs, buttons, saving values). |
 | `freecad/zahnrad_generator.py` | The actual geometry: Tooth profile sketch and 3D body generation. |
-| `freecad/zahnrad_params.py` | Definition of variables and default values. |
+| `freecad/zahnrad_params.py` | Passes the fields from `params.json` on to the control panel. |
+| `freecad/zahnprofil.py` | Contour maths for the tooth profile (no FreeCAD import). |
+| `web/js/zahnprofil.js` | The same code for the web preview – `npm test` keeps both in step. |
 | `freecad/speichen_geometrie.py` | Contour maths for the spoke openings (no FreeCAD import). |
-| `web/js/speichen.js` | The same code for the web preview – must match the Python version. |
+| `web/js/speichen.js` | The same code for the web preview – `npm test` keeps both in step. |
+| `tools/golden-test.mjs` | Runs both versions and reports any difference (`npm test`). |
 | `web/index.html` | The web configurator (hosted via GitHub Pages). |
 | `freecad/build_headless.py` | Helper script: Builds the release series (STEP/STL) in the background without a GUI. |
 | `freecad/render_gui_preview.py` | Cloud Build: Renders the preview using Xvfb. |
 | `freecad/ritzel_params.py` | Cloud Build: Default values and JSON overrides. |
 | `.github/workflows/build-ritzel.yml` | GitHub Action for automated builds. |
+| `.github/workflows/pruefen.yml` | Runs the cross-check on every change. |
+
+### One source, not two
+
+Maintaining the same geometry twice – once in Python for CAD, once in JavaScript for the preview – goes wrong sooner or later: the configurator then shows something other than what the STEP file contains. Two things guard against that:
+
+* **Parameters exist only once.** Input fields, default values and the tooth-count limits live solely in `params.json`. FreeCAD reads the file at startup; the web generator gets it inlined into its bundle at build time. Do not enter values anywhere else.
+* **Formulas are cross-checked.** The shared contour maths (`zahnprofil`, `speichen_geometrie`/`speichen.js`) sits in modules with no FreeCAD and no Three.js binding. `npm test` runs both versions over some 20 parameter sets and compares radii, contour points and spoke openings to within a nanometre. Any difference fails the run – on every branch, too, see `.github/workflows/pruefen.yml`.
+
+All it needs is `python3` and Node; neither FreeCAD nor Three.js has to be installed.
+
+```
+npm test
+```
 
 ## Legal Disclaimer & Liability
 

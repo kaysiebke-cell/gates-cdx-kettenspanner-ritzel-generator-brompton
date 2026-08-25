@@ -150,19 +150,39 @@ Bezugsquelle für Deutschland: [F605-2RS bei Kugellager-Express](https://www.kug
 
 ## Struktur der Dateien
 
+Der CAD-Körper entsteht in Python, die Live-Vorschau in JavaScript. Damit beide dasselbe Teil beschreiben, gibt es für die gemeinsamen Teile jeweils **eine** Quelle bzw. ein geprüftes Zwillingspaar – siehe [Eine Quelle statt zwei](#eine-quelle-statt-zwei).
+
 | Datei | Inhalt |
 |---|---|
+| `params.json` | **Einzige Quelle** für Eingabefelder, Standardwerte und Zähnezahl-Grenzen – gelesen von Web und FreeCAD. |
 | `freecad/main.py` | Der Einstiegspunkt für FreeCAD, lädt alle Module sauber rein. |
 | `freecad/zahnrad_ui.py` | Das Bedienfeld (Eingaben, Buttons, Speichern der Werte). |
 | `freecad/zahnrad_generator.py` | Die eigentliche Geometrie: Skizze des Zahnprofils und Aufbau des 3D-Körpers. |
-| `freecad/zahnrad_params.py` | Definition der Variablen und Standardwerte. |
+| `freecad/zahnrad_params.py` | Reicht die Felder aus `params.json` an das Bedienfeld weiter. |
+| `freecad/zahnprofil.py` | Kontur-Mathematik des Zahnprofils (ohne FreeCAD-Import). |
+| `web/js/zahnprofil.js` | Derselbe Code für die Web-Vorschau – `npm test` hält beide gleich. |
 | `freecad/speichen_geometrie.py` | Kontur-Mathematik der Speichen-Durchbrüche (ohne FreeCAD-Import). |
-| `web/js/speichen.js` | Derselbe Code für die Web-Vorschau – muss zur Python-Fassung passen. |
+| `web/js/speichen.js` | Derselbe Code für die Web-Vorschau – `npm test` hält beide gleich. |
+| `tools/golden-test.mjs` | Rechnet beide Fassungen durch und meldet jede Abweichung (`npm test`). |
 | `web/index.html` | Der Web-Konfigurator (läuft über GitHub Pages). |
 | `freecad/build_headless.py` | Hilfsskript: Baut die Release-Serie (STEP/STL) im Hintergrund ohne GUI. |
 | `freecad/render_gui_preview.py` | Cloud-Build: Rendert die Vorschau unter Xvfb. |
 | `freecad/ritzel_params.py` | Cloud-Build: Standardwerte und JSON-Overrides. |
 | `.github/workflows/build-ritzel.yml` | Die GitHub-Aktion für die automatischen Builds. |
+| `.github/workflows/pruefen.yml` | Lässt den Abgleich bei jeder Änderung laufen. |
+
+### Eine Quelle statt zwei
+
+Dieselbe Geometrie zweimal zu pflegen – einmal in Python fürs CAD, einmal in JavaScript für die Vorschau – geht auf Dauer schief: der Konfigurator zeigt dann etwas anderes an, als in der STEP-Datei steht. Dagegen stehen hier zwei Vorkehrungen:
+
+* **Parameter gibt es nur einmal.** Eingabefelder, Standardwerte und die Zähnezahl-Grenzen stehen ausschließlich in `params.json`. FreeCAD liest die Datei beim Start, der Web-Generator bekommt sie beim Bauen ins Bundle gelegt. Werte bitte nirgendwo sonst eintragen.
+* **Formeln werden nachgerechnet.** Die geteilte Kontur-Mathematik (`zahnprofil`, `speichen_geometrie`/`speichen.js`) liegt in Modulen ohne FreeCAD- und ohne Three.js-Bindung. `npm test` rechnet beide Fassungen für rund 20 Parametersätze durch und vergleicht Radien, Konturpunkte und Speichen-Öffnungen auf ein Nanometer genau. Jede Abweichung bricht den Lauf ab – auch auf jedem Zweig, siehe `.github/workflows/pruefen.yml`.
+
+Gebraucht wird dafür nur `python3` und Node; weder FreeCAD noch Three.js müssen installiert sein.
+
+```
+npm test
+```
 
 ## Rechtliches & Haftung
 

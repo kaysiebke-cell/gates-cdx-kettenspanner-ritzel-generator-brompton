@@ -24,6 +24,15 @@ def _pol(r, t):  return (r * math.cos(t), r * math.sin(t))
 def _winkel(a):  return math.atan2(a[1], a[0])
 
 
+def _runde(x):
+    """Auf die naechste ganze Zahl runden, .5 aufwaerts — wie das
+    Math.round() in web/js/speichen.js.
+
+    int() wuerde abschneiden: eine Speichenzahl von 4,6 aus dem Web-Formular
+    haette in der Vorschau 5 Arme ergeben, im CAD-Koerper aber 4."""
+    return math.floor(float(x) + 0.5)
+
+
 def _kreis_kreis(c0, r0, c1, r1):
     """Schnittpunkte zweier Kreise (0, 1 oder 2 Punkte)."""
     d = _laenge(_sub(c1, c0))
@@ -95,11 +104,12 @@ def ring_radien(r_kopf, p):
 
 def ist_sinnvoll(r_innen, r_aussen, anzahl, arm_b):
     """Automatik-Schwelle: zu schmaler Ring -> gar keine Speichen bauen."""
-    if int(anzahl) < 3 or float(arm_b) < MIN_ARM:
+    n = _runde(anzahl)
+    if n < 3 or float(arm_b) < MIN_ARM:
         return False
     if r_aussen - r_innen < MIN_RING or r_innen <= arm_b / 2.0:
         return False
-    offen = r_innen * (2 * math.pi / int(anzahl)
+    offen = r_innen * (2 * math.pi / n
                        - 2 * math.asin(min(1.0, arm_b / (2 * r_innen))))
     return offen >= MIN_OEFFNUNG
 
@@ -192,7 +202,7 @@ def kontur(anzahl, arm_b, r_innen, r_aussen, rundung, schwung_grad):
     den vorhandenen Platz zu gross, werden sie schrittweise zurueckgenommen —
     wie die Radius-Kaskade der Verrundungen im Generator. Bleibt gar nichts
     Baubares uebrig, ist 'oeffnungen' leer und der Steg bleibt voll."""
-    n = int(anzahl)
+    n = _runde(anzahl)
     leer = {'oeffnungen': [], 'schwung': 0.0, 'rundung': 0.0}
     if not ist_sinnvoll(r_innen, r_aussen, n, arm_b):
         return leer

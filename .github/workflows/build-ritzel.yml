@@ -27,11 +27,14 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/build-ritzel.yml"
+      - "params.json"
       - "freecad/build_headless.py"
       - "freecad/render_gui_preview.py"
       - "freecad/ritzel_params.py"
       - "freecad/zahnrad_generator.py"
       - "freecad/zahnrad_params.py"
+      - "freecad/zahnprofil.py"
+      - "freecad/speichen_geometrie.py"
 
 permissions:
   contents: read
