@@ -21,6 +21,8 @@ Fürs Handy gibt es dieselbe Anwendung als **installierbare App** — sie bringt
 
 Im Web-Konfigurator kannst du das **Spannrollen-Ritzel live in 3D drehen und anpassen**. Zahnprofil, Schmutzöffnungen, Riemenführung, Nabe und Kugellagersitze verändern sich direkt mit deinen Wünschen.
 
+Die Erklärungen zu den einzelnen Feldern sind eingeklappt — der Knopf **ⓘ** rechts in der Tab-Leiste blendet sie ein und wieder aus. Die Einstellung bleibt bis zum nächsten Besuch erhalten.
+
 **Zwei Wege zum Download:**
 * **Fertige STL direkt laden:** Für Standardgrößen von **12 bis 19 Zähnen** liegen fertig verrundete Dateien bereit (gibt es auch inklusive STEP-Dateien im [Release "stl-serie"](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/tag/stl-serie)).
 * **Eigene Maße generieren:** Du kannst die Parameter frei eintragen (Zähnezahl **12–19**) und das STL direkt aus dem Browser ziehen (die Verrundungen werden hierbei angenähert; die exakten CAD-Verrundungen gibt es in den Release-Dateien).

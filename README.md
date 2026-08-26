@@ -21,6 +21,8 @@ The same tool is available as an **installable app** for phones — it ships eve
 
 In the web configurator, you can **rotate and adjust the tensioner sprocket live in 3D**. The tooth profile, debris mud ports, belt guide, hub, and ball bearing seats update instantly based on your preferences.
 
+The per-field explanations are collapsed by default — the **ⓘ** button at the right of the tab bar shows and hides them. The choice is remembered for your next visit.
+
 **Two ways to download:**
 * **Download ready-made STLs:** Pre-rounded files are available for standard sizes from **12 to 19 teeth** (also available with STEP files in the [Release "stl-serie"](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/tag/stl-serie)).
 * **Generate custom dimensions:** You can enter the parameters freely (tooth count **12–19**) and drag the STL directly out of your browser (fillets are approximated here; the exact CAD fillets are included in the release files).

@@ -57,10 +57,13 @@ export function refreshStepButton() {
     if (bhint) bhint.style.display = 'none';
   } else if (STEP_API) {
     if (bbtn) { bbtn.style.display = ''; bbtn.textContent = t('step_build'); bbtn.disabled = false; }
-    if (bhint) { bhint.style.display = ''; bhint.textContent = t('step_build_hint'); }
+    // Erklaerung zum Knopf: klappt mit dem ⓘ-Schalter mit (Klasse .hint).
+    if (bhint) { bhint.className = 'hint'; bhint.style.display = ''; bhint.textContent = t('step_build_hint'); }
   } else {
     if (bbtn) bbtn.style.display = 'none';
-    if (bhint) { bhint.style.display = ''; bhint.textContent = t('step_only_standard'); }
+    // Hier steht KEIN Knopf. Der Satz erklaert, warum — er muss also
+    // sichtbar bleiben, auch wenn die Erklaertexte eingeklappt sind.
+    if (bhint) { bhint.className = 'status'; bhint.style.display = ''; bhint.textContent = t('step_only_standard'); }
   }
 }
 
