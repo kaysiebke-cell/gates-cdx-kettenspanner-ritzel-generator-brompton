@@ -45,7 +45,18 @@ legend { font-weight: 600; font-size: 13px; padding: 0 4px; }
   border-radius: 4px; background: var(--bg); color: var(--text);
   font-size: 13px; text-align: right;
 }
-.hint { color: var(--muted); font-size: 12px; margin: 4px 0 10px; }
+/* ── Erklärtexte ("Hinweise") ─────────────────────────────────────── */
+/* .hint  = Erklärung, standardmäßig eingeklappt (ⓘ in der Kopfzeile)
+   .status = Lebenszeichen des Cloud-Baus — muss immer sichtbar sein
+   .legal  = rechtlicher Hinweis — bleibt bewusst stehen */
+.hint, .status, .legal { color: var(--muted); font-size: 12px; margin: 4px 0 10px; }
+/* Eingeklappt, bis der ⓘ-Schalter <body> die Klasse gibt. `!important`,
+   weil step.js die Sichtbarkeit der STEP-Hinweise per style.display
+   steuert — ohne das gewänne die Inline-Angabe. */
+body:not(.hinweise) .hint { display: none !important; }
+/* Ausgeklappt als Randnotiz absetzen, damit die Texte nicht mit den
+   Eingabezeilen verschwimmen. */
+.hinweise .hint { border-left: 2px solid var(--border); padding-left: 8px; }
 .stats {
   font-size: 12.5px; color: var(--muted); background: var(--bg);
   border: 1px solid var(--border); border-radius: 6px;
@@ -88,6 +99,25 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
   cursor: pointer; white-space: nowrap; margin-left: auto;
 }
 #lang-toggle:hover { background: var(--border); }
+
+/* ⓘ-Schalter: klappt alle Erklärtexte auf einmal auf und zu. Sitzt am
+   rechten Ende der Tab-Leiste — dort ist Platz frei, und die Kopfzeile
+   bleibt so niedrig wie bisher. Er trägt nur das Zeichen, die
+   Beschriftung steckt in aria-label/title (i18n). */
+#hintsbtn {
+  width: auto; flex: 0 0 auto; margin: 0 0 0 auto; align-self: center;
+  padding: 3px 8px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--bg); color: var(--muted); font-size: 15px; line-height: 1.2;
+  cursor: pointer;
+}
+#hintsbtn:hover { background: var(--border); filter: none; }
+/* Eingeschaltet: in der Themenfarbe, damit erkennbar bleibt, woher die
+   zusätzlichen Texte kommen. */
+#hintsbtn[aria-pressed="true"] {
+  border-color: var(--accent); color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+#hintsbtn[hidden] { display: none; }
 
 /* Install-Button (PWA): nur sichtbar, wenn der Browser die Installation
    anbietet (Steuerung via [hidden] im Inline-Skript). Optisch hervorgehoben
@@ -208,6 +238,7 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
   /* Hinweiszeile auf dem Handy ausblenden: spart 2 Zeilen Kopfhöhe
      zugunsten der Vorschau; Drehen/Zoomen per Finger ist intuitiv. */
   header .sub { display: none; }
+  #hintsbtn { padding: 4px 10px; font-size: 17px; }   /* Daumenfläche */
   .row { margin: 6px 0; }
   .row label { font-size: 15px; }
   /* 16px verhindert den Auto-Zoom beim Antippen auf iOS */

@@ -4,7 +4,7 @@
 // bitte IMMER in beiden Dateien, sonst driften Vorschau und CAD-Körper.
 // Punkte sind [x, y]; ein Segment ist {typ:'linie'|'bogen', ...}.
 
-export const MIN_RING = 6.0;       // freie Ringbreite [mm], ab der gebaut wird
+export const MIN_RING = 5.0;       // freie Ringbreite [mm], ab der gebaut wird
 export const MIN_OEFFNUNG = 3.0;   // kleinste Bogenlänge am Innenring [mm]
 export const MIN_ARM = 2.0;        // dünnster zulässiger Arm [mm]
 

@@ -17,6 +17,39 @@ function onFormChange() {
   timer = setTimeout(() => window.__ritzelRebuild && window.__ritzelRebuild(), 120);
 }
 
+// ── Erklärtexte ein-/ausklappen ─────────────────────────────────────
+// Die .hint-Bloecke stehen dort, wo sie hingehoeren, bleiben aber
+// eingeklappt: dauerhaft sichtbar kosten sie im schmalen Formular mehr
+// Platz als das Formular selbst. Der ⓘ-Schalter in der Kopfzeile klappt
+// alle auf einmal auf; die Wahl haelt bis zum naechsten Besuch.
+// Nicht betroffen: der Status des Cloud-Baus (.status) und der
+// rechtliche Hinweis (.legal) — die stehen immer.
+const HINWEIS_SCHLUESSEL = 'ritzel.hinweise';
+
+// localStorage kann werfen (privates Fenster, gesperrter Speicher in der
+// WebView) — dann laeuft die Seite eben ohne Gedaechtnis weiter.
+function geladen() {
+  try { return localStorage.getItem(HINWEIS_SCHLUESSEL) === '1'; } catch { return false; }
+}
+function merke(an) {
+  try { localStorage.setItem(HINWEIS_SCHLUESSEL, an ? '1' : '0'); } catch { /* egal */ }
+}
+
+let hinweiseAn = geladen();
+
+// Klasse, Knopfzustand und Beschriftung in einem — wird auch beim
+// Sprachwechsel wieder aufgerufen.
+function setzeHinweise(an) {
+  hinweiseAn = an;
+  document.body.classList.toggle('hinweise', an);
+  const b = document.getElementById('hintsbtn');
+  if (!b) return;
+  const text = t(an ? 'hints_hide' : 'hints_show');
+  b.setAttribute('aria-pressed', String(an));
+  b.setAttribute('aria-label', text);
+  b.title = text;
+}
+
 // Statische Texte, die kein 3D brauchen (Button-Beschriftung, Tabs).
 function setStaticTexts() {
   document.getElementById('stlbtn').textContent = `💾 ${t('custom_stl')}`;
@@ -26,6 +59,7 @@ function setStaticTexts() {
   // Install-Button-Beschriftung (Sichtbarkeit steuert das Inline-PWA-Skript)
   const ib = document.getElementById('installbtn');
   if (ib) ib.textContent = t('install');
+  setzeHinweise(hinweiseAn);   // Beschriftung des ⓘ-Schalters
   // Druck-Empfehlungen in der aktuellen Sprache einspeisen
   document.getElementById('printview').innerHTML = renderPrint(i18n.lang);
 }
@@ -38,6 +72,9 @@ function activateTab(name) {
   const tg = document.getElementById('tab-gen'), tp = document.getElementById('tab-print');
   tg.setAttribute('aria-selected', String(gen));
   tp.setAttribute('aria-selected', String(!gen));
+  // Der ⓘ-Schalter wirkt nur aufs Formular — in den Druck-Empfehlungen
+  // stünde er wirkungslos herum.
+  document.getElementById('hintsbtn').hidden = !gen;
   // Wird die 3D-Ansicht wieder sichtbar, muss der Renderer neu vermessen
   // (der Viewport war ausgeblendet → Größe 0).
   if (gen) dispatchEvent(new Event('resize'));
@@ -50,6 +87,11 @@ buildFormFields(onFormChange);
 setStaticTexts();
 initStep();            // Cloud-Build-Button verdrahten (eigene Werte)
 refreshStepButton();   // STEP-Buttons gleich beim Start setzen (ohne 3D)
+
+document.getElementById('hintsbtn').addEventListener('click', () => {
+  setzeHinweise(!hinweiseAn);
+  merke(hinweiseAn);
+});
 
 // STEP-Download aus dem Release: hängt nicht am Viewer, damit er auch auf
 // schwachen Handys funktioniert, wo Three.js evtl. nicht lädt.
