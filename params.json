@@ -100,7 +100,7 @@
             { "key": "rolle_d",    "i18n": "roller_d",    "de": "Außen-Ø (gesamt)",     "standard": 40.00, "schritt": 0.5, "kommentar": "größtes Maß der Rolle — hier läuft der Riemen" },
             { "key": "rolle_b",    "i18n": "roller_w",    "de": "Breite",               "standard": 14.00, "schritt": 0.5, "kommentar": "axiale Breite (Riemen 11 mm + 1,5 je Seite)" },
             { "key": "rolle_wand", "i18n": "roller_wall", "de": "Dicke der Lauffläche", "standard": 3.00,  "schritt": 0.1, "kommentar": "Kranzstärke nach innen — trägt den Riemendruck" },
-            { "key": "kante_r",    "i18n": "roller_edge", "de": "Kanten-Rundung",       "standard": 0.80,  "schritt": 0.1, "kommentar": "Rundung der vier Laufflächenkanten (0 = scharf)" }
+            { "key": "kante_r",    "i18n": "roller_edge", "de": "Kanten-Rundung",       "standard": 0.80,  "schritt": 0.1, "kommentar": "Rundung der beiden umlaufenden Laufflächenkanten (0 = scharf)" }
           ]
         },
         {

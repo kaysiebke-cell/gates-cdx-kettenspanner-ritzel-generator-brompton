@@ -6,6 +6,10 @@
 # Aufruf:  freecadcmd build_headless.py
 # Parameter kommen ueber die Umgebungsvariable PARAMS_JSON (JSON-Objekt,
 # ueberschreibt nur die angegebenen Felder; Rest = Standardwerte).
+#
+# Gebaut werden Ritzel und Riemenschutz-Buegel. Steht in PARAMS_JSON das
+# Feld "bauteil": "rolle", entsteht stattdessen die Spannrolle — sie haengt
+# an keiner Zaehnezahl und braucht daher keine Serie.
 
 import os
 import sys
@@ -22,7 +26,46 @@ from zahnrad_params import DEFAULT_FIELDS
 from ritzel_params import lade_parameter
 
 
+def baue_rolle_datei(out_dir):
+    """Spannrolle als STEP + STL. Eigene Standardwerte, eigener Dateiname —
+    die Rolle haengt an keiner Zaehnezahl."""
+    from zahnrad_params import default_fields
+    from rolle_generator import baue_rolle
+    import MeshPart
+
+    params = lade_parameter(default_fields('rolle'))
+    print("Baue Spannrolle mit Parametern:")
+    import json
+    print(json.dumps(params, indent=2, ensure_ascii=False))
+
+    shape = baue_rolle(params)
+    basis = "spannrolle_d%.0f_b%.0f" % (params['rolle_d'], params['rolle_b'])
+    step_pfad = os.path.join(out_dir, basis + ".step")
+    stl_pfad = os.path.join(out_dir, basis + ".stl")
+    shape.exportStep(step_pfad)
+    mesh = MeshPart.meshFromShape(
+        Shape=shape, LinearDeflection=0.05, AngularDeflection=0.5, Relative=False)
+    mesh.write(stl_pfad)
+    print(f"Fertig: {step_pfad}")
+    print(f"Fertig: {stl_pfad}")
+
+
 def main():
+    out_dir = os.environ.get('OUTPUT_DIR', 'output')
+    os.makedirs(out_dir, exist_ok=True)
+
+    # Welches Bauteil? Die Rolle geht einen eigenen, kuerzeren Weg.
+    roh = os.environ.get('PARAMS_JSON', '')
+    if roh:
+        import json as _json
+        try:
+            if _json.loads(roh).get('bauteil') == 'rolle':
+                App.newDocument("ZahnradDokument")
+                baue_rolle_datei(out_dir)
+                return
+        except ValueError:
+            pass
+
     params = lade_parameter(DEFAULT_FIELDS)
     print("Baue Ritzel mit Parametern:")
     import json
@@ -36,9 +79,6 @@ def main():
     if teil is None or not teil.Shape.isValid() or teil.Shape.Volume <= 0:
         print("Fehler: Es konnte kein gueltiger Koerper erzeugt werden.")
         sys.exit(1)
-
-    out_dir = os.environ.get('OUTPUT_DIR', 'output')
-    os.makedirs(out_dir, exist_ok=True)
 
     z = int(params['zaehne'])
     basisname = f"ritzel_z{z}"

@@ -22,7 +22,7 @@ import { dirname, join } from 'node:path';
 import { DEFAULTS, ZAEHNE_MIN, ZAEHNE_MAX, defaults } from '../web/js/fields.js';
 import { radien, konturPunkte } from '../web/js/zahnprofil.js';
 import { ringRadien, kontur, flaeche, istSinnvoll } from '../web/js/speichen.js';
-import { radien as rolleRadien, ringRadien as rolleRing,
+import { radien as rolleRadien, ringRadien as rolleRing, profil,
          maengel, kantenRadius, vollVolumen } from '../web/js/rolle.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -113,6 +113,7 @@ function jsRollenWerte(p) {
     sinnvoll: istSinnvoll(ri, ra, p.speichen_n, p.speichen_b),
     speichen,
     flaeche: flaeche(speichen.oeffnungen),
+    profil: profil(p),
     maengel: maengel(p),
     kante: kantenRadius(p),
     voll_volumen: vollVolumen(p),

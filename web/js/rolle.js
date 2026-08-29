@@ -60,10 +60,61 @@ export function maengel(p) {
   return m;
 }
 
-// Verrundung der vier Laufflächenkanten. Sie darf weder halbe Kranzdicke
+// Verrundung der beiden umlaufenden Laufflächenkanten. Sie darf weder halbe Kranzdicke
 // noch halbe Breite überschreiten, sonst frisst sie die Lauffläche auf.
 export function kantenRadius(p) {
   return Math.max(0, Math.min(p.kante_r, p.rolle_wand / 2, p.rolle_b / 2));
+}
+
+// ── Drehprofil ─────────────────────────────────────────────────────────────
+// Der Querschnitt der Rolle, einmal umlaufend in (r, z): radial nach außen,
+// axial über die Breite. Um die Achse gedreht ergibt er den ganzen Körper —
+// Lauffläche, Kantenrundungen, Bohrung und die beiden Flanschsenkungen.
+//
+// Segmente wie in speichen.js: echte Linien und Kreisbögen, kein Polygonzug.
+// Die Vorschau zerlegt die Bögen in Punkte, FreeCAD baut daraus echte Arcs —
+// deshalb liegt hier auch `pm`, ein Punkt auf dem Bogen (Part.Arc mag drei
+// Punkte lieber als Winkel und Normalen).
+//
+// Die Umlaufrichtung ist bewusst DIESE: andersherum zeigt die Hülle nach
+// innen (negatives Volumen) und das STL wäre umgestülpt.
+const linie = (p0, p1) => ({ typ: 'linie', p0, p1 });
+
+function viertelbogen(c, radius, a0, a1) {
+  const auf = (a) => [c[0] + radius * Math.cos(a), c[1] + radius * Math.sin(a)];
+  return { typ: 'bogen', c, r: radius, a0, a1,
+           p0: auf(a0), pm: auf((a0 + a1) / 2), p1: auf(a1) };
+}
+
+export function profil(p) {
+  const r = radien(p);
+  const k = kantenRadius(p);
+  const L = p.rolle_b / 2;
+  const rB = Math.max(r.rBohrung, 0.1);
+  const rS = Math.max(r.rLager, rB);
+  const t = Math.min(p.lager_t, L / 2);
+  const rA = r.rAussen;
+  const H = Math.PI / 2;
+
+  const seg = [
+    linie([rS, L - t], [rB, L - t]),      // Senkungsgrund oben
+    linie([rB, L - t], [rB, -L + t]),     // Bohrungswand
+    linie([rB, -L + t], [rS, -L + t]),    // Senkungsgrund unten
+    linie([rS, -L + t], [rS, -L]),        // Senkungswand unten
+  ];
+  if (k > 0.01) {
+    seg.push(linie([rS, -L], [rA - k, -L]));                 // Stirnfläche unten
+    seg.push(viertelbogen([rA - k, -L + k], k, -H, 0));      // Kante unten
+    seg.push(linie([rA, -L + k], [rA, L - k]));              // Lauffläche
+    seg.push(viertelbogen([rA - k, L - k], k, 0, H));        // Kante oben
+    seg.push(linie([rA - k, L], [rS, L]));                   // Stirnfläche oben
+  } else {
+    seg.push(linie([rS, -L], [rA, -L]));
+    seg.push(linie([rA, -L], [rA, L]));
+    seg.push(linie([rA, L], [rS, L]));
+  }
+  seg.push(linie([rS, L], [rS, L - t]));   // Senkungswand oben, schließt den Umlauf
+  return seg;
 }
 
 // Volumen des vollen Rings ohne Speichen [mm³] — Kranz plus Nabe plus Steg,
