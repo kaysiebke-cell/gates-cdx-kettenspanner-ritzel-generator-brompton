@@ -11,6 +11,7 @@
 //      faellt hier auf)
 //   2. Zahnprofil — web/js/zahnprofil.js  gegen  freecad/zahnprofil.py
 //   3. Speichen   — web/js/speichen.js    gegen  freecad/speichen_geometrie.py
+//   4. Spannrolle — web/js/rolle.js       gegen  freecad/rolle_geometrie.py
 //
 // Aufruf: `npm test` (braucht python3, sonst nichts).
 
@@ -18,9 +19,11 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { DEFAULTS, ZAEHNE_MIN, ZAEHNE_MAX } from '../web/js/fields.js';
+import { DEFAULTS, ZAEHNE_MIN, ZAEHNE_MAX, defaults } from '../web/js/fields.js';
 import { radien, konturPunkte } from '../web/js/zahnprofil.js';
 import { ringRadien, kontur, flaeche, istSinnvoll } from '../web/js/speichen.js';
+import { radien as rolleRadien, ringRadien as rolleRing,
+         maengel, kantenRadius, vollVolumen } from '../web/js/rolle.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -60,6 +63,29 @@ const VARIANTEN = [
 
 const faelle = VARIANTEN.map(([name, abw]) => ({ name, p: { ...DEFAULTS, ...abw } }));
 
+// ── Pruef-Faelle der Spannrolle ────────────────────────────────────────────
+// Sie teilt sich das Speichen-Modul mit dem Ritzel, hat aber eigene Radien:
+// aussen die Innenkante des Laufkranzes, innen der Nabenrand.
+const ROLLE_STD = defaults('rolle');
+const ROLLEN_VARIANTEN = [
+  ['Standardwerte',            {}],
+  ['ohne Speichen',            { speichen_n: 0 }],
+  ['acht schmale Speichen',    { speichen_n: 8, speichen_b: 2.5 }],
+  ['drei breite Speichen',     { speichen_n: 3, speichen_b: 7.0 }],
+  ['kleine Rolle (Ø30)',       { rolle_d: 30 }],              // Ring zu schmal
+  ['grosse Rolle (Ø52)',       { rolle_d: 52, speichen_n: 6 }],
+  ['dicker Kranz',             { rolle_wand: 6.0 }],
+  ['duenner Kranz',            { rolle_wand: 1.5 }],
+  ['dicke Nabe',               { nabe_d: 26 }],
+  ['schmale Rolle',            { rolle_b: 11.0 }],
+  ['Kante groesser als Kranz', { kante_r: 5.0 }],             // wird geklemmt
+  ['ohne Lagersitz',           { lager_d: 0, lager_t: 0 }],
+  ['Kranz unter der Nabe',     { rolle_d: 24, rolle_wand: 3 }],  // unbaubar
+  ['Lagersitz zu tief',        { rolle_b: 2.0 }],                // unbaubar
+];
+const rollenFaelle = ROLLEN_VARIANTEN.map(
+  ([name, abw]) => ({ name, p: { ...ROLLE_STD, ...abw } }));
+
 // ── JavaScript-Seite ───────────────────────────────────────────────────────
 function jsWerte(p) {
   const r = radien(p);
@@ -76,9 +102,28 @@ function jsWerte(p) {
   };
 }
 
+function jsRollenWerte(p) {
+  const r = rolleRadien(p);
+  const { ri, ra } = rolleRing(p);
+  const speichen = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r, 0);
+  return {
+    radien: [r.rAussen, r.rKranzInnen, r.rNabe, r.rBohrung, r.rLager],
+    ring: [ri, ra],
+    sinnvoll: istSinnvoll(ri, ra, p.speichen_n, p.speichen_b),
+    speichen,
+    flaeche: flaeche(speichen.oeffnungen),
+    maengel: maengel(p),
+    kante: kantenRadius(p),
+    voll_volumen: vollVolumen(p),
+  };
+}
+
 // ── Python-Seite ───────────────────────────────────────────────────────────
 function pyWerte() {
-  const eingabe = JSON.stringify(faelle.map(f => f.p));
+  const eingabe = JSON.stringify({
+    ritzel: faelle.map(f => f.p),
+    rolle: rollenFaelle.map(f => f.p),
+  });
   try {
     return JSON.parse(execFileSync('python3', [join(root, 'tools/golden_dump.py')],
       { input: eingabe, encoding: 'utf8', maxBuffer: 64 << 20 }));
@@ -122,6 +167,7 @@ const py = pyWerte();
 vergleiche('zaehne_min', ZAEHNE_MIN, py.zaehne_min);
 vergleiche('zaehne_max', ZAEHNE_MAX, py.zaehne_max);
 vergleiche('standardwerte', DEFAULTS, py.standard);
+vergleiche('standardwerte_rolle', ROLLE_STD, py.standard_rolle);
 
 // 2. + 3. Geometrie je Fall
 let punkte = 0, oeffnungen = 0;
@@ -132,6 +178,14 @@ faelle.forEach((f, i) => {
   vergleiche(`«${f.name}»`, js, py.faelle[i]);
 });
 
+// 4. Spannrolle je Fall
+let rollenOeffnungen = 0;
+rollenFaelle.forEach((f, i) => {
+  const js = jsRollenWerte(f.p);
+  rollenOeffnungen += js.speichen.oeffnungen.length;
+  vergleiche(`Rolle «${f.name}»`, js, py.rollen_faelle[i]);
+});
+
 if (abweichungen.length) {
   console.error('JS- und Python-Fassung driften auseinander:\n');
   for (const a of abweichungen) console.error('  ' + a);
@@ -140,5 +194,7 @@ if (abweichungen.length) {
   process.exit(1);
 }
 
-console.log(`JS und Python stimmen ueberein: ${Object.keys(DEFAULTS).length} Parameter, `
-  + `${faelle.length} Faelle, ${punkte} Konturpunkte, ${oeffnungen} Speichen-Oeffnungen.`);
+console.log(`JS und Python stimmen ueberein: `
+  + `${Object.keys(DEFAULTS).length} + ${Object.keys(ROLLE_STD).length} Parameter, `
+  + `${faelle.length} Ritzel-Faelle (${punkte} Konturpunkte, ${oeffnungen} Oeffnungen), `
+  + `${rollenFaelle.length} Rollen-Faelle (${rollenOeffnungen} Oeffnungen).`);
