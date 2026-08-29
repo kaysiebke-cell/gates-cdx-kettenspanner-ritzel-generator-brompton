@@ -22,7 +22,8 @@
   <button id="lang-toggle">DE / EN</button>
 </header>
 <nav id="tabs">
-  <button class="tab" id="tab-gen" aria-selected="true">Generator</button>
+  <button class="tab" id="tab-gen" aria-selected="true">Ritzel</button>
+  <button class="tab" id="tab-rolle" aria-selected="false">Spannrolle</button>
   <button class="tab" id="tab-print" aria-selected="false">Druck-Empfehlungen</button>
   <!-- Klappt die Erklärtexte des Formulars auf und zu (shell.js). Sitzt in
        der Tab-Leiste statt in der Kopfzeile: dort kostet er keine Höhe,
@@ -41,6 +42,14 @@
     <fieldset id="sec3"><legend id="leg3">Seitliche Schmutzabweiser</legend>
       <div class="hint" id="hint1">Zahn- und Mulden-Rundung werden in der Vorschau angenähert dargestellt; die Release-Dateien enthalten die exakten CAD-Verrundungen.</div>
     </fieldset>
+
+    <fieldset id="rsec1" hidden><legend id="rleg1">Laufkranz (Grundkörper)</legend>
+      <div class="hint" id="rhint1">Die Rolle läuft mit glatter Fläche auf dem Rücken des Riemens. „Außen-Ø“ ist ihr größtes Maß; die Dicke der Lauffläche misst von dort nach innen.</div>
+    </fieldset>
+    <fieldset id="rsec2" hidden><legend id="rleg2">Speichen (Material sparen)</legend>
+      <div class="hint" id="rhint2">Zwischen Nabe und Laufkranz. Wird der freie Ring schmaler als 5 mm, bleibt der Steg voll — dann helfen ein größerer Außen-Ø, eine dünnere Lauffläche oder eine kleinere Nabe.</div>
+    </fieldset>
+    <fieldset id="rsec3" hidden><legend id="rleg3">Zylinder (Kugellager)</legend></fieldset>
 
     <a class="btn" id="stlbtn" href="#"></a>
     <a class="btn" id="stepbtn" href="#" style="display:none"></a>

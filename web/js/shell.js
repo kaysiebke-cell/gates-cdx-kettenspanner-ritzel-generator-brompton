@@ -4,15 +4,42 @@
 // Hintergrund nach. So erscheint die Bedienoberfläche sofort, statt erst
 // nach dem Parsen von ~765 KB Three.js.
 import { initI18n, updateUI, t, i18n } from './i18n.js';
-import { buildFormFields } from './fields.js';
+import { buildFormFields, BAUTEILE } from './fields.js';
 import { renderPrint } from './print.js';
 import { refreshStepButton, exportStep, initStep } from './step.js';
 
 // Formularänderung → STEP-Button sofort aktualisieren (braucht kein 3D)
 // und (entprellt) den Viewer neu bauen lassen, sobald er da ist.
+// ── Bauteil ────────────────────────────────────────────────────────────────
+// Ritzel und Rolle teilen sich Formular und Vorschau; sichtbar ist immer
+// nur eines. Welche fieldsets zu welchem Bauteil gehören, steht in
+// params.json — hier wird nur ein- und ausgeblendet.
+const GRUPPEN = {
+  ritzel: ['sec1', 'sec4', 'sec2', 'sec3'],
+  rolle:  ['rsec1', 'rsec2', 'rsec3'],
+};
+let bauteil = 'ritzel';
+
+function zeigeBauteil(id) {
+  bauteil = BAUTEILE.some(b => b.id === id) ? id : 'ritzel';
+  for (const [teil, ids] of Object.entries(GRUPPEN))
+    for (const secId of ids) {
+      const sec = document.getElementById(secId);
+      if (sec) sec.hidden = teil !== bauteil;
+    }
+  // Bügel und sein Kästchen gehören zum Ritzel.
+  const brow = document.getElementById('buegelrow');
+  if (brow) brow.hidden = bauteil !== 'ritzel';
+  buildFormFields(onFormChange, bauteil);
+  window.__ritzelBauteil = bauteil;   // falls der Viewer noch lädt
+  if (window.__ritzelSetzeBauteil) window.__ritzelSetzeBauteil(bauteil);
+  refreshStepButton(bauteil);
+  if (window.__ritzelRebuild) window.__ritzelRebuild();
+}
+
 let timer = null;
 function onFormChange() {
-  refreshStepButton();
+  refreshStepButton(bauteil);
   clearTimeout(timer);
   timer = setTimeout(() => window.__ritzelRebuild && window.__ritzelRebuild(), 120);
 }
@@ -52,9 +79,11 @@ function setzeHinweise(an) {
 
 // Statische Texte, die kein 3D brauchen (Button-Beschriftung, Tabs).
 function setStaticTexts() {
-  document.getElementById('stlbtn').textContent = `💾 ${t('custom_stl')}`;
+  document.getElementById('stlbtn').textContent =
+    bauteil === 'rolle' ? `💾 ${t('roller_stl')}` : `💾 ${t('custom_stl')}`;
   document.getElementById('buegellbl').textContent = t('buegel_show');
   document.getElementById('tab-gen').textContent = t('tab_gen');
+  document.getElementById('tab-rolle').textContent = t('tab_rolle');
   document.getElementById('tab-print').textContent = t('tab_print');
   // Install-Button-Beschriftung (Sichtbarkeit steuert das Inline-PWA-Skript)
   const ib = document.getElementById('installbtn');
@@ -64,29 +93,34 @@ function setStaticTexts() {
   document.getElementById('printview').innerHTML = renderPrint(i18n.lang);
 }
 
-// Tab-Umschaltung: Generator-Ansicht (<main>) vs. Druck-Empfehlungen.
+// Reiter: die beiden Bauteile teilen sich die Generator-Ansicht,
+// die Druck-Empfehlungen sind eine eigene Seite.
+const REITER = { gen: 'tab-gen', rolle: 'tab-rolle', print: 'tab-print' };
 function activateTab(name) {
-  const gen = name === 'gen';
+  const gen = name !== 'print';
   document.getElementById('genview').hidden = !gen;
   document.getElementById('printview').hidden = gen;
-  const tg = document.getElementById('tab-gen'), tp = document.getElementById('tab-print');
-  tg.setAttribute('aria-selected', String(gen));
-  tp.setAttribute('aria-selected', String(!gen));
+  for (const [n, id] of Object.entries(REITER))
+    document.getElementById(id).setAttribute('aria-selected', String(n === name));
   // Der ⓘ-Schalter wirkt nur aufs Formular — in den Druck-Empfehlungen
   // stünde er wirkungslos herum.
   document.getElementById('hintsbtn').hidden = !gen;
-  // Wird die 3D-Ansicht wieder sichtbar, muss der Renderer neu vermessen
-  // (der Viewport war ausgeblendet → Größe 0).
-  if (gen) dispatchEvent(new Event('resize'));
+  if (gen) {
+    zeigeBauteil(name === 'rolle' ? 'rolle' : 'ritzel');
+    setStaticTexts();          // Beschriftung des STL-Knopfs folgt dem Bauteil
+    // Wird die 3D-Ansicht wieder sichtbar, muss der Renderer neu vermessen
+    // (der Viewport war ausgeblendet → Größe 0).
+    dispatchEvent(new Event('resize'));
+  }
 }
-document.getElementById('tab-gen').addEventListener('click', () => activateTab('gen'));
-document.getElementById('tab-print').addEventListener('click', () => activateTab('print'));
+for (const [n, id] of Object.entries(REITER))
+  document.getElementById(id).addEventListener('click', () => activateTab(n));
 
 initI18n();
-buildFormFields(onFormChange);
+zeigeBauteil('ritzel');   // baut das Formular und blendet die Rollen-Gruppen aus
 setStaticTexts();
-initStep();            // Cloud-Build-Button verdrahten (eigene Werte)
-refreshStepButton();   // STEP-Buttons gleich beim Start setzen (ohne 3D)
+initStep();               // Cloud-Build-Button verdrahten (eigene Werte)
+refreshStepButton(bauteil);   // STEP-Buttons gleich beim Start setzen (ohne 3D)
 
 document.getElementById('hintsbtn').addEventListener('click', () => {
   setzeHinweise(!hinweiseAn);
@@ -105,9 +139,9 @@ document.getElementById('stepbtn').addEventListener('click', (e) => {
 document.getElementById('lang-toggle').addEventListener('click', () => {
   i18n.lang = i18n.lang === 'de' ? 'en' : 'de';
   updateUI();
-  buildFormFields(onFormChange);
+  buildFormFields(onFormChange, bauteil);
   setStaticTexts();
-  refreshStepButton();   // Beschriftung in neuer Sprache
+  refreshStepButton(bauteil);   // Beschriftung in neuer Sprache
   if (window.__ritzelLangChanged) window.__ritzelLangChanged();
 });
 
