@@ -80,7 +80,8 @@ const ROLLEN_VARIANTEN = [
   ['schmale Rolle',            { rolle_b: 11.0 }],
   ['Kante groesser als Kranz', { kante_r: 5.0 }],             // wird geklemmt
   ['ohne Lagersitz',           { lager_d: 0, lager_t: 0 }],
-  ['Kranz unter der Nabe',     { rolle_d: 24, rolle_wand: 3 }],  // unbaubar
+  ['Kranz reicht bis zur Nabe', { rolle_d: 24, rolle_wand: 3 }],   // voll, ohne Speichen
+  ['kein Kranz ueber der Nabe', { rolle_d: 19 }],                   // unbaubar
   ['Lagersitz zu tief',        { rolle_b: 2.0 }],                // unbaubar
 ];
 const rollenFaelle = ROLLEN_VARIANTEN.map(

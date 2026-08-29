@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { t } from './i18n.js';
 import { renderer, scene, camera, resize, startRenderLoop } from './scene.js';
-import { rebuild, exportStl } from './ui.js';
+import { rebuild, setzeBauteil, exportStl } from './ui.js';
 
 // Download: Ritzel + Schutzbügel gebündelt als ZIP
 document.getElementById('stlbtn').addEventListener('click', (e) => {
@@ -20,6 +20,11 @@ document.getElementById('buegelchk')?.addEventListener('change', rebuild);
 
 // Die Shell ruft dies bei jeder Formularänderung (entprellt) auf.
 window.__ritzelRebuild = rebuild;
+// Die Shell sagt, welches Bauteil die Vorschau zeigen soll. Sie kann das
+// schon tun, bevor dieses Bundle geladen ist — darum holt sich der Viewer
+// beim Start die zuletzt gesetzte Wahl nach.
+window.__ritzelSetzeBauteil = (id) => { setzeBauteil(id); rebuild(); };
+if (window.__ritzelBauteil) setzeBauteil(window.__ritzelBauteil);
 
 // Die Shell ruft dies nach einem Sprachwechsel auf: Stats + Serien-Buttons
 // benutzen t() und müssen neu gezeichnet werden.

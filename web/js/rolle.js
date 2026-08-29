@@ -49,7 +49,10 @@ export function maengel(p) {
   if (!(p.rolle_d > 0)) m.push('aussen_d');
   if (!(p.rolle_b > 0)) m.push('breite');
   if (p.rolle_wand < MIN_KRANZ) m.push('kranz_duenn');
-  if (r.rKranzInnen <= r.rNabe) m.push('kranz_ueber_nabe');
+  // Reicht der Kranz bis an die Nabe oder darüber hinaus, ist die Rolle
+  // einfach voll — das ist ein gültiger Körper, nur eben ohne Speichen.
+  // Unbaubar wird es erst, wenn außen nichts mehr über der Nabe steht.
+  if (r.rAussen <= r.rNabe) m.push('kranz_fehlt');
   if (r.rNabe - r.rBohrung < MIN_NABE) m.push('nabe_duenn');
   if (r.rLager > 0 && r.rLager <= r.rBohrung) m.push('lagersitz_zu_klein');
   if (r.rLager >= r.rNabe) m.push('lagersitz_ueber_nabe');
@@ -65,7 +68,8 @@ export function kantenRadius(p) {
 
 // Volumen des vollen Rings ohne Speichen [mm³] — Kranz plus Nabe plus Steg,
 // abzüglich Bohrung und der beiden Flanschsenkungen. Die Kantenrundung ist
-// darin nicht abgezogen; sie ändert unter einem Promille.
+// darin NICHT abgezogen — bei R 0,8 sind das rund 0,07 cm³ oder ein halbes
+// Prozent (am gerenderten Körper nachgemessen).
 export function vollVolumen(p) {
   const r = radien(p);
   const kreis = (rad) => Math.PI * rad * rad;

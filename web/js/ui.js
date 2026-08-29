@@ -2,7 +2,8 @@ import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 import * as THREE from 'three';
 import { t } from './i18n.js';
 import { params } from './fields.js';
-import { buildMeshes } from './geometry.js';
+import { buildMeshes, rolleMeshes } from './geometry.js';
+import { maengel } from './rolle.js';
 import { scene, camera, controls, boden, mat } from './scene.js';
 import { buegelGeometrie, buegelMaterial } from './buegel.js';
 import { makeZip } from './zip.js';
@@ -16,7 +17,7 @@ const buegelGruppe = new THREE.Group();
 scene.add(buegelGruppe);
 
 export function aktualisiereBuegel(p) {
-  const zeigen = !!document.getElementById('buegelchk')?.checked;
+  const zeigen = !!p && !!document.getElementById('buegelchk')?.checked;
   buegelGruppe.visible = zeigen;
   while (buegelGruppe.children.length) {
     const c = buegelGruppe.children[0];
@@ -33,12 +34,17 @@ export function aktualisiereBuegel(p) {
 // jetzt in step.js und wird von der Shell verdrahtet — er braucht kein 3D
 // und funktioniert daher auch, wenn der Viewer nicht geladen ist.
 
+// Welches Bauteil zeigt die Vorschau? Die Shell setzt es beim Umschalten.
+let bauteil = 'ritzel';
+export function setzeBauteil(id) { bauteil = id; }
+
 export function rebuild() {
-  const p = params();
+  const p = params(bauteil);
   if (group) { scene.remove(group); group.traverse(o => o.geometry && o.geometry.dispose()); }
-  const { g, rKopf } = buildMeshes(p, mat);
+  const rolle = bauteil === 'rolle';
+  const { g, rKopf } = rolle ? rolleMeshes(p, mat) : buildMeshes(p, mat);
   group = g; scene.add(group);
-  boden.position.z = -(Math.max(p.breite, p.nabe_l) / 2 + 2);
+  boden.position.z = -((rolle ? p.rolle_b : Math.max(p.breite, p.nabe_l)) / 2 + 2);
 
   // Kamera-Abstand an die Modellgröße anpassen (Blickrichtung beibehalten)
   if (Math.abs(rKopf - lastR) > 0.5) {
@@ -46,11 +52,15 @@ export function rebuild() {
     const richtung = camera.position.clone().sub(controls.target).normalize();
     camera.position.copy(controls.target).addScaledVector(richtung, rKopf * 4.0);
   }
-  document.getElementById('stats').innerHTML =
-    `${t('head_circle')}: <b>${(rKopf * 2).toFixed(2)} mm</b> · ` +
-    `${t('total_height')}: <b>${Math.max(p.breite, p.nabe_l).toFixed(1)} mm</b> · ` +
-    `${t('teeth_label')}: <b>${p.zaehne}</b>`;
-  aktualisiereBuegel(p);
+  document.getElementById('stats').innerHTML = rolle
+    ? `${t('outer_circle')}: <b>${(rKopf * 2).toFixed(2)} mm</b> · ` +
+      `${t('total_height')}: <b>${p.rolle_b.toFixed(1)} mm</b> · ` +
+      (maengel(p).length ? `<b>${t('roller_impossible')}</b>` : `${t('tread')}: <b>${p.rolle_wand.toFixed(1)} mm</b>`)
+    : `${t('head_circle')}: <b>${(rKopf * 2).toFixed(2)} mm</b> · ` +
+      `${t('total_height')}: <b>${Math.max(p.breite, p.nabe_l).toFixed(1)} mm</b> · ` +
+      `${t('teeth_label')}: <b>${p.zaehne}</b>`;
+  // Der Bügel gehört zum Ritzel — bei der Rolle bleibt er weg.
+  aktualisiereBuegel(rolle ? null : p);
 }
 
 function stlBytes(object3d) {
@@ -76,6 +86,13 @@ function buegelMesh() {
 // für Standard- wie angepasste Werte gleich (client-seitig erzeugt).
 export function exportStl() {
   if (!group) return;
+  // Die Rolle steht für sich — kein Bügel, keine Zähnezahl im Namen.
+  if (bauteil === 'rolle') {
+    const p = params('rolle');
+    const name = `spannrolle_d${p.rolle_d.toFixed(0)}_b${p.rolle_b.toFixed(0)}`;
+    downloadBlob(new Blob([stlBytes(group)], { type: 'model/stl' }), `${name}.stl`);
+    return;
+  }
   const z = params().zaehne;
   const { mesh, geo } = buegelMesh();
   const zip = makeZip([

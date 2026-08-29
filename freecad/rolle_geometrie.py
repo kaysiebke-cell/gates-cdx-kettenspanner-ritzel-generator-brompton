@@ -62,8 +62,11 @@ def maengel(p):
         m.append('breite')
     if p['rolle_wand'] < MIN_KRANZ:
         m.append('kranz_duenn')
-    if r['r_kranz_innen'] <= r['r_nabe']:
-        m.append('kranz_ueber_nabe')
+    # Reicht der Kranz bis an die Nabe oder darueber hinaus, ist die Rolle
+    # einfach voll — das ist ein gueltiger Koerper, nur eben ohne Speichen.
+    # Unbaubar wird es erst, wenn aussen nichts mehr ueber der Nabe steht.
+    if r['r_aussen'] <= r['r_nabe']:
+        m.append('kranz_fehlt')
     if r['r_nabe'] - r['r_bohrung'] < MIN_NABE:
         m.append('nabe_duenn')
     if r['r_lager'] > 0 and r['r_lager'] <= r['r_bohrung']:
@@ -84,7 +87,8 @@ def kanten_radius(p):
 def voll_volumen(p):
     """Volumen des vollen Rings ohne Speichen [mm^3] — Kranz plus Nabe plus
     Steg, abzueglich Bohrung und der beiden Flanschsenkungen. Die
-    Kantenrundung ist darin nicht abgezogen; sie aendert unter einem Promille."""
+    Kantenrundung ist darin NICHT abgezogen — bei R 0,8 sind das rund
+    70 mm^3 oder ein halbes Prozent (am gerenderten Koerper nachgemessen)."""
     r = radien(p)
 
     def kreis(rad):

@@ -3,6 +3,8 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
 import { ringRadien, kontur } from './speichen.js';
 import { radien, konturPunkte } from './zahnprofil.js';
+import { radien as rolleRadien, ringRadien as rolleRing,
+         kantenRadius, maengel } from './rolle.js';
 
 const dir2 = t => new THREE.Vector2(Math.cos(t), Math.sin(t));
 
@@ -80,8 +82,21 @@ export function speichenGeometrie(p, rKopf) {
   const { oeffnungen } = kontur(p.speichen_n, p.speichen_b, ri, ra,
                                 p.speichen_r, p.speichen_schwung);
   if (!oeffnungen.length) return null;
+  return speichenPrismen(oeffnungen, p.breite + 2);
+}
 
-  const tiefe = p.breite + 2;          // sicher durch beide Stirnflächen
+// Dieselben Durchbrüche für die Spannrolle: andere Radien, sonst nichts.
+// Die Rolle kennt keinen Schwung — ihre Arme laufen radial.
+export function rolleSpeichen(p) {
+  if (!(p.speichen_n >= 3) || !(p.speichen_b > 0)) return null;
+  const { ri, ra } = rolleRing(p);
+  const { oeffnungen } = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r, 0);
+  if (!oeffnungen.length) return null;
+  return speichenPrismen(oeffnungen, p.rolle_b + 2);
+}
+
+// Ein Schneidkörper je Öffnung, über die volle Breite (tiefe).
+function speichenPrismen(oeffnungen, tiefe) {
   const teile = [];
   for (const oef of oeffnungen) {
     const shape = new THREE.Shape();
@@ -189,4 +204,70 @@ export function buildMeshes(p, mat) {
   koerper.receiveShadow = true;   // Selbstschattierung in den Mulden
   g.add(koerper);
   return { g, rKopf };
+}
+
+// ── Spannrolle ─────────────────────────────────────────────────────────────
+// Ein Drehteil: das Profil (radial, axial) umläuft den Querschnitt einmal,
+// LatheGeometry macht daraus den Körper. Darin steckt alles Rotations-
+// symmetrische — Lauffläche, Kantenrundungen, Bohrung und die beiden
+// Flanschsenkungen. Nur die Speichen sind es nicht; die werden geschnitten.
+export function rolleProfil(p) {
+  const r = rolleRadien(p);
+  const k = kantenRadius(p);
+  const L = p.rolle_b / 2;
+  const rB = Math.max(r.rBohrung, 0.1);
+  const rS = Math.max(r.rLager, rB);
+  const t = Math.min(p.lager_t, L / 2);
+  const rA = r.rAussen;
+
+  // Viertelkreis der Laufflächenkante, von der Stirnfläche zur Lauffläche.
+  const bogen = (zEnde) => {
+    const pts = [], mz = zEnde > 0 ? L - k : -L + k, richtung = Math.sign(zEnde);
+    for (let i = 1; i < 6; i++) {
+      const w = (Math.PI / 2) * (i / 6);
+      pts.push([rA - k + k * Math.sin(w), mz + richtung * k * Math.cos(w)]);
+    }
+    return pts;
+  };
+
+  // Reihenfolge wie bei der Nabe im Ritzel: andersherum zeigt die Hülle
+  // nach innen (negatives Volumen) und das STL wäre umgestülpt.
+  const ecken = [
+    [rS, L - t], [rB, L - t], [rB, -L + t], [rS, -L + t], [rS, -L],
+  ];
+  if (k > 0.01) {
+    ecken.push([rA - k, -L], ...bogen(-1).reverse(), [rA, -L + k],
+               [rA, L - k], ...bogen(1).reverse(), [rA - k, L]);
+  } else {
+    ecken.push([rA, -L], [rA, L]);
+  }
+  ecken.push([rS, L]);
+  return ecken;
+}
+
+export function rolleMeshes(p, mat) {
+  const g = new THREE.Group();
+  const r = rolleRadien(p);
+
+  // Unbaubare Kombinationen (Kranz unter der Nabe, Lagersitz zu tief …)
+  // erkennt rolle.js. Dann bleibt die Vorschau leer statt zu entgleisen.
+  if (maengel(p).length) return { g, rKopf: Math.max(r.rAussen, 1) };
+
+  const ecken = rolleProfil(p);
+  const prof = [];
+  for (let i = 0; i < ecken.length; i++) {
+    const [r1, z1] = ecken[i], [r2, z2] = ecken[(i + 1) % ecken.length];
+    prof.push(new THREE.Vector2(r1, z1), new THREE.Vector2(r2, z2));
+  }
+  let koerper = new THREE.LatheGeometry(prof, 96);
+  koerper.rotateX(Math.PI / 2);        // Lathe dreht um Y → auf die Z-Achse kippen
+
+  const speichen = rolleSpeichen(p);
+  if (speichen) koerper = csgOp(koerper, speichen, SUBTRACTION);
+
+  const mesh = new THREE.Mesh(koerper, mat);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  g.add(mesh);
+  return { g, rKopf: r.rAussen };
 }

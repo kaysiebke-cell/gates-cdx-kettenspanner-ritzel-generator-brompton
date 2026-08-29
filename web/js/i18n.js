@@ -8,7 +8,8 @@ export const i18n = {
     de: {
       title: 'Gates CDX Riemenspanner-Ritzel Generator (Brompton)',
       subtitle: 'Werte ändern → Vorschau aktualisiert sich sofort · Ansicht mit Maus oder Finger drehen/zoomen',
-      tab_gen: 'Generator',
+      tab_gen: 'Ritzel',
+      tab_rolle: 'Spannrolle',
       tab_print: 'Druck-Empfehlungen',
       leg1: 'Zahnrad-Körper (Grundkörper)',
       leg2: 'Zylinder (Kugellager)',
@@ -29,6 +30,16 @@ export const i18n = {
       step_error: 'STEP-Bau fehlgeschlagen. Bitte später erneut versuchen.',
       hint2: 'Lädt das angezeigte Modell direkt als druckbare STL — mit angenäherten Verrundungen, genau wie in der Vorschau zu sehen.',
       hint3: '⚖️ Nur für den privaten Gebrauch: Teile des Gates-Systems können patentgeschützt sein — kein gewerblicher Verkauf generierter Ritzel. Unabhängiges Hobby-Projekt ohne Verbindung zu Gates.',
+      outer_circle: 'Außen-Ø',
+      tread: 'Lauffläche',
+      roller_impossible: 'So nicht baubar — Maße prüfen',
+      roller_stl: 'STL herunterladen (Spannrolle)',
+      roller_step_hint: 'Für die Spannrolle gibt es noch keine vorgebaute STEP. Das STL aus dem Browser passt bereits.',
+      rleg1: 'Laufkranz (Grundkörper)',
+      rleg2: 'Speichen (Material sparen)',
+      rleg3: 'Zylinder (Kugellager)',
+      rhint1: 'Die Rolle läuft mit glatter Fläche auf dem Rücken des Riemens. „Außen-Ø“ ist ihr größtes Maß; die Dicke der Lauffläche misst von dort nach innen.',
+      rhint2: 'Zwischen Nabe und Laufkranz. Wird der freie Ring schmaler als 5 mm, bleibt der Steg voll — dann helfen ein größerer Außen-Ø, eine dünnere Lauffläche oder eine kleinere Nabe.',
       part_sprocket: 'Ritzel',
       part_roller: 'Spannrolle',
       roller_d: 'Außen-Ø (gesamt)',
@@ -78,7 +89,8 @@ export const i18n = {
     en: {
       title: 'Gates CDX Belt-Drive Sprocket Generator (Brompton)',
       subtitle: 'Change values → preview updates instantly · Rotate/zoom view with mouse or finger',
-      tab_gen: 'Generator',
+      tab_gen: 'Sprocket',
+      tab_rolle: 'Idler roller',
       tab_print: 'Print guide',
       leg1: 'Gear Body (Base)',
       leg2: 'Cylinder (Bearing)',
@@ -99,6 +111,16 @@ export const i18n = {
       step_error: 'STEP build failed. Please try again later.',
       hint2: 'Loads the displayed model directly as printable STL — with approximated roundings, exactly as shown in preview.',
       hint3: '⚖️ Private use only: Parts of the Gates system may be patent-protected — no commercial resale of generated sprockets. Independent hobby project without connection to Gates.',
+      outer_circle: 'Outer Ø',
+      tread: 'Tread',
+      roller_impossible: 'Not buildable — check dimensions',
+      roller_stl: 'Download STL (idler roller)',
+      roller_step_hint: 'There is no pre-built STEP for the idler roller yet. The STL from the browser already fits.',
+      rleg1: 'Tread ring (base body)',
+      rleg2: 'Spokes (save material)',
+      rleg3: 'Cylinder (bearing)',
+      rhint1: 'The roller runs with a smooth face on the back of the belt. „Outer Ø“ is its largest dimension; the tread thickness measures inward from there.',
+      rhint2: 'Between hub and tread ring. If the free ring gets narrower than 5 mm the web stays solid — a larger outer Ø, a thinner tread or a smaller hub help.',
       part_sprocket: 'Sprocket',
       part_roller: 'Idler roller',
       roller_d: 'Outer Ø (overall)',
@@ -159,6 +181,10 @@ export function updateUI() {
   document.getElementById('leg2').textContent = t('leg2');
   document.getElementById('leg3').textContent = t('leg3');
   document.getElementById('leg4').textContent = t('leg4');
+  for (const id of ['rleg1', 'rleg2', 'rleg3', 'rhint1', 'rhint2']) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(id);
+  }
   document.getElementById('hint4').textContent = t('hint4');
   document.getElementById('hint1').textContent = t('hint1');
   document.getElementById('hint2').textContent = t('hint2');

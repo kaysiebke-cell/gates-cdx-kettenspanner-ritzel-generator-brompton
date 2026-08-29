@@ -33,11 +33,29 @@ let building = false;
 
 // Sichtbarkeit + Beschriftung an die aktuellen Formularwerte anpassen.
 // Wird von der Shell beim Start und bei jeder Änderung aufgerufen.
-export function refreshStepButton() {
+export function refreshStepButton(bauteil = 'ritzel') {
   if (building) return;
   const btn = el('stepbtn'), hint = el('stephint');
   const bbtn = el('stepbuildbtn'), bhint = el('stepbuildhint'), status = el('stepbuildstatus');
   if (!btn) return;
+
+  // Für die Spannrolle gibt es weder eine vorgebaute Serie noch einen
+  // Cloud-Bau. Statt eines Knopfes, der ins Leere führt, ein Satz, der
+  // sagt was geht — er bleibt stehen, auch wenn die Erklärtexte
+  // eingeklappt sind.
+  if (bauteil === 'rolle') {
+    btn.style.display = 'none';
+    hint.style.display = 'none';
+    if (bbtn) bbtn.style.display = 'none';
+    if (status) status.style.display = 'none';
+    if (bhint) {
+      bhint.className = 'status';
+      bhint.style.display = '';
+      bhint.textContent = t('roller_step_hint');
+    }
+    return;
+  }
+
   const p = params();
   const standard = istStandard(p);
 

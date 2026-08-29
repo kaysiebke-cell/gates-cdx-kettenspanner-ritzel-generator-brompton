@@ -47,12 +47,22 @@ export const inputs = {};
 export function buildFormFields(onChange, bauteil = STANDARD_BAUTEIL) {
   const g = grenzen(bauteil);
   for (const key in inputs) delete inputs[key];
+
+  // Erst die Zeilen ALLER Bauteile wegräumen, nicht nur die des eigenen:
+  // Ritzel und Rolle teilen sich Feldnamen (speichen_n, bohrung_d …).
+  // Bliebe das versteckte Feld des anderen Bauteils stehen, stünde dieselbe
+  // id zweimal im DOM — und getElementById() in params() läse das falsche.
+  for (const b of PARAMS.bauteile)
+    for (const a of b.abschnitte) {
+      const sec = document.getElementById(a.id);
+      if (sec) sec.querySelectorAll('.row').forEach(r => r.remove());
+    }
+
   for (const [secId, felder] of sections(bauteil)) {
     const sec = document.getElementById(secId);
     // Fehlt das fieldset im HTML, hat diese Seite den Abschnitt nicht —
     // still überspringen statt am fehlenden Element zu scheitern.
     if (!sec) continue;
-    sec.querySelectorAll('.row').forEach(r => r.remove());
     for (const [key, labelKey, def, step] of felder) {
       const row = document.createElement('div'); row.className = 'row';
       const lab = document.createElement('label'); lab.textContent = t(labelKey); lab.htmlFor = key;
