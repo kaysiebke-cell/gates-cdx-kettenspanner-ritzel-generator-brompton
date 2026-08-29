@@ -20,7 +20,9 @@ def lade_parameter(default_fields):
         except json.JSONDecodeError as e:
             print(f"PARAMS_JSON ist kein gueltiges JSON: {e}")
             sys.exit(1)
-        unbekannt = set(overrides) - set(params)
+        # `bauteil` sagt build_headless.py, WAS gebaut wird (Ritzel oder
+        # Spannrolle) — es ist kein Feld des Bauteils und darum kein Fehler.
+        unbekannt = set(overrides) - set(params) - {'bauteil'}
         if unbekannt:
             print(f"Warnung: unbekannte Parameter werden ignoriert: {sorted(unbekannt)}")
         for k, v in overrides.items():

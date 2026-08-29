@@ -79,9 +79,61 @@ def maengel(p):
 
 
 def kanten_radius(p):
-    """Verrundung der vier Lauffflaechenkanten. Sie darf weder halbe
+    """Verrundung der beiden umlaufenden Lauffflaechenkanten. Sie darf weder halbe
     Kranzdicke noch halbe Breite ueberschreiten."""
     return max(0.0, min(p['kante_r'], p['rolle_wand'] / 2.0, p['rolle_b'] / 2.0))
+
+
+# ── Drehprofil ─────────────────────────────────────────────────────────────
+# Der Querschnitt der Rolle, einmal umlaufend in (r, z): radial nach aussen,
+# axial ueber die Breite. Um die Achse gedreht ergibt er den ganzen Koerper —
+# Lauffflaeche, Kantenrundungen, Bohrung und die beiden Flanschsenkungen.
+#
+# Segmente wie in speichen_geometrie: echte Linien und Kreisboegen, kein
+# Polygonzug — damit STEP und CNC sauber bleiben. `pm` ist ein Punkt auf dem
+# Bogen; Part.Arc mag drei Punkte lieber als Winkel und Normalen.
+#
+# Die Umlaufrichtung ist bewusst DIESE: andersherum zeigt die Huelle nach
+# innen (negatives Volumen) und das STL waere umgestuelpt.
+def _linie(p0, p1):
+    return {'typ': 'linie', 'p0': list(p0), 'p1': list(p1)}
+
+
+def _viertelbogen(c, radius, a0, a1):
+    def auf(a):
+        return [c[0] + radius * math.cos(a), c[1] + radius * math.sin(a)]
+    return {'typ': 'bogen', 'c': list(c), 'r': radius, 'a0': a0, 'a1': a1,
+            'p0': auf(a0), 'pm': auf((a0 + a1) / 2.0), 'p1': auf(a1)}
+
+
+def profil(p):
+    r = radien(p)
+    k = kanten_radius(p)
+    L = p['rolle_b'] / 2.0
+    r_b = max(r['r_bohrung'], 0.1)
+    r_s = max(r['r_lager'], r_b)
+    t = min(p['lager_t'], L / 2.0)
+    r_a = r['r_aussen']
+    H = math.pi / 2.0
+
+    seg = [
+        _linie((r_s, L - t), (r_b, L - t)),      # Senkungsgrund oben
+        _linie((r_b, L - t), (r_b, -L + t)),     # Bohrungswand
+        _linie((r_b, -L + t), (r_s, -L + t)),    # Senkungsgrund unten
+        _linie((r_s, -L + t), (r_s, -L)),        # Senkungswand unten
+    ]
+    if k > 0.01:
+        seg.append(_linie((r_s, -L), (r_a - k, -L)))                 # Stirn unten
+        seg.append(_viertelbogen((r_a - k, -L + k), k, -H, 0.0))     # Kante unten
+        seg.append(_linie((r_a, -L + k), (r_a, L - k)))              # Lauffflaeche
+        seg.append(_viertelbogen((r_a - k, L - k), k, 0.0, H))       # Kante oben
+        seg.append(_linie((r_a - k, L), (r_s, L)))                   # Stirn oben
+    else:
+        seg.append(_linie((r_s, -L), (r_a, -L)))
+        seg.append(_linie((r_a, -L), (r_a, L)))
+        seg.append(_linie((r_a, L), (r_s, L)))
+    seg.append(_linie((r_s, L), (r_s, L - t)))   # schliesst den Umlauf
+    return seg
 
 
 def voll_volumen(p):

@@ -4,7 +4,7 @@ import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
 import { ringRadien, kontur } from './speichen.js';
 import { radien, konturPunkte } from './zahnprofil.js';
 import { radien as rolleRadien, ringRadien as rolleRing,
-         kantenRadius, maengel } from './rolle.js';
+         profil as rolleProfilSegmente, maengel } from './rolle.js';
 
 const dir2 = t => new THREE.Vector2(Math.cos(t), Math.sin(t));
 
@@ -207,42 +207,22 @@ export function buildMeshes(p, mat) {
 }
 
 // ── Spannrolle ─────────────────────────────────────────────────────────────
-// Ein Drehteil: das Profil (radial, axial) umläuft den Querschnitt einmal,
-// LatheGeometry macht daraus den Körper. Darin steckt alles Rotations-
-// symmetrische — Lauffläche, Kantenrundungen, Bohrung und die beiden
-// Flanschsenkungen. Nur die Speichen sind es nicht; die werden geschnitten.
+// Ein Drehteil: rolle.js liefert den Querschnitt als Linien und Kreisbögen —
+// dieselben Segmente, aus denen FreeCAD den CAD-Körper dreht. Hier werden die
+// Bögen in Punkte zerlegt, weil LatheGeometry nur Punkte kennt; im STEP
+// bleiben es echte Radien.
+const BOGEN_PUNKTE = 6;
+
 export function rolleProfil(p) {
-  const r = rolleRadien(p);
-  const k = kantenRadius(p);
-  const L = p.rolle_b / 2;
-  const rB = Math.max(r.rBohrung, 0.1);
-  const rS = Math.max(r.rLager, rB);
-  const t = Math.min(p.lager_t, L / 2);
-  const rA = r.rAussen;
-
-  // Viertelkreis der Laufflächenkante, von der Stirnfläche zur Lauffläche.
-  const bogen = (zEnde) => {
-    const pts = [], mz = zEnde > 0 ? L - k : -L + k, richtung = Math.sign(zEnde);
-    for (let i = 1; i < 6; i++) {
-      const w = (Math.PI / 2) * (i / 6);
-      pts.push([rA - k + k * Math.sin(w), mz + richtung * k * Math.cos(w)]);
+  const pts = [];
+  for (const seg of rolleProfilSegmente(p)) {
+    if (seg.typ === 'linie') { pts.push(seg.p0, seg.p1); continue; }
+    for (let i = 0; i <= BOGEN_PUNKTE; i++) {
+      const a = seg.a0 + (seg.a1 - seg.a0) * (i / BOGEN_PUNKTE);
+      pts.push([seg.c[0] + seg.r * Math.cos(a), seg.c[1] + seg.r * Math.sin(a)]);
     }
-    return pts;
-  };
-
-  // Reihenfolge wie bei der Nabe im Ritzel: andersherum zeigt die Hülle
-  // nach innen (negatives Volumen) und das STL wäre umgestülpt.
-  const ecken = [
-    [rS, L - t], [rB, L - t], [rB, -L + t], [rS, -L + t], [rS, -L],
-  ];
-  if (k > 0.01) {
-    ecken.push([rA - k, -L], ...bogen(-1).reverse(), [rA, -L + k],
-               [rA, L - k], ...bogen(1).reverse(), [rA - k, L]);
-  } else {
-    ecken.push([rA, -L], [rA, L]);
   }
-  ecken.push([rS, L]);
-  return ecken;
+  return pts;
 }
 
 export function rolleMeshes(p, mat) {

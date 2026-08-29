@@ -59,6 +59,7 @@ def rollen_werte(p):
         'sinnvoll': sp.ist_sinnvoll(r_innen, r_aussen, p['speichen_n'], p['speichen_b']),
         'speichen': _listen(speichen),
         'flaeche': sp.flaeche(speichen['oeffnungen']),
+        'profil': _listen(ro.profil(p)),
         'maengel': ro.maengel(p),
         'kante': ro.kanten_radius(p),
         'voll_volumen': ro.voll_volumen(p),
