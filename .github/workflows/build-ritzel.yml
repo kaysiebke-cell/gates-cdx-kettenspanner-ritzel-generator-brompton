@@ -1,10 +1,14 @@
-name: Ritzel bauen (headless)
+name: Bauteil bauen (headless)
 
 # Der Web-Generator kann diesen Build per Vermittler (worker/) mit eigenen
 # Werten anstossen, um STEP fuer nicht-Standard-Parameter zu erzeugen.
 # Die client_id landet im run-name, damit der Vermittler genau diesen Lauf
 # wiederfindet.
-run-name: Ritzel bauen ${{ inputs.client_id }}
+#
+# Welches Bauteil gebaut wird, steht als "bauteil" in params_json:
+# ohne Angabe das Ritzel (plus Riemenschutz-Buegel), mit "rolle" die
+# Spannrolle. build_headless.py wertet das Feld aus.
+run-name: Bauteil bauen ${{ inputs.client_id }}
 
 on:
   workflow_dispatch:
@@ -12,7 +16,8 @@ on:
       params_json:
         description: >
           Parameter als JSON-Objekt (nur Abweichungen vom Standard noetig).
-          Beispiel: {"zaehne": 16, "bohrung_d": 14, "breite": 11}
+          Ritzel:  {"zaehne": 16, "bohrung_d": 14, "breite": 11}
+          Rolle:   {"bauteil": "rolle", "rolle_d": 44, "speichen_n": 6}
         required: false
         default: "{}"
       client_id:
@@ -35,6 +40,8 @@ on:
       - "freecad/zahnrad_params.py"
       - "freecad/zahnprofil.py"
       - "freecad/speichen_geometrie.py"
+      - "freecad/rolle_geometrie.py"
+      - "freecad/rolle_generator.py"
 
 permissions:
   contents: read
@@ -86,12 +93,13 @@ jobs:
 
       # Nur die STEP-Dateien als eigenes Artifact — der Web-Vermittler
       # (worker/) laedt genau dieses und reicht es als ZIP an den Browser
-      # durch (Ritzel + Buegel). Kein Rendern/STL noetig.
+      # durch. Beim Ritzel sind das zwei Dateien (Rad + Buegel), bei der
+      # Spannrolle eine. Darum ALLE .step einsammeln statt fester Namen:
+      # sonst braeche der Lauf bei der Rolle an dieser Stelle ab, obwohl die
+      # fertige Datei danebenliegt.
       - name: STEP fuer Web-Download bereitstellen
         uses: actions/upload-artifact@v4
         with:
           name: step-download
-          path: |
-            output/ritzel_z*.step
-            output/riemenschutz_z*.step
+          path: output/*.step
           if-no-files-found: error

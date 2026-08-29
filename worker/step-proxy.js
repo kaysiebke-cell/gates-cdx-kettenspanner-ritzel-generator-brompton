@@ -29,9 +29,17 @@ const DEFAULT_REPO = 'kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-br
 const DEFAULT_ORIGIN = 'https://kaysiebke-cell.github.io';
 const repoOf = (env) => env.REPO || DEFAULT_REPO;
 
+// Welche Bauteile darf der Endpunkt bauen? Alles andere wird abgewiesen —
+// der Wert landet in PARAMS_JSON und steuert dort build_headless.py.
+const BAUTEILE = ['ritzel', 'rolle'];
+
 // Erlaubte Parameter + zulaessige Bereiche. Fremde Keys werden verworfen,
 // Werte auf sinnvolle Grenzen geklemmt — so kann der oeffentliche Endpunkt
 // keine entarteten oder missbraeuchlichen Builds ausloesen.
+//
+// Ritzel und Rolle teilen sich einige Namen (bohrung_d, lager_d, speichen_*).
+// Das ist unkritisch: Es wird immer nur EIN Bauteil gebaut, und
+// ritzel_params.py nimmt ohnehin nur die Felder, die das Bauteil kennt.
 const RANGES = {
   zaehne:          [12, 19],
   eingriffswinkel: [5, 45],
@@ -58,11 +66,20 @@ const RANGES = {
   speichen_schwung:[-60, 60],
   speichen_wand:   [0.5, 15],
   speichen_r:      [0, 10],
+
+  // Spannrolle
+  rolle_d:         [10, 120],
+  rolle_b:         [2, 40],
+  rolle_wand:      [0.5, 20],
+  kante_r:         [0, 10],
 };
 
 function reinigeParams(roh) {
   const out = {};
   if (roh && typeof roh === 'object') {
+    // `bauteil` ist kein Mass, sondern die Weiche im Bau-Skript: nur bekannte
+    // Werte durchlassen, sonst faellt der Bau auf das Ritzel zurueck.
+    if (BAUTEILE.includes(roh.bauteil)) out.bauteil = roh.bauteil;
     for (const [k, r] of Object.entries(RANGES)) {
       if (!(k in roh)) continue;
       let v = Number(roh[k]);
@@ -112,7 +129,8 @@ export default {
       if (request.method === 'POST' && url.pathname === '/build') {
         const body = await request.json().catch(() => ({}));
         const params = reinigeParams(body.params);
-        if (!('zaehne' in params) && Object.keys(params).length === 0)
+        const masse = Object.keys(params).filter(k => k !== 'bauteil');
+        if (masse.length === 0)
           return new Response(JSON.stringify({ error: 'keine gueltigen Parameter' }),
             { status: 400, headers: jsonHeaders(origin) });
 
