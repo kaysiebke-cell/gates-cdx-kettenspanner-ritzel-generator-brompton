@@ -30,6 +30,9 @@ const el = (id) => document.getElementById(id);
 
 // Läuft gerade ein Cloud-Build? Dann Buttons/Status nicht überschreiben.
 let building = false;
+// Welches Bauteil ist gewählt? refreshStepButton() setzt es, buildCustomStep()
+// liest es — sonst schickte der Cloud-Bau die Rollenmaße als Ritzel los.
+let aktivesBauteil = 'ritzel';
 
 // Sichtbarkeit + Beschriftung an die aktuellen Formularwerte anpassen.
 // Wird von der Shell beim Start und bei jeder Änderung aufgerufen.
@@ -39,19 +42,23 @@ export function refreshStepButton(bauteil = 'ritzel') {
   const bbtn = el('stepbuildbtn'), bhint = el('stepbuildhint'), status = el('stepbuildstatus');
   if (!btn) return;
 
-  // Für die Spannrolle gibt es weder eine vorgebaute Serie noch einen
-  // Cloud-Bau. Statt eines Knopfes, der ins Leere führt, ein Satz, der
-  // sagt was geht — er bleibt stehen, auch wenn die Erklärtexte
-  // eingeklappt sind.
+  aktivesBauteil = bauteil;
+
+  // Für die Spannrolle gibt es keine vorgebaute Serie — sie hängt an keiner
+  // Zähnezahl, jede Rolle ist eine eigene. Der Cloud-Bau kann sie dagegen
+  // bauen, sobald STEP_API eingerichtet ist.
   if (bauteil === 'rolle') {
     btn.style.display = 'none';
     hint.style.display = 'none';
-    if (bbtn) bbtn.style.display = 'none';
     if (status) status.style.display = 'none';
-    if (bhint) {
-      bhint.className = 'status';
-      bhint.style.display = '';
-      bhint.textContent = t('roller_step_hint');
+    if (STEP_API) {
+      if (bbtn) { bbtn.style.display = ''; bbtn.textContent = t('step_build'); bbtn.disabled = false; }
+      if (bhint) { bhint.className = 'hint'; bhint.style.display = ''; bhint.textContent = t('roller_step_build_hint'); }
+    } else {
+      if (bbtn) bbtn.style.display = 'none';
+      // Hier steht KEIN Knopf. Der Satz erklärt, warum — er muss also
+      // sichtbar bleiben, auch wenn die Erklärtexte eingeklappt sind.
+      if (bhint) { bhint.className = 'status'; bhint.style.display = ''; bhint.textContent = t('roller_step_hint'); }
     }
     return;
   }
@@ -105,7 +112,9 @@ function setStatus(msg) {
 
 async function buildCustomStep() {
   const bbtn = el('stepbuildbtn');
-  const p = params();
+  const rolle = aktivesBauteil === 'rolle';
+  const p = params(aktivesBauteil);
+  if (rolle) p.bauteil = 'rolle';
   building = true;
   if (bbtn) bbtn.disabled = true;
   setStatus(t('step_queued'));
@@ -141,7 +150,9 @@ async function buildCustomStep() {
     setStatus(t('step_done'));
     const a = document.createElement('a');
     a.href = `${STEP_API}/result?id=${encodeURIComponent(id)}`;
-    a.download = `cdx_ritzel_buegel_z${p.zaehne}_custom_step.zip`;
+    a.download = rolle
+      ? `spannrolle_d${p.rolle_d.toFixed(0)}_b${p.rolle_b.toFixed(0)}_step.zip`
+      : `cdx_ritzel_buegel_z${p.zaehne}_custom_step.zip`;
     document.body.appendChild(a); a.click(); a.remove();
   } catch (e) {
     console.error('STEP-Build fehlgeschlagen:', e);

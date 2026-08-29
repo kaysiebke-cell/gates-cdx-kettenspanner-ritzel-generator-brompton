@@ -14,7 +14,9 @@ on:
       - "freecad/riemenschutz_generator.py"
       - "freecad/zahnrad_generator.py"
       - "freecad/zahnrad_params.py"
-      - "params.json"              # Zähnezahl-Grenzen der Serie
+      - "params.json"              # Zähnezahl-Grenzen und Rollen-Standardmaße
+      - "freecad/rolle_generator.py"
+      - "freecad/rolle_geometrie.py"
       - "freecad/ritzel_params.py"
 
 permissions:
@@ -54,6 +56,13 @@ jobs:
             (cd "$OUTPUT_DIR" && zip -q "cdx_ritzel_buegel_z${Z}_step.zip" \
               "ritzel_z${Z}.step" "riemenschutz_z${Z}.step")
           done
+          # Spannrolle in Standardmassen: sie haengt an keiner Zaehnezahl,
+          # eine Groesse genuegt. Wer andere Masse braucht, nimmt den
+          # Cloud-Bau im Web-Generator.
+          echo "::group::Spannrolle (Standardmasse)"
+          PARAMS_JSON='{"bauteil": "rolle"}' freecadcmd freecad/build_headless.py
+          echo "::endgroup::"
+
           echo "── Erzeugte Dateien ──"
           ls -la "$OUTPUT_DIR"
 
@@ -64,8 +73,12 @@ jobs:
           name: Serie — Ritzel + Bügel (STL + STEP)
           body: >
             Automatisch gebaute Serie 12–19 Zähne: Ritzel und Riemenschutz-Bügel,
-            je als STEP (exakt) und STL. Erzeugt vom Workflow release-serie.yml.
+            je als STEP (exakt) und STL. Dazu die Spannrolle in Standardmaßen
+            (Ø 40 × 14 mm) — für eigene Rollenmaße den Cloud-Bau im
+            Web-Generator nutzen. Erzeugt vom Workflow release-serie.yml.
           files: |
+            output/spannrolle_*.step
+            output/spannrolle_*.stl
             output/ritzel_z*.step
             output/ritzel_z*.stl
             output/riemenschutz_z*.step
