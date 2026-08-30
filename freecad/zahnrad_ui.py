@@ -433,6 +433,11 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
             # (ritzel_z18, ritzel_z001, ritzel_z002 ...) — der Bügel-Weg
             # räumt längst auf, dieser tat es nicht. Gemerkt wird über die
             # Objektnamen: nur die sind im Dokument eindeutig.
+            # Die Rolle gibt es nur einmal, egal ob im Fenster gebaut oder
+            # hier importiert — beide Wege raeumen ueber dieselbe Regel auf.
+            if self._hg_bauteil == 'rolle':
+                from rolle_generator import entferne_rollen
+                entferne_rollen(doc)
             for alt_name in getattr(self, '_hg_geladen', ()):
                 if doc.getObject(alt_name) is not None:
                     try:

@@ -128,6 +128,28 @@ def baue_rolle(params):
     return koerper
 
 
+def entferne_rollen(doc):
+    """Entfernt vorhandene Spannrollen — egal, auf welchem Weg sie entstanden
+    sind. Der Bau im Fenster legt "Spannrolle" an; der Hintergrundbau
+    importiert die STEP und erbt deren Dateinamen, "spannrolle_d40_b14",
+    also KLEIN geschrieben. Der frühere Vergleich mit
+    startswith("Spannrolle") sah die importierte nicht: wer beide Wege
+    benutzte, bekam bei jeder Änderung eine weitere Rolle daneben, statt
+    die bestehende zu ersetzen. Darum hier case-unabhängig und an einer
+    Stelle für beide Wege.
+    """
+    entfernt = []
+    for obj in list(doc.Objects):
+        if ((obj.Name or "").lower().startswith("spannrolle")
+                or (obj.Label or "").lower().startswith("spannrolle")):
+            try:
+                doc.removeObject(obj.Name)
+                entfernt.append(obj.Name)
+            except Exception:
+                pass        # haengt noch woanders dran -> stehen lassen
+    return entfernt
+
+
 def build(params=None):
     """Legt die Rolle als Vorschauobjekt im aktiven Dokument an (GUI-Weg).
     Ein vorhandenes Objekt gleichen Namens wird ersetzt, damit wiederholtes
@@ -139,10 +161,7 @@ def build(params=None):
 
     shape = baue_rolle(params)
     doc = App.ActiveDocument or App.newDocument("ZahnradDokument")
-    for obj in list(doc.Objects):
-        if obj.Name.startswith("Spannrolle") or \
-           (obj.Label or "").startswith("Spannrolle"):
-            doc.removeObject(obj.Name)
+    entferne_rollen(doc)
     obj = doc.addObject("Part::Feature", "Spannrolle")
     obj.Label = "Spannrolle Ø%.0f × %.0f" % (params['rolle_d'], params['rolle_b'])
     obj.Shape = shape
