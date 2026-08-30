@@ -42,6 +42,11 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         self._busy = False          # verhindert überlappende Bau-Vorgänge
         self._proc = None           # laufender Hintergrund-Bau (QProcess)
         self._hg_knopf = None       # Knopf, der gerade "Abbrechen" zeigt
+        self._letztes_bauteil = None    # welches Bauteil zeigen die Reiter?
+        self._letzter_reiter = {}       # je Bauteil der zuletzt offene Reiter
+        self._verteilung = None         # zuletzt gebaute Seitenaufteilung
+        self._seiten_widgets = []       # aktuelle Reiterseiten (zum Aufräumen)
+        self._verteilt_gerade = False   # Sperre gegen verschachtelten Umbau
         self._saved = self._load_values()   # zuletzt benutzte Werte (falls vorhanden)
 
         self._build_layout()
@@ -58,13 +63,6 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         # kommen vollständig vom FreeCAD-Theme.
         outer = QtWidgets.QVBoxLayout(self.content)
 
-        # Scrollbereich für die Abschnitte (falls das Panel zu klein wird)
-        scroll = QtWidgets.QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QtWidgets.QFrame.NoFrame)
-        inner = QtWidgets.QWidget()
-        form = QtWidgets.QVBoxLayout(inner)
-
         # Bauteil-Umschalter: Ritzel und Spannrolle teilen sich das Panel,
         # sichtbar ist immer nur eines. Die Auswahl steht in params.json.
         wahl = QtWidgets.QHBoxLayout()
@@ -75,48 +73,44 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         wahl.addWidget(self.bauteil_wahl, 1)
         outer.addLayout(wahl)
 
-        # Je Abschnitt: fette Überschrift (Theme-Schrift) + QFrame mit
-        # nativem Theme-Rahmen (Box, 1px) — dünner grauer Rahmen ohne
-        # Füllung, ganz ohne Stylesheet (FreeCADs QSS funkt so nicht rein).
-        #
+        # Reiterleiste statt einer langen Spalte: gestapelt sind es beim
+        # Ritzel 13 Feldzeilen plus Überschriften, auf einem kleinen
+        # Bildschirm heißt das scrollen. Wie viele Abschnitte auf einer Seite
+        # liegen, entscheidet nicht diese Methode, sondern die aktuelle
+        # Dock-Größe — siehe _verteile_abschnitte.
+        self.tabs = QtWidgets.QTabWidget()
+        self.tabs.setDocumentMode(True)
+        leiste = self.tabs.tabBar()
+        # Reiter teilen sich die Breite und kürzen ihren Text mit „…“, statt
+        # Pfeiltasten einzublenden — sonst wäre das Scrollen nur von senkrecht
+        # nach waagerecht gewandert. Der volle Titel steht im Tooltip.
+        leiste.setExpanding(True)
+        leiste.setUsesScrollButtons(False)
+        leiste.setElideMode(QtCore.Qt.ElideRight)
+
         # Eigene Feldsätze je Bauteil: Ritzel und Rolle teilen sich Namen
         # (bohrung_d heißt bei beiden dasselbe), dürfen sich aber nicht die
         # Eingabefelder teilen — sonst schriebe das eine Bauteil die Werte
         # des anderen um.
+        # Nur die Eingabefelder entstehen hier ein für alle Mal; in welchem
+        # Raster und auf welcher Seite sie landen, hängt an der Dock-Größe
+        # und wird bei jeder Größenänderung neu entschieden.
         self.inputs_je_bauteil = {}
-        self.gruppen = {}
+        self.abschnitte = {}
         for bid, _name in BAUTEILE:
             self.inputs = {}
-            widgets = []
+            liste = []
             for abschnitt, felder in feld_sektionen(bid):
-                titel = QtWidgets.QLabel(abschnitt)
-                font = titel.font()
-                font.setBold(True)
-                titel.setFont(font)
-                form.addWidget(titel)
-
-                kasten = QtWidgets.QFrame()
-                kasten.setObjectName("abschnittRahmen")
-                # Rahmen per Stylesheet: FreeCADs globales QSS schaltet den
-                # nativen QFrame-Rahmen ab. palette(mid) folgt hell/dunkel;
-                # der #-Selektor trifft nur den Kasten, nicht die Felder darin.
-                kasten.setStyleSheet(
-                    "QFrame#abschnittRahmen {"
-                    "  border: 1px solid palette(mid);"
-                    "  border-radius: 3px;"
-                    "  background: transparent;"
-                    "}"
-                )
-                grid = QtWidgets.QGridLayout(kasten)
-                self._build_section_grid(grid, felder, bid)
-                form.addWidget(kasten)
-                widgets += [titel, kasten]
+                paare = []
+                for key, label, standard in felder:
+                    spinbox = self._feld_spinbox(key, standard, bid)
+                    self.inputs[key] = spinbox
+                    paare.append((label, spinbox))
+                liste.append((self._reiter_titel(abschnitt), abschnitt, paare))
             self.inputs_je_bauteil[bid] = self.inputs
-            self.gruppen[bid] = widgets
+            self.abschnitte[bid] = liste
 
-        form.addStretch()
-        scroll.setWidget(inner)
-        outer.addWidget(scroll, 1)
+        outer.addWidget(self.tabs, 1)
 
         # Rundungen sind der teuerste Teil des Baus (>80 % der Zeit) —
         # abgewählt entsteht ein schneller Entwurfskörper ohne Verrundungen.
@@ -178,32 +172,187 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         self.bauteil_wahl.setCurrentIndex(idx if idx >= 0 else 0)
         self._wechsle_bauteil()
 
-    def _build_section_grid(self, grid, felder, bauteil=None):
-        """Erstellt die Eingabefelder eines Abschnitts (2 Spalten)."""
-        for i, (key, label, default) in enumerate(felder):
+    def _feld_spinbox(self, key, standard, bauteil=None):
+        """Ein Eingabefeld mit gemerktem oder Standardwert. Das Feld überlebt
+        jedes Neuverteilen der Seiten — es wird nur umgehängt, nie neu
+        gebaut, sonst wäre der eingetippte Wert weg."""
+        if isinstance(standard, int):
+            spinbox = QtWidgets.QSpinBox()
+        else:
+            spinbox = QtWidgets.QDoubleSpinBox()
+            spinbox.setDecimals(2)
+
+        spinbox.setRange(-1000, 1000)
+        # gespeicherten Wert verwenden, sonst Standard. Die Werte liegen
+        # je Bauteil getrennt (siehe _load_values), damit gleiche
+        # Feldnamen sich nicht gegenseitig überschreiben.
+        gemerkt = self._saved.get(bauteil, {}) if bauteil else self._saved
+        wert = gemerkt.get(key, standard) if isinstance(gemerkt, dict) else standard
+        spinbox.setValue(int(wert) if isinstance(standard, int) else float(wert))
+        # KEIN valueChanged->run_update: sonst löst jede Wertänderung (auch
+        # beim Tippen/Scrollen) einen vollständigen Recompute aller Features
+        # aus. Aktualisiert wird nur per Knopf "Vorschau" / "Körper erzeugen".
+        return spinbox
+
+    @staticmethod
+    def _abschnitt_widget(paare, spalten):
+        """Die Felder eines Abschnitts als eigenes Widget, `spalten` Felder
+        nebeneinander (Beschriftung über dem Feld)."""
+        w = QtWidgets.QWidget()
+        grid = QtWidgets.QGridLayout(w)
+        grid.setContentsMargins(0, 0, 0, 0)
+        for i, (label, spinbox) in enumerate(paare):
             box = QtWidgets.QVBoxLayout()
+            box.setSpacing(2)
             box.addWidget(QtWidgets.QLabel(label))
-
-            if isinstance(default, int):
-                spinbox = QtWidgets.QSpinBox()
-            else:
-                spinbox = QtWidgets.QDoubleSpinBox()
-                spinbox.setDecimals(2)
-
-            spinbox.setRange(-1000, 1000)
-            # gespeicherten Wert verwenden, sonst Standard. Die Werte liegen
-            # je Bauteil getrennt (siehe _load_values), damit gleiche
-            # Feldnamen sich nicht gegenseitig überschreiben.
-            gemerkt = self._saved.get(bauteil, {}) if bauteil else self._saved
-            wert = gemerkt.get(key, default) if isinstance(gemerkt, dict) else default
-            spinbox.setValue(int(wert) if isinstance(default, int) else float(wert))
-            # KEIN valueChanged->run_update: sonst löst jede Wertänderung (auch
-            # beim Tippen/Scrollen) einen vollständigen Recompute aller Features
-            # aus. Aktualisiert wird nur per Knopf "Vorschau" / "Körper erzeugen".
-
             box.addWidget(spinbox)
-            grid.addLayout(box, i // 2, i % 2)
-            self.inputs[key] = spinbox
+            grid.addLayout(box, i // spalten, i % spalten)
+        for spalte in range(spalten):
+            grid.setColumnStretch(spalte, 1)
+        return w
+
+    # ---- Aufteilung auf Reiterseiten ---------------------------------
+
+    def _spalten(self):
+        """Wie viele Felder passen nebeneinander? Rund 160 px braucht eins:
+        die Beschriftung steht über dem Feld, breiter als sie muss die Spalte
+        also nicht sein. Ist das Dock breiter, wandern mehr Felder in eine
+        Zeile, statt die Zahlenfelder absurd breit zu ziehen — und die
+        Abschnitte werden dabei kürzer."""
+        return max(1, min(4, (self.tabs.width() - 24) // 160))
+
+    def _seitenhoehe(self):
+        """Höhe, die einer Reiterseite bleibt. Die Reiterleiste wird immer
+        abgezogen, auch wenn sie gerade ausgeblendet ist: sonst schüfe das
+        Ausblenden Platz für einen weiteren Abschnitt, der die Leiste sofort
+        zurückholt — und damit den Platz wieder nimmt."""
+        return max(self.tabs.height()
+                   - self.tabs.tabBar().sizeHint().height() - 12, 1)
+
+    @staticmethod
+    def _gruppengroessen(hoehen, platz, kopf):
+        """Wie viele Abschnitte kommen auf welche Seite? Der Reihe nach so
+        viele, wie in `platz` passen. `kopf` ist die Höhe einer Überschrift —
+        die fällt nur an, wenn mehrere Abschnitte auf einer Seite liegen.
+        Ein einzelner zu hoher Abschnitt bekommt trotzdem seine eigene
+        Seite; dann scrollt eben die."""
+        groessen, offen, summe = [], 0, 0
+        for h in hoehen:
+            zahl = offen + 1
+            voll = summe + h + (kopf * zahl if zahl > 1 else 0)
+            if offen and voll > platz:
+                groessen.append(offen)
+                offen, summe = 1, h
+            else:
+                offen, summe = zahl, summe + h
+        if offen:
+            groessen.append(offen)
+        return tuple(groessen)
+
+    def _verteile_abschnitte(self, erzwingen=False):
+        """Baut die Reiterseiten für das gewählte Bauteil neu: so viele
+        Abschnitte je Seite, wie in die aktuelle Dock-Höhe passen. Passt
+        alles auf eine Seite, verschwindet die Reiterleiste ganz."""
+        # Der Umbau löst selbst wieder resizeEvents aus — ohne Sperre
+        # riefe sich die Methode aus ihrem eigenen Rumpf heraus auf.
+        if self._verteilt_gerade:
+            return
+
+        aktiv = self._bauteil()
+        spalten = self._spalten()
+        platz = self._seitenhoehe()
+        self._verteilt_gerade = True
+        try:
+            kopf = self.fontMetrics().height() + 6      # Höhe einer Überschrift
+
+            # Beim Ziehen am Fensterrand kommt ein resizeEvent nach dem anderen.
+            # Neu gebaut wird nur, wenn dabei wirklich eine andere Aufteilung
+            # herauskommt — die Höhen der Abschnitte sind ja schon bekannt.
+            if not erzwingen and self._verteilung:
+                kennung, hoehen, groessen = self._verteilung
+                if kennung == (aktiv, spalten) and \
+                        self._gruppengroessen(hoehen, platz, kopf) == groessen:
+                    return
+
+            # Erst die Felder aus den alten Seiten lösen: gleich werden die
+            # gelöscht, und als deren Kinder gingen die Felder mit unter.
+            for felder in self.inputs_je_bauteil.values():
+                for spinbox in felder.values():
+                    spinbox.setParent(None)
+
+            neu = [(kurz, voll, self._abschnitt_widget(paare, spalten))
+                   for kurz, voll, paare in self.abschnitte[aktiv]]
+            hoehen = [w.sizeHint().height() for _kurz, _voll, w in neu]
+            groessen = self._gruppengroessen(hoehen, platz, kopf)
+
+            merk = self.tabs.currentIndex()
+            self.tabs.clear()
+            for alt in self._seiten_widgets:
+                alt.deleteLater()
+            self._seiten_widgets = []
+
+            ab = 0
+            for anzahl in groessen:
+                gruppe = neu[ab:ab + anzahl]
+                ab += anzahl
+                # Scrollbereich je Seite: Rückfall für sehr flache Docks — die
+                # Reiterleiste bleibt dabei oben stehen.
+                seite = QtWidgets.QScrollArea()
+                seite.setWidgetResizable(True)
+                seite.setFrameShape(QtWidgets.QFrame.NoFrame)
+                inhalt = QtWidgets.QWidget()
+                spalte = QtWidgets.QVBoxLayout(inhalt)
+                spalte.setContentsMargins(0, 0, 0, 0)
+                for _kurz, voll, w in gruppe:
+                    # Überschrift nur, wenn mehrere Abschnitte auf der Seite
+                    # liegen — sonst benennt sie der Reiter schon.
+                    if len(gruppe) > 1:
+                        titel = QtWidgets.QLabel(voll)
+                        schrift = titel.font()
+                        schrift.setBold(True)
+                        titel.setFont(schrift)
+                        spalte.addWidget(titel)
+                    spalte.addWidget(w)
+                spalte.addStretch()
+                seite.setWidget(inhalt)
+                reiter = self.tabs.addTab(
+                    seite, " · ".join(k for k, _v, _w in gruppe))
+                self.tabs.setTabToolTip(
+                    reiter, "\n".join(v for _k, v, _w in gruppe))
+                self._seiten_widgets.append(seite)
+
+            # Eine einzige Seite braucht keine Leiste.
+            self.tabs.tabBar().setVisible(self.tabs.count() > 1)
+            self.tabs.setCurrentIndex(max(0, min(merk, self.tabs.count() - 1)))
+            self._verteilung = ((aktiv, spalten), hoehen, groessen)
+        finally:
+            self._verteilt_gerade = False
+
+    def resizeEvent(self, event):
+        """Dock verändert: Spaltenzahl und Seitenaufteilung nachziehen."""
+        super().resizeEvent(event)
+        if getattr(self, 'tabs', None) is not None:
+            self._verteile_abschnitte()
+
+    def showEvent(self, event):
+        """Erst beim Anzeigen stehen die echten Größen fest — vorher wäre
+        jede Aufteilung geraten."""
+        super().showEvent(event)
+        if getattr(self, 'tabs', None) is not None:
+            self._verteile_abschnitte()
+
+    @staticmethod
+    def _reiter_titel(abschnitt):
+        """Kurzer Reitertext: der Klammerzusatz („Grundkörper“, „Kugellager“)
+        erklärt den Abschnitt, kostet auf dem Reiter aber Breite, die im
+        schmalen Dock fehlt. Der volle Titel bleibt als Tooltip."""
+        kurz = abschnitt.split("(")[0].strip()
+        # Immer noch lang und mehrwortig? Dann ist das erste Wort meist nur
+        # eine Näherbestimmung („Seitliche Schmutzabweiser“) — auf dem Reiter
+        # zählt das Hauptwort, sonst bliebe davon nur „Seitlic…“ übrig.
+        if len(kurz) > 14 and " " in kurz:
+            kurz = kurz.split(" ", 1)[1]
+        return kurz
 
     @staticmethod
     def _make_button(label, callback):
@@ -220,14 +369,23 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         return self.bauteil_wahl.currentData() or BAUTEILE[0][0]
 
     def _wechsle_bauteil(self, *_):
-        """Blendet Abschnitte und Knöpfe des gewählten Bauteils ein, die des
-        anderen aus. `self.inputs` zeigt danach auf den richtigen Feldsatz —
-        alles Weitere (Bauen, Speichern) liest von dort."""
+        """Bestückt die Reiterleiste mit den Abschnitten des gewählten
+        Bauteils und blendet dessen Knöpfe ein, die des anderen aus.
+        `self.inputs` zeigt danach auf den richtigen Feldsatz — alles
+        Weitere (Bauen, Speichern) liest von dort."""
         aktiv = self._bauteil()
         self.inputs = self.inputs_je_bauteil[aktiv]
-        for bid, widgets in self.gruppen.items():
-            for w in widgets:
-                w.setVisible(bid == aktiv)
+
+        # Reiter des bisherigen Bauteils merken, damit hin und zurück nicht
+        # jedes Mal beim ersten Abschnitt landet.
+        if self._letztes_bauteil is not None and self.tabs.count():
+            self._letzter_reiter[self._letztes_bauteil] = self.tabs.currentIndex()
+        self._verteile_abschnitte(erzwingen=True)
+        self.tabs.setCurrentIndex(
+            max(0, min(self._letzter_reiter.get(aktiv, 0),
+                       self.tabs.count() - 1)))
+        self._letztes_bauteil = aktiv
+
         for bid, knoepfe in self.btn_je_bauteil.items():
             for b in knoepfe:
                 b.setVisible(bid == aktiv)
