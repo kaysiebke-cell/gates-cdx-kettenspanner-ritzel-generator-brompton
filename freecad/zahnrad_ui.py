@@ -2,7 +2,9 @@
 # FreeCAD Dock-Panel für den Zahnrad-Konfigurator
 
 import os
+import re
 import json
+import time
 
 from PySide6 import QtCore, QtWidgets
 import FreeCADGui as Gui
@@ -38,6 +40,8 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         self.setWidget(self.content)
 
         self._busy = False          # verhindert überlappende Bau-Vorgänge
+        self._proc = None           # laufender Hintergrund-Bau (QProcess)
+        self._hg_knopf = None       # Knopf, der gerade "Abbrechen" zeigt
         self._saved = self._load_values()   # zuletzt benutzte Werte (falls vorhanden)
 
         self._build_layout()
@@ -120,28 +124,52 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         self.chk_rundungen.setChecked(bool(self._saved.get('rundungen', True)))
         outer.addWidget(self.chk_rundungen)
 
+        # Bau im eigenen Prozess: eine Frage des WIE, nicht des WAS — darum
+        # ein Häkchen neben den Rundungen und kein eigener Knopf. OCC
+        # verrundet single-threaded und blockiert Qt minutenlang am Stück;
+        # ausgelagert bleibt das Fenster bedienbar und der Bau abbrechbar.
+        # Das Ergebnis kommt als STEP-Import zurück, nicht als
+        # parametrischer Körper.
+        self.chk_hintergrund = QtWidgets.QCheckBox(
+            "Im Hintergrund bauen (Fenster bleibt bedienbar)")
+        self.chk_hintergrund.setChecked(bool(self._saved.get('hintergrund', False)))
+        self.chk_hintergrund.setToolTip(
+            "Betrifft \u201eFertigteil\u201c und \u201eSpannrolle erzeugen\u201c: der Bau läuft in einem\n"
+            "zweiten, fensterlosen FreeCAD. Der Knopf wird solange zu \u201eAbbrechen\u201c.")
+        outer.addWidget(self.chk_hintergrund)
+
+        # Statuszeile. Der Bau läuft im GUI-Thread und ein einzelnes OCC-Fillet
+        # blockiert Qt minutenlang am Stück — ohne Rückmeldung sieht das nach
+        # einem Absturz aus. Hier steht, woran gerade gebaut wird, und danach
+        # bleiben die Abweichungen stehen (Radius/Schwung, die die Geometrie
+        # nicht hergab).
+        self.lbl_status = QtWidgets.QLabel("")
+        self.lbl_status.setWordWrap(True)
+        self.lbl_status.setTextFormat(QtCore.Qt.PlainText)
+        outer.addWidget(self.lbl_status)
+
         # Buttons (bleiben unten fest sichtbar). 2x2-Raster statt einer Reihe:
         # vier Knöpfe nebeneinander erzwingen sonst eine große Mindestbreite,
         # und das Dock lässt sich nicht mehr schmaler ziehen.
         btn_layout = QtWidgets.QGridLayout()
         b_vorschau = self._make_button("Vorschau", self.run_update)
         b_koerper = self._make_button("Körper erzeugen", self.build_body)
-        b_fertig = self._make_button("Fertigteil", self.build_fertigteil)
+        self.b_fertig = self._make_button("Fertigteil", self.build_fertigteil)
         b_buegel = self._make_button("Riemenschutz-Bügel", self.build_buegel)
-        b_rolle = self._make_button("Spannrolle erzeugen", self.build_rolle)
+        self.b_rolle = self._make_button("Spannrolle erzeugen", self.build_rolle)
         btn_layout.addWidget(b_vorschau, 0, 0)
         btn_layout.addWidget(b_koerper, 0, 1)
-        btn_layout.addWidget(b_fertig, 1, 0)
+        btn_layout.addWidget(self.b_fertig, 1, 0)
         btn_layout.addWidget(b_buegel, 1, 1)
-        btn_layout.addWidget(b_rolle, 1, 0, 1, 2)
+        btn_layout.addWidget(self.b_rolle, 1, 0, 1, 2)
         btn_layout.addWidget(self._make_button("Schließen", self.close), 2, 0, 1, 2)
         outer.addLayout(btn_layout)
 
         # Zum Ritzel gehören vier Knöpfe, zur Rolle einer — sie liegen an
         # derselben Stelle im Raster und wechseln sich ab.
         self.btn_je_bauteil = {
-            'ritzel': [b_vorschau, b_koerper, b_fertig, b_buegel],
-            'rolle': [b_rolle],
+            'ritzel': [b_vorschau, b_koerper, self.b_fertig, b_buegel],
+            'rolle': [self.b_rolle],
         }
         # Die Rundungs-Option ist eine Ritzel-Sache (Zahn- und Muldenfillets).
         self.bauteil_wahl.currentIndexChanged.connect(self._wechsle_bauteil)
@@ -230,7 +258,8 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
             return {}
         if any(bid in daten for bid, _ in BAUTEILE):
             return daten
-        flach = {k: v for k, v in daten.items() if k not in ('rundungen', 'bauteil')}
+        flach = {k: v for k, v in daten.items()
+                 if k not in ('rundungen', 'hintergrund', 'bauteil')}
         return {'ritzel': flach, 'rundungen': daten.get('rundungen', True)}
 
     def _save_values(self):
@@ -238,6 +267,7 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         ALLER Bauteile, nicht nur die des gerade sichtbaren."""
         try:
             daten = {'rundungen': self.chk_rundungen.isChecked(),
+                     'hintergrund': self.chk_hintergrund.isChecked(),
                      'bauteil': self._bauteil()}
             for bid, felder in self.inputs_je_bauteil.items():
                 daten[bid] = {k: v.value() for k, v in felder.items()}
@@ -252,6 +282,203 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         super().closeEvent(event)
 
     # ---- Aktionen ----------------------------------------------------
+
+    # ── Bau im eigenen Prozess ────────────────────────────────────────
+    @staticmethod
+    def _freecadcmd():
+        """Pfad zum Konsolen-FreeCAD DERSELBEN Installation wie diese GUI.
+        None, wenn nichts gefunden wird."""
+        import shutil
+        import FreeCAD as App
+        kandidaten = ('freecadcmd', 'FreeCADCmd', 'freecadcmd.exe', 'FreeCADCmd.exe')
+        try:
+            heim = App.getHomePath()
+        except Exception:
+            heim = None
+        if heim:
+            for name in kandidaten:
+                pfad = os.path.join(heim, 'bin', name)
+                if os.path.isfile(pfad):
+                    return pfad
+        for name in kandidaten:          # Rückfall: irgendwo im PATH
+            pfad = shutil.which(name)
+            if pfad:
+                return pfad
+        return None
+
+    def _hg_abbrechen(self):
+        """Zweiter Klick auf den laufenden Bau-Knopf: Prozess abschießen."""
+        self.lbl_status.setText("Wird abgebrochen …")
+        self._proc.kill()
+
+    def _hg_sperre(self, an):
+        """Während des ausgelagerten Baus bleibt nur der Abbrechen-Knopf
+        bedienbar: die übrigen Bau-Knöpfe laufen im GUI-Thread und würden
+        das Fenster doch wieder einfrieren, und ein Bauteil-Wechsel würde
+        den Abbrechen-Knopf ausblenden."""
+        self.bauteil_wahl.setDisabled(an)
+        for knoepfe in self.btn_je_bauteil.values():
+            for b in knoepfe:
+                if b is not self._hg_knopf:
+                    b.setDisabled(an)
+
+    def _starte_hintergrund(self, knopf):
+        """Startet den headless-Bau als eigenen Prozess. `knopf` ist der
+        gedrückte Bau-Knopf; er heißt für die Dauer des Baus "Abbrechen".
+        Das Ergebnis (STEP) wird danach ins Dokument geladen."""
+        exe = self._freecadcmd()
+        if not exe:
+            self.lbl_status.setText(
+                "freecadcmd nicht gefunden — Häkchen „Im Hintergrund bauen“ "
+                "abwählen, dann wird im Fenster gebaut.")
+            return
+
+        macro_dir = os.path.dirname(os.path.abspath(__file__))
+        skript = os.path.join(macro_dir, 'build_headless.py')
+        self._hg_out = os.path.join(macro_dir, 'output')
+        os.makedirs(self._hg_out, exist_ok=True)
+
+        params = self._collect_params()
+        self._hg_bauteil = self._bauteil()
+        params['bauteil'] = self._hg_bauteil
+        self._hg_zaehne = int(params.get('zaehne', 0))
+        self._save_values()
+
+        umgebung = QtCore.QProcessEnvironment.systemEnvironment()
+        umgebung.insert('PARAMS_JSON', json.dumps(params))
+        umgebung.insert('OUTPUT_DIR', self._hg_out)
+        umgebung.insert('REPO_DIR', macro_dir)
+
+        self._proc = QtCore.QProcess(self)
+        self._proc.setProcessEnvironment(umgebung)
+        self._proc.setProcessChannelMode(QtCore.QProcess.MergedChannels)
+        self._proc.readyReadStandardOutput.connect(self._hg_ausgabe)
+        self._proc.finished.connect(self._hg_fertig)
+        self._hg_knopf = knopf
+        self._hg_text = knopf.text()
+        knopf.setText("Abbrechen")
+        self._hg_sperre(True)
+        self.lbl_status.setText("Hintergrund-Bau gestartet — Fenster bleibt bedienbar.")
+        # Startzeit merken: nur eine Datei, die NACH diesem Punkt geschrieben
+        # wurde, stammt aus diesem Bau (siehe _hg_fertig).
+        self._hg_start = time.time()
+        self._proc.start(exe, [skript])
+
+    # OpenCascade faerbt seine Meldungen mit ANSI-Codes ein und schreibt
+    # waehrend des Exports viel, was niemanden interessiert. Ungefiltert
+    # stand in der Statuszeile am Ende meist "(99 %)" oder eine eingefaerbte
+    # STEP-Schreiber-Zeile statt der eigentlichen Fertigmeldung.
+    _ANSI = re.compile(r'\x1b\[[0-9;]*m')
+    _PROZENT = re.compile(r'^\(\s*\d+\s*%\)$')
+    _RAUSCHEN = ('WorkSession', 'Transferring Shape', 'Step File Name')
+
+    def _hg_ausgabe(self):
+        """Letzte AUSSAGEKRAEFTIGE Ausgabezeile in die Statuszeile spiegeln.
+        Ist der ganze Schwung nur Rauschen, bleibt der bisherige Text
+        stehen — besser als ihn durch einen Fortschrittsbalken zu ersetzen."""
+        if self._proc is None:
+            return
+        roh = bytes(self._proc.readAllStandardOutput()).decode('utf-8', 'replace')
+        for zeile in reversed(roh.splitlines()):
+            z = self._ANSI.sub('', zeile).strip().lstrip('*').strip()
+            if not z or self._PROZENT.match(z):
+                continue
+            if any(r in z for r in self._RAUSCHEN):
+                continue
+            self.lbl_status.setText(z)
+            return
+
+    def _hg_fertig(self, code, _status):
+        """Prozess ist durch: Ergebnis laden oder Fehler melden."""
+        self._proc = None
+        self._hg_sperre(False)
+        if self._hg_knopf is not None:
+            self._hg_knopf.setText(self._hg_text)
+            self._hg_knopf = None
+        if code != 0:
+            self.lbl_status.setText(
+                "Hintergrund-Bau abgebrochen oder fehlgeschlagen (Code %d)." % code)
+            return
+        name = ("spannrolle" if self._hg_bauteil == 'rolle'
+                else "ritzel_z%d" % self._hg_zaehne)
+        # Die GERADE gebaute Datei nehmen, nicht die alphabetisch erste.
+        # Der Rollen-Dateiname traegt ihre Masse (spannrolle_d40_b14.step);
+        # nach einer Aenderung auf Ø50 liegen beide im Ordner und sorted()[0]
+        # lieferte die ALTE Rolle zurueck — es sah aus, als wuerde eine neue
+        # Rolle erzeugt statt der bestehenden geaendert. Ein Zeitfenster von
+        # zwei Sekunden vor dem Start faengt grobe Uhr-/Dateisystem-Ungenauig-
+        # keiten ab.
+        grenze = getattr(self, '_hg_start', 0) - 2
+        frisch = []
+        for f in os.listdir(self._hg_out):
+            if not (f.startswith(name) and f.endswith('.step')):
+                continue
+            voll = os.path.join(self._hg_out, f)
+            try:
+                if os.path.getmtime(voll) >= grenze:
+                    frisch.append((os.path.getmtime(voll), voll))
+            except OSError:
+                pass
+        if not frisch:
+            self.lbl_status.setText(
+                "Fertig, aber keine frisch gebaute STEP-Datei gefunden.")
+            return
+        pfad = max(frisch)[1]
+        try:
+            import FreeCAD as App
+            import Part
+            doc = App.ActiveDocument or App.newDocument("ZahnradDokument")
+            # Voriges Hintergrund-Ergebnis entfernen. Ohne das legt
+            # Part.insert bei jedem Bau ein weiteres Objekt daneben
+            # (ritzel_z18, ritzel_z001, ritzel_z002 ...) — der Bügel-Weg
+            # räumt längst auf, dieser tat es nicht. Gemerkt wird über die
+            # Objektnamen: nur die sind im Dokument eindeutig.
+            # Die Rolle gibt es nur einmal, egal ob im Fenster gebaut oder
+            # hier importiert — beide Wege raeumen ueber dieselbe Regel auf.
+            if self._hg_bauteil == 'rolle':
+                from rolle_generator import entferne_rollen
+                entferne_rollen(doc)
+            for alt_name in getattr(self, '_hg_geladen', ()):
+                if doc.getObject(alt_name) is not None:
+                    try:
+                        doc.removeObject(alt_name)
+                    except Exception:
+                        pass        # haengt noch woanders dran -> stehen lassen
+            vorher = {o.Name for o in doc.Objects}
+            Part.insert(pfad, doc.Name)
+            self._hg_geladen = [o.Name for o in doc.Objects
+                                if o.Name not in vorher]
+            doc.recompute()
+            self.lbl_status.setText(
+                "Fertig: %s geladen." % os.path.basename(pfad))
+        except Exception as e:
+            self.lbl_status.setText("Gebaut, aber Laden schlug fehl: %s" % e)
+
+    def _status(self, text):
+        """Fortschrittstext anzeigen und Qt kurz zeichnen lassen. Zwischen
+        zwei Fillet-Versuchen ist das die einzige Gelegenheit dafür."""
+        self.lbl_status.setText(text)
+        QtWidgets.QApplication.processEvents()
+
+    def _bau_beginnt(self, text):
+        """Wartecursor, Statuszeile, Fortschritts-Rückruf am Generator."""
+        self.lbl_status.setText(text)
+        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QtWidgets.QApplication.processEvents()
+        self.generator.fortschritt = self._status
+
+    def _bau_endet(self, erfolg=True):
+        """Cursor zurück und das Ergebnis in die Statuszeile: entweder die
+        Abweichungen vom Gewünschten oder eine schlichte Fertigmeldung."""
+        self.generator.fortschritt = None
+        QtWidgets.QApplication.restoreOverrideCursor()
+        if not erfolg:
+            self.lbl_status.setText("Fehlgeschlagen — Details im Report-View.")
+            return
+        warnungen = list(getattr(self.generator, 'meldungen', ()) or ())
+        self.lbl_status.setText(
+            "Fertig, aber abgewichen:\n• " + "\n• ".join(warnungen)
+            if warnungen else "Fertig.")
 
     def run_update(self):
         """Vorschau (Knopf): nur das Zahnprofil-Sketch neu zeichnen."""
@@ -269,29 +496,47 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         if self._busy:
             return
         self._busy = True
+        erfolg = False
         try:
-            self.generator.build_solid(self._collect_params())
+            self._bau_beginnt("Körper wird gebaut …")
+            erfolg = self.generator.build_solid(self._collect_params()) is not None
             self._save_values()
         finally:
+            self._bau_endet(erfolg)
             self._busy = False
 
     def build_fertigteil(self):
         """Körper bauen (falls nötig) und als einfachen Einzelkörper
         'RitzelFertig' ablegen (Knopf 'Fertigteil')."""
+        if self._proc is not None:          # Knopf zeigt gerade "Abbrechen"
+            self._hg_abbrechen()
+            return
         if self._busy:
             return
+        if self.chk_hintergrund.isChecked():
+            self._starte_hintergrund(self.b_fertig)
+            return
         self._busy = True
+        erfolg = False
         try:
-            self.generator.make_fertigteil(self._collect_params())
+            self._bau_beginnt("Fertigteil wird gebaut …")
+            erfolg = self.generator.make_fertigteil(self._collect_params()) is not None
             self._save_values()
         finally:
+            self._bau_endet(erfolg)
             self._busy = False
 
     def build_rolle(self):
         """Spannrolle als Part-Körper erzeugen (Knopf 'Spannrolle erzeugen').
         Baut aus denselben Formeln wie die Web-Vorschau: Drehprofil mit echten
         Kantenrundungen, Speichen-Durchbrüche aus dem geteilten Modul."""
+        if self._proc is not None:          # Knopf zeigt gerade "Abbrechen"
+            self._hg_abbrechen()
+            return
         if self._busy:
+            return
+        if self.chk_hintergrund.isChecked():
+            self._starte_hintergrund(self.b_rolle)
             return
         self._busy = True
         try:

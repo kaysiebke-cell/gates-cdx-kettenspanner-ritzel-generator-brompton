@@ -29,3 +29,6 @@ android/app/src/main/assets/
 *.jks
 *.keystore
 android/keystore.properties
+
+# Ausgabe des Hintergrund-Baus (Bedienfeld) und der Serien-Skripte
+freecad/output/

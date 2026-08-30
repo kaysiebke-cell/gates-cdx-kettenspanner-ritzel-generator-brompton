@@ -19,6 +19,33 @@ except Exception:               # Fallback, falls Modul (noch) nicht auf dem Pfa
 
 class ZahnradVollGenerator:
 
+    # Meldungen des letzten Baus. Grenzt die Geometrie einen Wunschwert ab
+    # (Rundungsradius zu groß, Speichen-Schwung zu viel), landete das bisher
+    # nur als print() im Report-View — wer den zu hat, bekam still ein Teil
+    # mit anderen Maßen als eingegeben. Das Bedienfeld liest die Liste nach
+    # dem Bau aus und zeigt sie an.
+    meldungen = ()
+
+    # Optionaler Rückruf für laufende Fortschrittstexte (setzt das Panel).
+    # Ein Fillet blockiert Qt minutenlang am Stück; dazwischen lässt sich
+    # aber wenigstens anzeigen, woran gerade gebaut wird.
+    fortschritt = None
+
+    def _melden(self, text, warnung=True):
+        """Ausgabe an Report-View und Bedienfeld. warnung=True heißt: Der
+        gebaute Körper weicht von den Eingaben ab — die Meldung bleibt nach
+        dem Bau stehen."""
+        print(text)
+        if warnung:
+            if not isinstance(self.meldungen, list):
+                self.meldungen = []
+            self.meldungen.append(text)
+        if self.fortschritt:
+            try:
+                self.fortschritt(text)
+            except Exception:
+                pass        # ein kaputtes Panel darf den Bau nicht kippen
+
     def setup_environment(self):
         """Stellt sicher, dass ein Dokument, ein Body und ein Sketch vorhanden sind."""
         doc = App.ActiveDocument or App.newDocument("ZahnradDokument")
@@ -171,39 +198,66 @@ class ZahnradVollGenerator:
 
     # Merkt sich je Geometrie den zuletzt erfolgreich gebauten Fillet-Radius,
     # damit Wiederhol-Builds die teuren OCC-Fehlversuche überspringen.
+    # Gemessen (z=18, FreeCAD 1.1.3): ein fehlgeschlagener Mulden-Fillet
+    # kostet ~23 s, die volle Kaskade 2,3 -> 1,05 also ~115 s allein an
+    # Fehlversuchen. Deshalb wird je Schlüssel eine LISTE von Einträgen
+    # geführt (nicht nur der letzte): wer zwischen zwei Zähnezahlen hin- und
+    # herspringt, zahlt das Probieren sonst bei jedem Wechsel erneut.
     _CACHE_DATEI = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "zahnrad_cache.json")
+    _CACHE_MAX = 24          # ältere Einträge fallen hinten raus
 
     def _cache_lesen(self):
         try:
             with open(self._CACHE_DATEI, encoding="utf-8") as f:
                 daten = json.load(f)
-            return daten if isinstance(daten, dict) else {}
+            if not isinstance(daten, dict):
+                return {}
         except Exception:
             return {}
+        # Altbestand (ein einzelnes dict je Schlüssel) in Listen überführen,
+        # damit alte Cache-Dateien nicht wegfliegen.
+        return {k: (v if isinstance(v, list) else [v])
+                for k, v in daten.items() if isinstance(v, (list, dict))}
 
     def _cache_merken(self, schluessel, eintrag):
         daten = self._cache_lesen()
-        daten[schluessel] = eintrag
+        liste = [e for e in daten.get(schluessel, [])
+                 if not (e.get('fp') == eintrag['fp']
+                         and e.get('wunsch') == eintrag['wunsch'])]
+        daten[schluessel] = ([eintrag] + liste)[:self._CACHE_MAX]
+        # Erst vollstaendig daneben schreiben, dann umbenennen: os.replace ist
+        # atomar. Ohne das koennen mehrere gleichzeitig laufende Builds (die
+        # Serie baut alle Zaehnezahlen parallel) sich gegenseitig eine halb
+        # geschriebene Datei unterschieben. Der eigene Prozessname im Temp-
+        # Pfad haelt die Schreiber auseinander.
+        tmp = "%s.%d.tmp" % (self._CACHE_DATEI, os.getpid())
         try:
-            with open(self._CACHE_DATEI, "w", encoding="utf-8") as f:
+            with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(daten, f, indent=2)
+            os.replace(tmp, self._CACHE_DATEI)
         except Exception:
-            pass
+            try:
+                os.remove(tmp)
+            except Exception:
+                pass
 
-    def _cache_startradius(self, schluessel, wunsch):
-        """Liefert den Startradius für die Kaskade: der zuletzt für dieselbe
-        Geometrie + denselben Wunschradius erfolgreiche Wert (sonst wunsch)."""
-        e = self._cache_lesen().get(schluessel, {})
-        if (e.get('fp') == getattr(self, '_geo_fp', None)
-                and e.get('wunsch') == wunsch and e.get('ok')):
-            return min(wunsch, float(e['ok']))
+    def _cache_startradius(self, schluessel, wunsch, fp):
+        """Startradius für die Kaskade. Liefert den zuletzt für dieselbe
+        Geometrie + denselben Wunschradius erfolgreichen Wert, 0.0 wenn dort
+        gar kein Radius baubar war (dann wird der Fillet übersprungen),
+        sonst den Wunschradius."""
+        for e in self._cache_lesen().get(schluessel, []):
+            if e.get('fp') == fp and e.get('wunsch') == wunsch:
+                ok = e.get('ok')
+                return min(wunsch, float(ok)) if ok else 0.0
         return wunsch
 
     def build_solid(self, params):
         """Baut aus dem Zahnprofil einen fertigen Gates-CDX-Volumenkörper:
         Pad (Zahnkörper) + polar wiederholte Schmutzabweiser-Taschen mit
         stehendem Mittelsteg (Riemenführung) + zentrale Bohrung."""
+        self.meldungen = []
         try:
             # 0. Kurzschluss: unveränderte Parameter und der Körper existiert
             #    noch gültig -> nichts zu tun (spart den kompletten Neuaufbau,
@@ -251,19 +305,34 @@ class ZahnradVollGenerator:
             # Geometrie-Fingerabdruck für den Radius-Cache: nur Werte, die die
             # Fillet-Machbarkeit beeinflussen. Ändert sich einer, wird der
             # gecachte Radius verworfen und wieder ab Wunschradius probiert.
-            self._geo_fp = repr([round(float(params.get(k, 0)), 3) for k in (
-                'zaehne', 'eingriffswinkel', 'spitzen_abstand', 'spitzen_d',
-                'fuss_d', 'tiefe', 'breite', 'steg_w', 'seiten_t',
-                'tasche_b', 'mulde_winkel', 'mulde_r',
+            #
+            # ZWEI Abdrücke, weil die beiden Rundungen an verschiedenen
+            # Stellen im Baum sitzen: Die Mulden-Verrundung (Schritt 4b) läuft
+            # auf Pad + Schmutztaschen — Führungsring, Speichen, Nabe, Bohrung
+            # und Lagersitz kommen erst DANACH und können sie unmöglich
+            # beeinflussen. Stünden sie trotzdem im Abdruck, würde schon eine
+            # geänderte Nabe den gecachten Muldenradius wegwerfen und ~115 s
+            # Fehlversuche neu auslösen. Die Zahn-Rundung ist das letzte
+            # Feature und hängt folglich an allem.
+            def _fp(keys):
+                return repr([round(float(params.get(k, 0)), 3) for k in keys])
+
+            _mulde_keys = ('zaehne', 'eingriffswinkel', 'spitzen_abstand',
+                           'spitzen_d', 'fuss_d', 'tiefe', 'breite', 'rotation',
+                           'steg_w', 'seiten_t', 'tasche_b', 'mulde_winkel')
+            self._geo_fp_mulde = _fp(_mulde_keys)
+            self._geo_fp = _fp(_mulde_keys + (
+                'mulde_r',
                 'bohrung_d', 'nabe_d', 'nabe_l', 'lager_d', 'lager_t',
                 'fuehrung_w', 'fuehrung_d',
                 'speichen_n', 'speichen_b', 'speichen_schwung',
-                'speichen_wand', 'speichen_r')])
+                'speichen_wand', 'speichen_r'))
 
             # 3. Zahnkörper aufpolstern (symmetrisch zur XY-Ebene)
             #    Hinweis: KEIN recompute je Feature — sonst verschachteln sich
             #    ~20 Dokument-Recomputes ("Recursive calling of recompute").
             #    Alle Features werden aufgebaut, EIN recompute erfolgt am Ende.
+            self._melden("Grundkörper wird aufgebaut …", False)
             pad = body.newObject('PartDesign::Pad', 'ZahnPad')
             pad.Profile  = self.sketch
             pad.Length   = breite
@@ -282,7 +351,7 @@ class ZahnradVollGenerator:
             #     Die Rundungen sind der teuerste Teil des Baus (>80 % der Zeit);
             #     im Entwurfsmodus (rundungen=False) werden sie übersprungen.
             if rundungen and m_rund > 0 and steg_w > 0 and seiten_t > 0 and tasche_b > 0:
-                print("Zahnrad: Mulden-Verrundung … (dauert am längsten)")
+                self._melden("Mulden-Verrundung … (dauert am längsten)", False)
                 self._add_flanken_fillet(doc, body, m_rund)
 
             # 5. Mittlere Riemenführung: erhabenes z-Eck (eine Ecke je Zahn,
@@ -323,9 +392,10 @@ class ZahnradVollGenerator:
             #    'flächen abrundung.py' — erlaubt größere Radien als der
             #    Ganze-Flächen-Fillet mitten im Baum.)
             if rundungen and zahn_r > 0:
-                print("Zahnrad: Zahn-Rundung …")
+                self._melden("Zahn-Rundung … (dauert am längsten)", False)
                 self._add_zahn_verrundung(doc, body, breite, zahn_r)
 
+            self._melden("Körper wird durchgerechnet …", False)
             doc.recompute()
             if App.GuiUp:
                 body.Visibility = True
@@ -442,6 +512,14 @@ class ZahnradVollGenerator:
             sk.Visibility = False
 
     @staticmethod
+    def _kanten_schluessel(edge):
+        """Billiger Lage-Schlüssel zum Vorsortieren von Kanten. Zwei
+        verschiedene Kanten teilen praktisch nie Schwerpunkt UND Länge; wo
+        es doch passiert, entscheidet danach weiterhin isSame()."""
+        c = edge.CenterOfMass
+        return (round(c.x, 4), round(c.y, 4), round(c.z, 4), round(edge.Length, 4))
+
+    @staticmethod
     def _ist_zentrale_kreiskante(edge):
         """True für die geschlossene Kreiskante um die Achse (Nabendurchdringung
         bzw. Bohrung) — sie wird von der Zahn-Rundung ausgenommen."""
@@ -476,13 +554,14 @@ class ZahnradVollGenerator:
             params.get('speichen_r', 0.0), params.get('speichen_schwung', 0.0))
         oeffnungen = ergebnis['oeffnungen']
         if not oeffnungen:
-            print(f"Speichen: freier Ring nur {r_aussen - r_innen:.1f} mm "
-                  f"(nötig {speichen_geometrie.MIN_RING:.0f} mm) — Steg bleibt voll.")
+            self._melden(f"Speichen: freier Ring nur {r_aussen - r_innen:.1f} mm "
+                         f"(nötig {speichen_geometrie.MIN_RING:.0f} mm) — "
+                         f"Steg bleibt voll.")
             return
         wunsch = float(params.get('speichen_schwung', 0.0))
         if abs(ergebnis['schwung'] - wunsch) > 0.05:
-            print(f"Speichen: Schwung {wunsch:.0f}° zu viel für diesen Ring — "
-                  f"mit {ergebnis['schwung']:.1f}° gebaut.")
+            self._melden(f"Speichen: Schwung {wunsch:.0f}° zu viel für diesen "
+                         f"Ring — mit {ergebnis['schwung']:.1f}° gebaut.")
 
         xy = self._xy_plane(body)
         sk = body.newObject('Sketcher::SketchObject', 'SpeichenSketch')
@@ -522,46 +601,67 @@ class ZahnradVollGenerator:
         tip = body.Tip
         sh = tip.Shape
         zmax = breite / 2.0
+
+        # Shape.Faces und Shape.Edges sind Properties: JEDER Zugriff baut die
+        # komplette Python-Liste neu auf (hier 375 bzw. 1107 Objekte). Einmal
+        # holen, sonst entstehen beim Suchen der Kantennummern hunderttausende
+        # Wegwerf-Objekte.
+        alle_flaechen = sh.Faces
+        alle_kanten = sh.Edges
+
+        # Kanten nach einem billigen Lage-Schlüssel vorsortieren. Danach muss
+        # je gesuchter Kante nur noch ein winziger Eimer mit isSame() geprüft
+        # werden statt der ganzen Liste — aus O(288 x 1107) wird O(288).
+        eimer = {}
+        for i, oe in enumerate(alle_kanten):
+            eimer.setdefault(self._kanten_schluessel(oe), []).append(i)
+
         names = []
+        gesehen = set()                    # 'name in names' war eine 2. Schleife
         for ziel in (zmax, -zmax):
             # größte planare Stirnfläche bei z=±breite/2 finden
             best = None
-            for idx, f in enumerate(sh.Faces):
+            for f in alle_flaechen:
                 su = f.Surface
                 if su.__class__.__name__ != 'Plane' or abs(su.Axis.z) < 0.99:
                     continue
                 if abs(f.BoundBox.ZMin - ziel) < 0.2:   # planar -> ZMin==ZMax
                     if best is None or f.Area > best[0]:
-                        best = (f.Area, idx)
+                        best = (f.Area, f)
             if best is None:
                 continue
             # deren Kanten einzeln übernehmen — ohne die zentrale Kreiskante
-            face = sh.Faces[best[1]]
-            for fe in face.Edges:
+            for fe in best[1].Edges:
                 if self._ist_zentrale_kreiskante(fe) or self._ist_speichen_kante(fe):
                     continue
-                for i, oe in enumerate(sh.Edges):
-                    if fe.isSame(oe):
+                for i in eimer.get(self._kanten_schluessel(fe), ()):
+                    if fe.isSame(alle_kanten[i]):       # isSame entscheidet weiter
                         name = f'Edge{i + 1}'
-                        if name not in names:
+                        if name not in gesehen:
+                            gesehen.add(name)
                             names.append(name)
                         break
         if not names:
             return
         # Radius-Kaskade wie bei der Mulden-Verrundung: zu großer Radius wird
         # schrittweise reduziert statt die Rundung ganz wegzulassen.
+        r = self._cache_startradius('zahn_r', radius, self._geo_fp)
+        if not r:
+            self._melden("Zahn-Rundung übersprungen — für diese Geometrie "
+                         "schon als unmöglich bekannt.")
+            return
         prev_tip = body.Tip
         fil = body.newObject('PartDesign::Fillet', 'ZahnVerrundung')
         fil.Base = (tip, names)
-        r = self._cache_startradius('zahn_r', radius)
         while r >= 0.1:
             try:
                 fil.Radius = r
                 doc.recompute()
                 if body.Shape.isValid() and 'Invalid' not in ' '.join(fil.State):
                     if r < radius:
-                        print(f"Zahn-Rundung: Radius {radius} zu groß für diese "
-                              f"Geometrie — mit {r:.2f} angewendet.")
+                        self._melden(f"Zahn-Rundung: Radius {radius} mm zu groß "
+                                     f"für diese Geometrie — mit {r:.2f} mm "
+                                     f"gebaut.")
                     self._cache_merken('zahn_r', {
                         'fp': self._geo_fp, 'wunsch': radius, 'ok': r})
                     return
@@ -571,7 +671,12 @@ class ZahnradVollGenerator:
             # OCC-Fillets sind nicht monoton (0,4 baut, wo 0,5 fehlschlägt) —
             # grobe Schritte würden machbare Radien überspringen.
             r = round(r / 2.0, 2) if r > 1.2 else round(r - 0.1, 2)
-        print(f"Zahn-Rundung übersprungen (kein gültiger Radius ≤ {radius}).")
+        self._melden(f"Zahn-Rundung übersprungen — kein gültiger Radius "
+                     f"≤ {radius} mm.")
+        # Auch den Fehlschlag merken: sonst läuft die komplette, sehr teure
+        # Kaskade bei jedem Neubau derselben Geometrie erneut ins Leere.
+        self._cache_merken('zahn_r', {
+            'fp': self._geo_fp, 'wunsch': radius, 'ok': 0})
         doc.removeObject(fil.Name)
         body.Tip = prev_tip
         doc.recompute()
@@ -599,48 +704,67 @@ class ZahnradVollGenerator:
         r_lo = min(r_flach, r_tief) - 0.5
         r_hi = max(r_flach, r_tief) + 0.5
         names = []
+        # Reihenfolge der Prüfungen nach Kosten sortiert: Lage (mp) ist billig,
+        # die Tangente (tangentAt + zwei Vektor-Operationen) ist der teure
+        # Teil. Erst Radius- und Höhenband prüfen — das wirft den Grossteil
+        # der ~1100 Kanten weg, bevor irgendeine Tangente gerechnet wird.
+        # Die Bedingung selbst bleibt Wort für Wort dieselbe.
+        z_lo = w2 + 0.3
+        z_hi = breite / 2.0 + 0.3
         for idx, e in enumerate(shape.Edges):
             if e.Curve.__class__.__name__ != 'Line':
                 continue
             m = (e.FirstParameter + e.LastParameter) / 2.0
-            mp = e.valueAt(m); d = e.tangentAt(m)
+            mp = e.valueAt(m)
             r = math.hypot(mp.x, mp.y); z = mp.z
-            rv = App.Vector(mp.x, mp.y, 0)
-            if rv.Length < 1e-6:
+            if not (r_lo < r < r_hi) or not (z_lo < abs(z) < z_hi):
                 continue
+            if r < 1e-6:
+                continue
+            d = e.tangentAt(m)
+            if abs(d.z) <= 0.5:
+                continue
+            rv = App.Vector(mp.x, mp.y, 0)
             rv.normalize()
             tang = abs(App.Vector(-rv.y, rv.x, 0).dot(App.Vector(d.x, d.y, 0)))
             # schräge Flankenkante: axial dominant, kaum tangential, mittige Höhe
-            if (abs(d.z) > 0.5 and tang < 0.3
-                    and r_lo < r < r_hi
-                    and w2 + 0.3 < abs(z) < breite / 2.0 + 0.3):
+            if tang < 0.3:
                 names.append(f'Edge{idx + 1}')
         if not names:
-            print("Mulden-Verrundung: keine Flankenkanten gefunden — übersprungen.")
+            self._melden("Mulden-Verrundung: keine Flankenkanten gefunden — "
+                         "übersprungen.")
             return
         # Radius-Kaskade: ist der Wunschradius für die Geometrie zu groß
         # (OCC-Fillet ungültig), schrittweise verkleinern statt aufgeben.
         # Startet beim zuletzt erfolgreichen Radius (Cache) — fehlschlagende
         # OCC-Fillets sind sehr langsam, das spart bei Wiederhol-Builds viel Zeit.
+        r = self._cache_startradius('mulde_r', radius, self._geo_fp_mulde)
+        if not r:
+            self._melden("Mulden-Verrundung übersprungen — für diese Geometrie "
+                         "schon als unmöglich bekannt.")
+            return
         prev_tip = body.Tip
         fil = body.newObject('PartDesign::Fillet', 'MuldenFillet')
         fil.Base = (tip, names)
-        r = self._cache_startradius('mulde_r', radius)
         while r >= 0.2:
             try:
                 fil.Radius = r
                 doc.recompute()
                 if body.Shape.isValid() and 'Invalid' not in ' '.join(fil.State):
                     if r < radius:
-                        print(f"Mulden-Verrundung: Radius {radius} zu groß für "
-                              f"diese Geometrie — mit {r:.2f} angewendet.")
+                        self._melden(f"Mulden-Verrundung: Radius {radius} mm zu "
+                                     f"groß für diese Geometrie — mit {r:.2f} mm "
+                                     f"gebaut.")
                     self._cache_merken('mulde_r', {
-                        'fp': self._geo_fp, 'wunsch': radius, 'ok': r})
+                        'fp': self._geo_fp_mulde, 'wunsch': radius, 'ok': r})
                     return
             except Exception:
                 pass
             r = round(r - 0.25, 2)
-        print(f"Mulden-Verrundung übersprungen (kein gültiger Radius ≤ {radius}).")
+        self._melden(f"Mulden-Verrundung übersprungen — kein gültiger Radius "
+                     f"≤ {radius} mm.")
+        self._cache_merken('mulde_r', {
+            'fp': self._geo_fp_mulde, 'wunsch': radius, 'ok': 0})
         doc.removeObject(fil.Name)
         body.Tip = prev_tip
         doc.recompute()
