@@ -106,11 +106,19 @@ export function rolleSpeichen(p) {
 // Kontur, die Enden treten um r heraus.
 function speichenPrismen(oeffnungen, dicke, kante = 0) {
   // Ohne Rundung ragt der Schneidkörper beidseitig 1 mm heraus — sicher
-  // durch beide Stirnflächen. Mit Rundung MUSS er exakt an ihnen enden:
-  // dort sitzt der Bevel, einen Millimeter weiter draußen liefe er ins
-  // Leere und die Kante bliebe scharf.
+  // durch beide Stirnflächen. Mit Rundung muss der Bevel dagegen genau an
+  // ihnen sitzen: einen Millimeter weiter draußen liefe er ins Leere und
+  // die Kante bliebe scharf.
   const kr = Math.max(0, Math.min(kante || 0, dicke / 2 - 0.05));
   const tiefe = kr > 0.01 ? dicke - 2 * kr : dicke + 2;
+  // Genau bündig darf er aber auch nicht enden: der Bevel läuft mit
+  // WAAGERECHTER Tangente in seine Deckfläche, seine Rundung läge dann
+  // tangential auf der Stirnfläche des Ritzels — der schlimmste Fall für
+  // die CSG. Gemessen: 2,7 s ohne Rundung, über 100 s mit. Ein kleiner
+  // Überstand lässt ihn die Stirnfläche in einem gesunden Winkel schneiden
+  // und kostet nichts (1,7 s). Er stutzt die Rundung um sein eigenes Maß,
+  // bei 0,1 mm ist davon nichts zu sehen.
+  const ueberstand = kr > 0.01 ? Math.max(0.05, 0.10 * kr) : 0;
   const teile = [];
   for (const oef of oeffnungen) {
     const shape = new THREE.Shape();
@@ -129,6 +137,7 @@ function speichenPrismen(oeffnungen, dicke, kante = 0) {
       bevelSize: -kr, bevelThickness: kr, bevelOffset: kr,
     } : { depth: tiefe, bevelEnabled: false, curveSegments: 24 });
     geo.translate(0, 0, -tiefe / 2);
+    if (ueberstand > 0) geo.scale(1, 1, (dicke + 2 * ueberstand) / dicke);
     teile.push(geo);
   }
   return mergeGeometries(teile);
