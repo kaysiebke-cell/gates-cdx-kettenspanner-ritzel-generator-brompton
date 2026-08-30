@@ -300,6 +300,7 @@ class ZahnradVollGenerator:
             m_rund    = params['mulde_r']          # Verrundungsradius der Mulde [mm]
             zahn_r    = params.get('zahn_r', 0.0)  # Verrundung der Zahnkontur beidseitig
             speichen_n = int(params.get('speichen_n', 0))   # Anzahl Speichen (0 = keine)
+            speichen_kante = params.get('speichen_kante', 0.0)  # Rundung der Öffnungskanten
             rundungen = params.get('rundungen', True)  # False = Entwurfsmodus (schnell)
 
             # Geometrie-Fingerabdruck für den Radius-Cache: nur Werte, die die
@@ -326,7 +327,7 @@ class ZahnradVollGenerator:
                 'bohrung_d', 'nabe_d', 'nabe_l', 'lager_d', 'lager_t',
                 'fuehrung_w', 'fuehrung_d',
                 'speichen_n', 'speichen_b', 'speichen_schwung',
-                'speichen_wand', 'speichen_r'))
+                'speichen_wand', 'speichen_r', 'speichen_kante'))
 
             # 3. Zahnkörper aufpolstern (symmetrisch zur XY-Ebene)
             #    Hinweis: KEIN recompute je Feature — sonst verschachteln sich
@@ -385,6 +386,15 @@ class ZahnradVollGenerator:
             #    Lagerflansch). Nur sinnvoll, wenn größer als die Bohrung.
             if (nabe_d > 0 and nabe_l > 0 and lager_d > bohrung_d and lager_t > 0):
                 self._add_lagersitz(doc, body, lager_d / 2.0, lager_t, nabe_l / 2.0)
+
+            # 8b. Kanten der Speichen-Durchbrüche an beiden Stirnflächen
+            #     verrunden. Eigenes Feature mit eigener Zahl, weil die
+            #     Zahn-Rundung genau diese Kanten auslässt: in EINEM Fillet
+            #     ließe ein einziger unmöglicher Radius die Rundung fürs
+            #     GANZE Teil scheitern.
+            if rundungen and speichen_kante > 0 and self._speichen_ring:
+                self._melden("Speichen-Kanten werden verrundet …", False)
+                self._add_speichen_verrundung(doc, body, breite, speichen_kante)
 
             # 9. Zahnkontur + Muldenöffnungen an beiden Stirnseiten verrunden —
             #    als LETZTES Feature auf dem fertigen Körper, die zentrale
@@ -588,6 +598,70 @@ class ZahnradVollGenerator:
         pocket.SideType = 'Symmetric'      # in beide Richtungen durch
         sk.Visibility = False
         self._speichen_ring = (r_innen, r_aussen)
+
+    def _add_speichen_verrundung(self, doc, body, breite, radius):
+        """Verrundet die Mündungskanten der Speichen-Durchbrüche an beiden
+        Stirnflächen (z = ±breite/2). Bewusst ein eigenes Feature neben der
+        Zahn-Rundung: die lässt genau diese Kanten aus (_ist_speichen_kante),
+        weil in einem gemeinsamen Fillet ein einziger unmöglicher Radius die
+        Rundung fürs ganze Teil kippen würde.
+        Robuster Fallback wie dort: Radius-Kaskade, und schlägt auch der
+        kleinste fehl, wird das Feature wieder entfernt."""
+        if not getattr(self, '_speichen_ring', None) or radius <= 0:
+            return
+        doc.recompute()                        # Kanten müssen berechnet sein
+        tip = body.Tip
+        zmax = breite / 2.0
+
+        # Shape.Edges ist ein Property: jeder Zugriff baut die ganze Liste
+        # neu auf. Einmal holen (siehe _add_zahn_verrundung).
+        alle_kanten = tip.Shape.Edges
+        namen = []
+        for i, kante in enumerate(alle_kanten):
+            if not kante.Vertexes:
+                continue
+            # Nur die Mündungen an den Stirnflächen — die Wände im Inneren
+            # des Durchbruchs bleiben scharf, dort gibt es nichts zu runden.
+            if not all(abs(abs(v.Point.z) - zmax) < 0.2 for v in kante.Vertexes):
+                continue
+            if self._ist_speichen_kante(kante):
+                namen.append('Edge%d' % (i + 1))
+        if not namen:
+            self._melden("Speichen-Kanten: keine passenden Kanten gefunden.")
+            return
+
+        r = self._cache_startradius('speichen_kante', radius, self._geo_fp)
+        if not r:
+            self._melden("Speichen-Kanten übersprungen — für diese Geometrie "
+                         "schon als unmöglich bekannt.")
+            return
+        prev_tip = body.Tip
+        fil = body.newObject('PartDesign::Fillet', 'SpeichenVerrundung')
+        fil.Base = (tip, namen)
+        while r >= 0.1:
+            try:
+                fil.Radius = r
+                doc.recompute()
+                if body.Shape.isValid() and 'Invalid' not in ' '.join(fil.State):
+                    if r < radius:
+                        self._melden(f"Speichen-Kanten: Radius {radius} mm zu "
+                                     f"groß für diese Geometrie — mit {r:.2f} mm "
+                                     f"gebaut.")
+                    self._cache_merken('speichen_kante', {
+                        'fp': self._geo_fp, 'wunsch': radius, 'ok': r})
+                    return
+            except Exception:
+                pass
+            # Wie bei der Zahn-Rundung: große Radien halbieren, kleine in
+            # 0,1er-Schritten absteigen — OCC-Fillets sind nicht monoton.
+            r = round(r / 2.0, 2) if r > 1.2 else round(r - 0.1, 2)
+        self._melden(f"Speichen-Kanten übersprungen — kein gültiger Radius "
+                     f"≤ {radius} mm.")
+        self._cache_merken('speichen_kante', {
+            'fp': self._geo_fp, 'wunsch': radius, 'ok': 0})
+        doc.removeObject(fil.Name)
+        body.Tip = prev_tip
+        doc.recompute()
 
     def _add_zahn_verrundung(self, doc, body, breite, radius):
         """Verrundet die Kanten der beiden Stirnflächen (Zahnkontur UND

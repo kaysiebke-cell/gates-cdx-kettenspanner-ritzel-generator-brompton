@@ -58,7 +58,8 @@
             { "key": "speichen_b",       "i18n": "spokes_w",     "de": "Speichen Breite",  "standard": 4.50, "schritt": 0.1, "kommentar": "Armbreite quer zur Speiche" },
             { "key": "speichen_schwung", "i18n": "spokes_sweep", "de": "Schwung (°)",      "standard": 0.00, "schritt": 1,   "kommentar": "0 = gerade, sonst gebogen" },
             { "key": "speichen_wand",    "i18n": "spokes_wall",  "de": "Wandstärke",       "standard": 2.00, "schritt": 0.1, "kommentar": "Wand am Kranz UND an der Nabe" },
-            { "key": "speichen_r",       "i18n": "spokes_round", "de": "Speichen-Rundung", "standard": 2.00, "schritt": 0.1, "kommentar": "Eckenradius der Öffnungen" }
+            { "key": "speichen_r",       "i18n": "spokes_round", "de": "Speichen-Rundung", "standard": 2.00, "schritt": 0.1, "kommentar": "Eckenradius der Öffnungen (in der Ebene)" },
+            { "key": "speichen_kante",   "i18n": "spokes_edge",  "de": "Kantenradius",     "standard": 0.00, "schritt": 0.1, "kommentar": "Rundung der Öffnungskanten an den Stirnflächen (0 = scharf)" }
           ]
         },
         {
@@ -109,7 +110,8 @@
           "felder": [
             { "key": "speichen_n", "i18n": "spokes_n",     "de": "Speichen",         "standard": 5,    "schritt": 1,   "kommentar": "Anzahl Arme (0 = voller Steg)" },
             { "key": "speichen_b", "i18n": "spokes_w",     "de": "Speichen Breite",  "standard": 4.00, "schritt": 0.1, "kommentar": "Armbreite quer zur Speiche" },
-            { "key": "speichen_r", "i18n": "spokes_round", "de": "Speichen-Rundung", "standard": 1.50, "schritt": 0.1, "kommentar": "Eckenradius der Öffnungen" }
+            { "key": "speichen_r", "i18n": "spokes_round", "de": "Speichen-Rundung", "standard": 1.50, "schritt": 0.1, "kommentar": "Eckenradius der Öffnungen (in der Ebene)" },
+            { "key": "speichen_kante", "i18n": "spokes_edge", "de": "Kantenradius",     "standard": 0.00, "schritt": 0.1, "kommentar": "Rundung der Öffnungskanten an den Stirnflächen (0 = scharf)" }
           ]
         },
         {
