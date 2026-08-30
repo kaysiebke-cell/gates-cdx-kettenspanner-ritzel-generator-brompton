@@ -2,6 +2,7 @@
 # FreeCAD Dock-Panel für den Zahnrad-Konfigurator
 
 import os
+import re
 import json
 
 from PySide6 import QtCore, QtWidgets
@@ -359,14 +360,29 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         self.lbl_status.setText("Hintergrund-Bau gestartet — Fenster bleibt bedienbar.")
         self._proc.start(exe, [skript])
 
+    # OpenCascade faerbt seine Meldungen mit ANSI-Codes ein und schreibt
+    # waehrend des Exports viel, was niemanden interessiert. Ungefiltert
+    # stand in der Statuszeile am Ende meist "(99 %)" oder eine eingefaerbte
+    # STEP-Schreiber-Zeile statt der eigentlichen Fertigmeldung.
+    _ANSI = re.compile(r'\x1b\[[0-9;]*m')
+    _PROZENT = re.compile(r'^\(\s*\d+\s*%\)$')
+    _RAUSCHEN = ('WorkSession', 'Transferring Shape', 'Step File Name')
+
     def _hg_ausgabe(self):
-        """Letzte Ausgabezeile des Bauprozesses in die Statuszeile spiegeln."""
+        """Letzte AUSSAGEKRAEFTIGE Ausgabezeile in die Statuszeile spiegeln.
+        Ist der ganze Schwung nur Rauschen, bleibt der bisherige Text
+        stehen — besser als ihn durch einen Fortschrittsbalken zu ersetzen."""
         if self._proc is None:
             return
         roh = bytes(self._proc.readAllStandardOutput()).decode('utf-8', 'replace')
-        zeilen = [z.strip() for z in roh.splitlines() if z.strip()]
-        if zeilen:
-            self.lbl_status.setText(zeilen[-1])
+        for zeile in reversed(roh.splitlines()):
+            z = self._ANSI.sub('', zeile).strip().lstrip('*').strip()
+            if not z or self._PROZENT.match(z):
+                continue
+            if any(r in z for r in self._RAUSCHEN):
+                continue
+            self.lbl_status.setText(z)
+            return
 
     def _hg_fertig(self, code, _status):
         """Prozess ist durch: Ergebnis laden oder Fehler melden."""
@@ -391,7 +407,21 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
             import FreeCAD as App
             import Part
             doc = App.ActiveDocument or App.newDocument("ZahnradDokument")
+            # Voriges Hintergrund-Ergebnis entfernen. Ohne das legt
+            # Part.insert bei jedem Bau ein weiteres Objekt daneben
+            # (ritzel_z18, ritzel_z001, ritzel_z002 ...) — der Bügel-Weg
+            # räumt längst auf, dieser tat es nicht. Gemerkt wird über die
+            # Objektnamen: nur die sind im Dokument eindeutig.
+            for alt_name in getattr(self, '_hg_geladen', ()):
+                if doc.getObject(alt_name) is not None:
+                    try:
+                        doc.removeObject(alt_name)
+                    except Exception:
+                        pass        # haengt noch woanders dran -> stehen lassen
+            vorher = {o.Name for o in doc.Objects}
             Part.insert(pfad, doc.Name)
+            self._hg_geladen = [o.Name for o in doc.Objects
+                                if o.Name not in vorher]
             doc.recompute()
             self.lbl_status.setText("Fertig: %s geladen." % treffer[0])
         except Exception as e:
