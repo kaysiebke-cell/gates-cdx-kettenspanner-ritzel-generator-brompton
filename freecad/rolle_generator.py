@@ -107,6 +107,56 @@ def _speichen_schnitt(params):
     return schnitt
 
 
+def _speichen_kanten_runden(koerper, params):
+    """Verrundet die Muendungskanten der Speichen-Durchbrueche an beiden
+    Stirnflaechen (z = +-rolle_b/2). Radius aus 'speichen_kante', 0 = scharf.
+
+    Wie beim Ritzel eine Kaskade: geht der Wunschradius nicht, wird er
+    schrittweise kleiner. Geht gar keiner, bleiben die Kanten scharf — eine
+    scharfe Kante ist besser als gar keine Rolle."""
+    radius = float(params.get('speichen_kante', 0.0) or 0.0)
+    if radius <= 0 or int(round(params.get('speichen_n', 0))) < 3:
+        return koerper
+
+    r_innen, r_aussen = rolle_geometrie.ring_radien(params)
+    zmax = params['rolle_b'] / 2.0
+
+    def muendungskante(kante):
+        """Liegt die Kante ganz in einer Stirnflaeche und im Speichenring?
+        Die Waende im Inneren des Durchbruchs bleiben damit aussen vor."""
+        if not kante.Vertexes:
+            return False
+        for v in kante.Vertexes:
+            if abs(abs(v.Point.z) - zmax) > 0.05:
+                return False
+            r = math.hypot(v.Point.x, v.Point.y)
+            if not (r_innen - 0.3 <= r <= r_aussen + 0.3):
+                return False
+        return True
+
+    kanten = [k for k in koerper.Edges if muendungskante(k)]
+    if not kanten:
+        print("Rolle: keine Oeffnungskanten gefunden — Kanten bleiben scharf.")
+        return koerper
+
+    r = min(radius, zmax - 0.05)
+    while r >= 0.1:
+        try:
+            gerundet = koerper.makeFillet(r, kanten)
+            if gerundet.isValid() and gerundet.Volume > 0:
+                if r < radius:
+                    print("Rolle: Kantenradius %.2f mm statt %.2f mm — mehr "
+                          "gab die Geometrie nicht her." % (r, radius))
+                return gerundet
+        except Exception:
+            pass
+        # Grosse Radien halbieren, kleine in 0,1er-Schritten: OCC-Fillets
+        # sind nicht monoton, grobe Schritte uebergingen machbare Radien.
+        r = round(r / 2.0, 2) if r > 1.2 else round(r - 0.1, 2)
+    print("Rolle: Oeffnungskanten nicht verrundbar — bleiben scharf.")
+    return koerper
+
+
 def baue_rolle(params):
     """Liefert die fertige Spannrolle als Part.Shape (Solid).
 
@@ -120,7 +170,10 @@ def baue_rolle(params):
     koerper = _drehteil(params)
     schnitt = _speichen_schnitt(params)
     if schnitt is not None:
-        koerper = koerper.cut(schnitt)
+        # removeSplitter vor dem Runden: der Schnitt hinterlaesst geteilte
+        # Flaechen, deren Naehte der Fillet sonst als eigene Kanten sieht.
+        koerper = koerper.cut(schnitt).removeSplitter()
+        koerper = _speichen_kanten_runden(koerper, params)
 
     koerper = koerper.removeSplitter()
     if not koerper.isValid() or koerper.Volume <= 0:

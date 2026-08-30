@@ -82,7 +82,7 @@ export function speichenGeometrie(p, rKopf) {
   const { oeffnungen } = kontur(p.speichen_n, p.speichen_b, ri, ra,
                                 p.speichen_r, p.speichen_schwung);
   if (!oeffnungen.length) return null;
-  return speichenPrismen(oeffnungen, p.breite + 2);
+  return speichenPrismen(oeffnungen, p.breite, p.speichen_kante);
 }
 
 // Dieselben Durchbrüche für die Spannrolle: andere Radien, sonst nichts.
@@ -92,11 +92,25 @@ export function rolleSpeichen(p) {
   const { ri, ra } = rolleRing(p);
   const { oeffnungen } = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r, 0);
   if (!oeffnungen.length) return null;
-  return speichenPrismen(oeffnungen, p.rolle_b + 2);
+  return speichenPrismen(oeffnungen, p.rolle_b, p.speichen_kante);
 }
 
-// Ein Schneidkörper je Öffnung, über die volle Breite (tiefe).
-function speichenPrismen(oeffnungen, tiefe) {
+// Ein Schneidkörper je Öffnung, über die volle Breite `dicke`.
+//
+// `kante` rundet die Mündungskanten an beiden Stirnflächen — dasselbe, was
+// im Generator die SpeichenVerrundung macht. Der Bevel läuft hier ANDERS
+// HERUM als am Zahnkörper: dort verkleinert er die Enden (bevelSize r,
+// bevelOffset -r) und rundet damit den Körper ab; ein Schneidkörper muss
+// an den Enden dagegen WEITER werden, damit er dort mehr Material mitnimmt.
+// Das ist bevelSize -r bei bevelOffset +r — die Mitte bleibt auf der
+// Kontur, die Enden treten um r heraus.
+function speichenPrismen(oeffnungen, dicke, kante = 0) {
+  // Ohne Rundung ragt der Schneidkörper beidseitig 1 mm heraus — sicher
+  // durch beide Stirnflächen. Mit Rundung MUSS er exakt an ihnen enden:
+  // dort sitzt der Bevel, einen Millimeter weiter draußen liefe er ins
+  // Leere und die Kante bliebe scharf.
+  const kr = Math.max(0, Math.min(kante || 0, dicke / 2 - 0.05));
+  const tiefe = kr > 0.01 ? dicke - 2 * kr : dicke + 2;
   const teile = [];
   for (const oef of oeffnungen) {
     const shape = new THREE.Shape();
@@ -109,8 +123,11 @@ function speichenPrismen(oeffnungen, tiefe) {
                    seg.ccw ? seg.a0 : seg.a1,
                    seg.ccw ? seg.a1 : seg.a0, !seg.ccw);
     }
-    const geo = new THREE.ExtrudeGeometry(shape, {
-      depth: tiefe, bevelEnabled: false, curveSegments: 24 });
+    const geo = new THREE.ExtrudeGeometry(shape, kr > 0.01 ? {
+      depth: tiefe, curveSegments: 24,
+      bevelEnabled: true, bevelSegments: 4,
+      bevelSize: -kr, bevelThickness: kr, bevelOffset: kr,
+    } : { depth: tiefe, bevelEnabled: false, curveSegments: 24 });
     geo.translate(0, 0, -tiefe / 2);
     teile.push(geo);
   }
