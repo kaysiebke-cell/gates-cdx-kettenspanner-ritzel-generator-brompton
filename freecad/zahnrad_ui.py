@@ -4,6 +4,7 @@
 import os
 import re
 import json
+import time
 
 from PySide6 import QtCore, QtWidgets
 import FreeCADGui as Gui
@@ -358,6 +359,9 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         knopf.setText("Abbrechen")
         self._hg_sperre(True)
         self.lbl_status.setText("Hintergrund-Bau gestartet — Fenster bleibt bedienbar.")
+        # Startzeit merken: nur eine Datei, die NACH diesem Punkt geschrieben
+        # wurde, stammt aus diesem Bau (siehe _hg_fertig).
+        self._hg_start = time.time()
         self._proc.start(exe, [skript])
 
     # OpenCascade faerbt seine Meldungen mit ANSI-Codes ein und schreibt
@@ -397,12 +401,29 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
             return
         name = ("spannrolle" if self._hg_bauteil == 'rolle'
                 else "ritzel_z%d" % self._hg_zaehne)
-        treffer = [f for f in sorted(os.listdir(self._hg_out))
-                   if f.startswith(name) and f.endswith('.step')]
-        if not treffer:
-            self.lbl_status.setText("Fertig, aber keine STEP-Datei gefunden.")
+        # Die GERADE gebaute Datei nehmen, nicht die alphabetisch erste.
+        # Der Rollen-Dateiname traegt ihre Masse (spannrolle_d40_b14.step);
+        # nach einer Aenderung auf Ø50 liegen beide im Ordner und sorted()[0]
+        # lieferte die ALTE Rolle zurueck — es sah aus, als wuerde eine neue
+        # Rolle erzeugt statt der bestehenden geaendert. Ein Zeitfenster von
+        # zwei Sekunden vor dem Start faengt grobe Uhr-/Dateisystem-Ungenauig-
+        # keiten ab.
+        grenze = getattr(self, '_hg_start', 0) - 2
+        frisch = []
+        for f in os.listdir(self._hg_out):
+            if not (f.startswith(name) and f.endswith('.step')):
+                continue
+            voll = os.path.join(self._hg_out, f)
+            try:
+                if os.path.getmtime(voll) >= grenze:
+                    frisch.append((os.path.getmtime(voll), voll))
+            except OSError:
+                pass
+        if not frisch:
+            self.lbl_status.setText(
+                "Fertig, aber keine frisch gebaute STEP-Datei gefunden.")
             return
-        pfad = os.path.join(self._hg_out, treffer[0])
+        pfad = max(frisch)[1]
         try:
             import FreeCAD as App
             import Part
@@ -423,7 +444,8 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
             self._hg_geladen = [o.Name for o in doc.Objects
                                 if o.Name not in vorher]
             doc.recompute()
-            self.lbl_status.setText("Fertig: %s geladen." % treffer[0])
+            self.lbl_status.setText(
+                "Fertig: %s geladen." % os.path.basename(pfad))
         except Exception as e:
             self.lbl_status.setText("Gebaut, aber Laden schlug fehl: %s" % e)
 
