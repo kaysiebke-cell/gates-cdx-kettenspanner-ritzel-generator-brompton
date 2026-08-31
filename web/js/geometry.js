@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { mergeGeometries, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
 import { ringRadien, kontur } from './speichen.js';
 import { radien, konturPunkte } from './zahnprofil.js';
@@ -206,12 +206,20 @@ function csgOp(geoA, geoB, op) {
 //
 // toCreasedNormals glaettet nur ueber Kanten unterhalb des Knickwinkels:
 // Bohrung und Rundungen bleiben glatt, echte Kanten bleiben scharf.
-const KNICKWINKEL = Math.PI / 3;        // 60 Grad — glaettet auch die
-                                        // Uebergaenge der Rundung, nur echte
-                                        // Kanten (90 Grad) bleiben scharf
+// 20 Grad. Geglaettet werden nur Flaechen, die ohnehin fast in einer Ebene
+// liegen: die Segmente der Bohrung stehen 5,6 Grad zueinander, die einer
+// Rundung 3,75 Grad — die werden glatt. Alles darueber bleibt getrennt.
+//
+// Mit 60 Grad wurden Normalen ueber echte Kanten hinweg verrechnet. Dabei
+// kippen einzelne Dreiecke an den Kanten ins Dunkle, und das sieht wie
+// dreieckige Kerben im Koerper aus.
+const KNICKWINKEL = Math.PI / 9;        // 20 Grad
 
 function normalenRichten(geometrie) {
-  return toCreasedNormals(geometrie, KNICKWINKEL);
+  // Erst zusammenschweissen: die CSG liefert lose Dreiecke, benachbarte
+  // Flaechen teilen sich keinen Eckpunkt. Ohne das findet die Glaettung
+  // keine Nachbarn und laesst alles facettiert.
+  return toCreasedNormals(mergeVertices(geometrie, 1e-4), KNICKWINKEL);
 }
 
 export function buildMeshes(p, mat) {
