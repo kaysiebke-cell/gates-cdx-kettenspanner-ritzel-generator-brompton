@@ -32,8 +32,10 @@ const l1 = new THREE.DirectionalLight(0xfff4e0, 2.4);   // warmes Hauptlicht
 l1.position.set(60, -40, 90);
 l1.castShadow = true;
 l1.shadow.mapSize.set(istMobil ? 1024 : 2048, istMobil ? 1024 : 2048);
-l1.shadow.camera.left = -70; l1.shadow.camera.right = 70;
-l1.shadow.camera.top = 70;   l1.shadow.camera.bottom = -70;
+// Eng um das Teil gelegt: 140 mm auf 2048 Texel waren rund 0,07 mm je Texel,
+// 80 mm sind 0,04 mm -- der Bodenschatten wird dadurch sauberer.
+l1.shadow.camera.left = -40; l1.shadow.camera.right = 40;
+l1.shadow.camera.top = 40;   l1.shadow.camera.bottom = -40;
 l1.shadow.camera.near = 10;  l1.shadow.camera.far = 300;
 l1.shadow.bias = -0.0002;
 // normalBias verschiebt den Schatten-Abtastpunkt entlang der Normale. Ohne ihn

@@ -287,7 +287,12 @@ export function buildMeshes(p, mat) {
   // Ein einziger wasserdichter Körper — sauber für STL/Slicer
   const koerper = new THREE.Mesh(normalenRichten(gear), mat);
   koerper.castShadow = true;
-  koerper.receiveShadow = true;   // Selbstschattierung in den Mulden
+  // KEIN receiveShadow: das Teil schattiert sich sonst selbst, und bei einer
+  // Schattenkarte mit rund 0,07 mm je Texel entstehen daraus Streifen quer
+  // ueber Zahnflanken und Oeffnungswaende (Shadow Acne). Die frueher damit
+  // gewonnene Tiefe in den Mulden ist den Preis nicht wert. Der Schatten auf
+  // dem Boden bleibt -- der kommt von castShadow.
+  koerper.receiveShadow = false;
   g.add(koerper);
   return { g, rKopf };
 }
@@ -333,7 +338,7 @@ export function rolleMeshes(p, mat) {
 
   const mesh = new THREE.Mesh(normalenRichten(koerper), mat);
   mesh.castShadow = true;
-  mesh.receiveShadow = true;
+  mesh.receiveShadow = false;   // wie beim Ritzel: keine Selbstverschattung
   g.add(mesh);
   return { g, rKopf: r.rAussen };
 }
