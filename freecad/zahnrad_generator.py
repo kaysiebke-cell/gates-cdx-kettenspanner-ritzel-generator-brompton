@@ -171,8 +171,9 @@ class ZahnradVollGenerator:
     # ==================================================================
 
     # Feste Namen der vom Körper-Aufbau erzeugten Objekte (idempotentes Neu-Erzeugen).
-    # Die Schmutzabweiser-Taschen (Präfix 'Schmutz') werden zusätzlich per
-    # Namenspräfix entfernt, da ihre Anzahl von der Zähnezahl abhängt.
+    # Die Schmutzabweiser (Präfix 'Schmutz') werden zusätzlich per Namens-
+    # präfix entfernt: normalerweise sind es drei Objekte (Sketch, Pocket,
+    # Muster), auf dem Rückfallweg aber 2·z Einzeltaschen.
     _SOLID_OBJECTS = [
         'ZahnVerrundung',
         'MuldenFillet',
@@ -442,10 +443,16 @@ class ZahnradVollGenerator:
 
     def _remove_solid_objects(self, doc):
         """Löscht zuvor erzeugte Körper-Features in Abhängigkeitsreihenfolge."""
-        # Präfix-Objekte (Schmutztaschen) zuerst: Pockets vor ihren Sketches.
+        # Präfix-Objekte (Schmutztaschen) zuerst, in Abhängigkeitsreihenfolge:
+        # Muster vor dem Pocket, das es wiederholt, Pockets vor ihren Sketches.
+        def _rang(o):
+            if 'Sketch' in o.Name:
+                return 2
+            return 0 if 'Muster' in o.Name else 1
+
         prefixed = [o for o in doc.Objects
                     if o.Name.startswith(self._SOLID_PREFIXES)]
-        for o in sorted(prefixed, key=lambda o: 'Sketch' in o.Name):
+        for o in sorted(prefixed, key=_rang):
             try:
                 doc.removeObject(o.Name)
             except Exception:
@@ -465,19 +472,9 @@ class ZahnradVollGenerator:
     def _xy_plane(self, body):
         return self._origin_feature(body, 'XY_Plane')
 
-    def _add_schmutztaschen(self, doc, body, z, breite, steg_w, seiten_t,
-                            tasche_b, mulde_winkel, rotation):
-        """Schneidet in jede Zahnlücke eine keilförmige Schmutzabweiser-Mulde
-        in den Zahnkranz — oben und unten, sodass in der Mitte ein Steg der
-        Breite steg_w stehen bleibt.
-
-        Umgesetzt als Schleife aus z Einzel-Pockets (PartDesign::PolarPattern
-        arbeitet headless unzuverlässig). Jede Skizze liegt in einer um die
-        Z-Achse gedrehten Radialebene (lokal u = radial, v = axial). Die Mulden
-        sitzen bei den Zahnlücken (Winkel (i+0.5)·360/z), NICHT auf den Zähnen.
-        seiten_t = radiale Muldentiefe AM STEG (Drehpunkt der Flanke).
-        mulde_winkel [Grad] dreht die Flanke an der Steg-Kante: 0 = gerade
-        (gleiche Tiefe überall), >0 = zur Stirnseite hin tiefer werdend."""
+    def _schmutz_masse(self, breite, steg_w, seiten_t, mulde_winkel):
+        """Rechnet die Muldenmaße einmal aus und merkt sie am Objekt — die
+        Flanken-Verrundung sucht ihre Kanten später anhand dieser Werte."""
         r_kopf  = self.r_kopf_max
         r_out   = r_kopf + 1.0                # sicher über den Kopfkreis
         w2      = steg_w / 2.0                # halbe Stegbreite (Muldenabstand)
@@ -493,33 +490,143 @@ class ZahnradVollGenerator:
         self._mulde_r_tief  = r_tief
         self._mulde_w2 = w2
         self._mulde_breite = breite
+        self._mulde_r_out = r_out
+        self._mulde_b2 = b2
 
+    def _schmutz_sketch(self, body, name, theta):
+        """Eine Muldenskizze in der um theta [Grad] gedrehten Radialebene
+        (lokal u = radial, v = axial): Keil-Trapez oben und unten."""
+        r_out, b2 = self._mulde_r_out, self._mulde_b2
+        r_flach, r_tief, w2 = self._mulde_r_flach, self._mulde_r_tief, self._mulde_w2
         # Basisdrehung: lokale Skizzen-Achsen (u,v) -> global (X, Z)
         base_rot = App.Rotation(App.Vector(1, 0, 0), 90)
 
+        sk = body.newObject('Sketcher::SketchObject', name)
+        sk.MapMode = 'Deactivated'
+        sk.Placement = App.Placement(
+            App.Vector(0, 0, 0),
+            App.Rotation(App.Vector(0, 0, 1), theta).multiply(base_rot))
+
+        for vz in (1, -1):                # Keil-Trapez oben (+1) und unten (-1)
+            p1 = App.Vector(r_out,   vz * w2, 0)   # außen, nahe Steg
+            p2 = App.Vector(r_out,   vz * b2, 0)   # außen, an der Stirnseite
+            p3 = App.Vector(r_tief,  vz * b2, 0)   # tief, an der Stirnseite
+            p4 = App.Vector(r_flach, vz * w2, 0)   # flach, nahe Steg
+            for a, b in ((p1, p2), (p2, p3), (p3, p4), (p4, p1)):
+                sk.addGeometry(Part.LineSegment(a, b), False)
+        sk.Visibility = False
+        return sk
+
+    def _schmutz_pocket(self, body, sk, name, tasche_b):
+        pocket = body.newObject('PartDesign::Pocket', name)
+        pocket.Profile  = sk
+        pocket.Length   = tasche_b
+        pocket.SideType = 'Symmetric'     # tangential nach beiden Seiten
+        return pocket
+
+    def _add_schmutztaschen(self, doc, body, z, breite, steg_w, seiten_t,
+                            tasche_b, mulde_winkel, rotation):
+        """Schneidet in jede Zahnlücke eine keilförmige Schmutzabweiser-Mulde
+        in den Zahnkranz — oben und unten, sodass in der Mitte ein Steg der
+        Breite steg_w stehen bleibt.
+
+        Bevorzugt gebaut als EINE Basistasche, die ein PartDesign::PolarPattern
+        auf alle z Zahnlücken verteilt: im Baum drei Einträge (SchmutzSketch,
+        SchmutzPocket, SchmutzMuster) statt 2·z. Transformations-Features
+        rechnen headless nicht immer zuverlässig durch — deshalb prüft
+        _schmutz_muster das Ergebnis am abgetragenen Volumen und fällt bei
+        Fehlschlag auf die erprobte Schleife aus z Einzel-Pockets zurück.
+
+        Die Mulden sitzen bei den Zahnlücken (Winkel (i+0.5)·360/z), NICHT auf
+        den Zähnen. seiten_t = radiale Muldentiefe AM STEG (Drehpunkt der
+        Flanke). mulde_winkel [Grad] dreht die Flanke an der Steg-Kante:
+        0 = gerade (gleiche Tiefe überall), >0 = zur Stirnseite hin tiefer."""
+        self._schmutz_masse(breite, steg_w, seiten_t, mulde_winkel)
+        if self._schmutz_muster(doc, body, z, tasche_b, rotation):
+            return
+        self._schmutz_schleife(body, z, tasche_b, rotation)
+
+    def _schmutz_muster(self, doc, body, z, tasche_b, rotation):
+        """Baut die Taschen als Basis-Pocket + PolarPattern. Liefert True, wenn
+        das Ergebnis geprüft gültig ist, sonst False — dann ist alles wieder
+        abgeräumt und der Aufrufer baut die Schleife.
+
+        Die beiden recomputes hier sind Absicht (sonst baut build_solid den
+        ganzen Baum in EINEM Durchlauf): ohne sie gäbe es kein Volumen zum
+        Prüfen. Sie rechnen nur Pad + eine Tasche bzw. das Muster — die Arbeit
+        fällt am Ende ohnehin an, sie wird lediglich vorgezogen."""
+        z_achse = self._origin_feature(body, 'Z_Axis')
+        if z_achse is None or z < 2:
+            return False
+
+        pad = body.Tip                    # Zahnkörper vor dem ersten Schnitt
+        sk = self._schmutz_sketch(body, 'SchmutzSketch', 180.0 / z + rotation)
+        pocket = self._schmutz_pocket(body, sk, 'SchmutzPocket', tasche_b)
+
+        aufraeumen = [pocket, sk]
+        try:
+            doc.recompute()
+            v_pad  = pad.Shape.Volume
+            v_eine = pocket.Shape.Volume
+            abtrag_1 = v_pad - v_eine
+            if abtrag_1 <= 1e-6:
+                # Basistasche schneidet nichts weg -> kein Prüfmaß vorhanden.
+                raise RuntimeError("Basistasche ohne Wirkung")
+
+            muster = body.newObject('PartDesign::PolarPattern', 'SchmutzMuster')
+            aufraeumen.insert(0, muster)
+            muster.Originals   = [pocket]
+            muster.Axis        = (z_achse, [''])
+            muster.Angle       = 360.0
+            muster.Occurrences = z
+            # Entscheidend: newObject hängt das Muster zwar in den Baum, führt
+            # die Körper-Spitze aber NICHT weiter (anders als bei Pad/Pocket).
+            # Ohne das hier endet der Body beim Basis-Pocket — das Muster
+            # rechnet korrekt, wird aber nie verwendet, und alle folgenden
+            # Features (Führungsring, Speichen, Nabe, Rundungen) bauen auf
+            # einem Zahnkranz mit nur EINER Mulde auf.
+            body.Tip = muster
+            doc.recompute()
+
+            # Prüfung am Körper selbst (nicht am Muster-Shape): sie deckt damit
+            # beides ab — ein Muster, das nicht alle Taschen erzeugt, und eine
+            # Spitze, die am Muster vorbeizeigt.
+            #
+            # Erwartet wird ein Abtrag von z · (eine Tasche). Nach oben kann er
+            # das nicht überschreiten (alle Kopien sind formgleich, Überlappung
+            # kann nur weniger abtragen), nach unten lässt 0,7 Rundungsspiel und
+            # geringe Überlappung benachbarter Taschen zu. Das Band fängt beide
+            # Ausfälle ab: zu wenig (Muster wirkungslos) und zu viel (leeres
+            # oder verschmolzenes Shape).
+            if 'Invalid' in ' '.join(muster.State) or not body.Shape.isValid():
+                raise RuntimeError("Muster ungültig")
+            abtrag = v_pad - body.Shape.Volume
+            if not (0.7 * z * abtrag_1 <= abtrag <= 1.05 * z * abtrag_1):
+                raise RuntimeError(
+                    "Muster trägt %.1f mm³ ab, erwartet ~%.1f mm³"
+                    % (abtrag, z * abtrag_1))
+            return True
+        except Exception as e:
+            self._melden(f"Schmutzabweiser: Polar-Muster nicht nutzbar ({e}) — "
+                         f"gebaut als {z} Einzeltaschen.")
+            body.Tip = pad
+            for obj in aufraeumen:
+                try:
+                    doc.removeObject(obj.Name)
+                except Exception:
+                    pass
+            doc.recompute()
+            return False
+
+    def _schmutz_schleife(self, body, z, tasche_b, rotation):
+        """Rückfallweg: z Einzel-Pockets, je Zahnlücke einer. Länger im Baum,
+        dafür ohne Transformations-Feature — funktioniert überall."""
         for i in range(z):
             # Zahnlücke i liegt bei (i+0.5)·360/z (+ Rotation) — genau zwischen
             # zwei Zähnen, damit die Mulde die Zähne nicht anschneidet.
             theta = 360.0 * (i + 0.5) / z + rotation
-            sk = body.newObject('Sketcher::SketchObject', f'Schmutz{i:02d}Sketch')
-            sk.MapMode = 'Deactivated'
-            sk.Placement = App.Placement(
-                App.Vector(0, 0, 0),
-                App.Rotation(App.Vector(0, 0, 1), theta).multiply(base_rot))
-
-            for vz in (1, -1):                # Keil-Trapez oben (+1) und unten (-1)
-                p1 = App.Vector(r_out,   vz * w2, 0)   # außen, nahe Steg
-                p2 = App.Vector(r_out,   vz * b2, 0)   # außen, an der Stirnseite
-                p3 = App.Vector(r_tief,  vz * b2, 0)   # tief, an der Stirnseite
-                p4 = App.Vector(r_flach, vz * w2, 0)   # flach, nahe Steg
-                for a, b in ((p1, p2), (p2, p3), (p3, p4), (p4, p1)):
-                    sk.addGeometry(Part.LineSegment(a, b), False)
-
-            pocket = body.newObject('PartDesign::Pocket', f'Schmutz{i:02d}Pocket')
-            pocket.Profile  = sk
-            pocket.Length   = tasche_b
-            pocket.SideType = 'Symmetric'     # tangential nach beiden Seiten
-            sk.Visibility = False
+            sk = self._schmutz_sketch(body, f'Schmutz{i:02d}Sketch', theta)
+            self._schmutz_pocket(body, sk, f'Schmutz{i:02d}Pocket', tasche_b)
 
     @staticmethod
     def _kanten_schluessel(edge):
