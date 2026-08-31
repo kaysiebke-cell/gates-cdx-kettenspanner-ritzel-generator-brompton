@@ -127,10 +127,10 @@ function aufgeweitet(p, ri, ra, dicke, schwung) {
 // Ein Schneidkörper je Öffnung, über die volle Breite `dicke`.
 //
 // Bei `kante` > 0 ist `oeffnungen` bereits die AUFGEWEITETE Kontur (siehe
-// aufgeweitet()), und der Bevel schrumpft sie über die Strecke `kante`
-// zurück auf die eigentliche Öffnung: an der Stirnfläche ist der
-// Schneidkörper also um `kante` weiter, in der Mitte auf Kontur. Genau das
-// ergibt die gefaste Öffnungskante.
+// aufgeweitet()), und der Bevel schrumpft sie als Viertelkreis über die
+// Strecke `kante` zurück auf die eigentliche Öffnung: an der Stirnfläche ist
+// der Schneidkörper um `kante` weiter, in der Mitte auf Kontur. Was er
+// dabei zusätzlich wegnimmt, ist die Rundung der Öffnungskante.
 function speichenPrismen(oeffnungen, dicke, kante = 0) {
   // Ohne Rundung ragt der Schneidkörper beidseitig 1 mm heraus — sicher
   // durch beide Stirnflächen. Mit Rundung muss der Bevel dagegen genau an
@@ -138,13 +138,14 @@ function speichenPrismen(oeffnungen, dicke, kante = 0) {
   // die Kante bliebe scharf.
   const kr = kante || 0;
   const tiefe = kr > 0.01 ? dicke - 2 * kr : dicke + 2;
-  // Genau bündig darf er aber auch nicht enden: seine Deckfläche läge dann
-  // in der Stirnfläche des Ritzels — der schlimmste Fall für die CSG.
-  // Gemessen mit dem tangential auslaufenden Viertelkreis: 2,7 s ohne
-  // Rundung, über 100 s mit. Ein kleiner Überstand lässt ihn die
-  // Stirnfläche in einem gesunden Winkel schneiden und kostet nichts.
-  // Er stutzt die Fase um sein eigenes Maß, bei 0,1 mm sieht man das nicht.
-  const ueberstand = kr > 0.01 ? Math.max(0.05, 0.10 * kr) : 0;
+  // Genau bündig darf er aber auch nicht enden. Der Viertelkreis läuft an
+  // seiner Deckfläche WAAGERECHT aus; bündig gesetzt berührt er die
+  // Stirnfläche über die ganze Kurve, statt sie zu schneiden — der
+  // schlimmste Fall für die CSG. Gemessen: 2,7 s ohne Rundung, über 100 s
+  // mit, und ausgefranste Ränder. Ein Überstand von 30 % des Radius stutzt
+  // den flachsten Teil der Kurve weg, sodass sie die Stirnfläche in rund
+  // 45° schneidet. Was bleibt, ist der sichtbare Teil der Rundung.
+  const ueberstand = kr > 0.01 ? Math.max(0.05, 0.30 * kr) : 0;
   const teile = [];
   for (const oef of oeffnungen) {
     const shape = new THREE.Shape();
@@ -159,13 +160,7 @@ function speichenPrismen(oeffnungen, dicke, kante = 0) {
     }
     const geo = new THREE.ExtrudeGeometry(shape, kr > 0.01 ? {
       depth: tiefe, curveSegments: 24,
-      // EIN Segment: eine 45°-Fase statt eines Viertelkreises. Der
-      // Viertelkreis läuft an der Deckfläche waagerecht aus und schneidet
-      // die Stirnfläche dadurch fast tangential — daran zerbrach die CSG in
-      // ausgefranste Ränder. Bei dieser Größe ist die Fase von einer
-      // Rundung ohnehin nicht zu unterscheiden; die Fußzeile sagt zudem,
-      // dass die Vorschau Verrundungen nur annähert.
-      bevelEnabled: true, bevelSegments: 1,
+      bevelEnabled: true, bevelSegments: 4,
       bevelSize: -kr, bevelThickness: kr, bevelOffset: 0,
     } : { depth: tiefe, bevelEnabled: false, curveSegments: 24 });
     geo.translate(0, 0, -tiefe / 2);
