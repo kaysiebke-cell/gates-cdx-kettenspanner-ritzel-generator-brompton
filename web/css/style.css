@@ -70,6 +70,7 @@ button, a.btn {
   cursor: pointer; text-align: center; text-decoration: none;
 }
 a.btn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+button:hover, a.btn:hover { filter: brightness(0.96); }
 #copied { color: var(--accent); font-size: 12.5px; text-align: center; min-height: 16px; }
 #overlaynote {
   position: absolute; left: 12px; bottom: 10px; font-size: 12px;
@@ -97,6 +98,7 @@ a.btn.primary { background: var(--accent); color: var(--accent-text); border-col
   background: var(--bg); color: var(--text); font-size: 12px;
   cursor: pointer; white-space: nowrap; margin-left: auto;
 }
+#lang-toggle:hover { background: var(--border); }
 
 /* ⓘ-Schalter: klappt alle Erklärtexte auf einmal auf und zu. Sitzt am
    rechten Ende der Tab-Leiste — dort ist Platz frei, und die Kopfzeile
@@ -108,6 +110,7 @@ a.btn.primary { background: var(--accent); color: var(--accent-text); border-col
   background: var(--bg); color: var(--muted); font-size: 15px; line-height: 1.2;
   cursor: pointer;
 }
+#hintsbtn:hover { background: var(--border); filter: none; }
 /* Eingeschaltet: in der Themenfarbe, damit erkennbar bleibt, woher die
    zusätzlichen Texte kommen. */
 #hintsbtn[aria-pressed="true"] {
@@ -126,6 +129,7 @@ a.btn.primary { background: var(--accent); color: var(--accent-text); border-col
   cursor: pointer; white-space: nowrap; margin-left: auto;
 }
 #installbtn + #lang-toggle { margin-left: 8px; }
+#installbtn:hover { filter: brightness(1.08); }
 #installbtn[hidden] { display: none; }
 
 /* ── Tab-Leiste ───────────────────────────────────────────────────── */
@@ -147,6 +151,7 @@ a.btn.primary { background: var(--accent); color: var(--accent-text); border-col
 .tab[aria-selected="true"] {
   color: var(--text); font-weight: 600; border-bottom-color: var(--accent);
 }
+.tab:hover { color: var(--text); filter: none; }
 
 /* ── Druck-Empfehlungen ───────────────────────────────────────────── */
 #printview {
@@ -198,37 +203,6 @@ a.btn.primary { background: var(--accent); color: var(--accent-text); border-col
 .disclaimer {
   margin-top: 24px; padding: 12px; border: 1px solid var(--border);
   border-radius: 6px; background: var(--panel); color: var(--muted); font-size: 12.5px;
-}
-
-/* ── Zeiger-abhängiges Verhalten ───────────────────────────────────── */
-/* Hover-Zustände nur, wo ein Zeiger schwebt. Auf Touch-Geräten bleibt der
-   zuletzt angetippte Knopf sonst „hängen“, weil der Finger keinen
-   Mouse-Out kennt — er sieht dann dauerhaft aus wie ausgewählt. */
-@media (hover: hover) {
-  button:hover, a.btn:hover { filter: brightness(0.96); }
-  #lang-toggle:hover { background: var(--border); }
-  /* Nicht im eingeschalteten Zustand: dort gehört der Knopf der
-     Themenfarbe, sonst überdeckte das Schweben die Rückmeldung. */
-  #hintsbtn:not([aria-pressed="true"]):hover { background: var(--border); filter: none; }
-  #installbtn:hover { filter: brightness(1.08); }
-  .tab:hover { color: var(--text); filter: none; }
-}
-
-/* Fingerbedienung auf breitem Bildschirm — Tablet im Querformat, Touch-
-   Monitor: Das zweispaltige Layout ist dort richtig, die Trefferflächen
-   sind es nicht. Ein 13-px-Feld trifft der Daumen nicht zuverlässig. Die
-   Handy-Regeln weiter unten helfen hier nicht, sie hängen an der Breite;
-   `data-zeiger` setzt umgebung.js nach der tatsächlichen Zeigerart. */
-@media (min-width: 701px) {
-  html[data-zeiger="finger"] .row { margin: 6px 0; }
-  html[data-zeiger="finger"] .row label { font-size: 14px; }
-  /* 16px verhindert zusätzlich den Auto-Zoom beim Antippen auf iOS */
-  html[data-zeiger="finger"] .row input { padding: 8px 10px; font-size: 16px; }
-  html[data-zeiger="finger"] button,
-  html[data-zeiger="finger"] a.btn { padding: 12px; font-size: 15px; }
-  html[data-zeiger="finger"] .tab { padding: 12px 16px; }
-  html[data-zeiger="finger"] #hintsbtn { padding: 5px 10px; font-size: 17px; }
-  html[data-zeiger="finger"] #lang-toggle { padding: 6px 10px; font-size: 13px; }
 }
 
 /* Mobil (schmale Bildschirme): Vorschau oben, Formular darunter scrollbar */
