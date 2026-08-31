@@ -1,0 +1,102 @@
+name: Körper bauen (Prüflauf)
+
+# Baut Ritzel, Riemenschutz-Bügel und Spannrolle headless in FreeCAD und
+# prüft, dass dabei gültige Körper entstehen.
+#
+# Warum es diesen Workflow gibt: release-serie.yml und build-ritzel.yml
+# bauen zwar dieselbe Logik, laufen aber beide nur auf `push: main` bzw. von
+# Hand — der eigentliche CAD-Bau wurde also erst NACH dem Merge geprüft. Im
+# Pull Request lief nur pruefen.yml, und das rechnet ausschließlich die
+# JS- gegen die Python-Formeln. Ein Fehler im Körper-Aufbau (falscher Body,
+# fehlende Taschen, ungültige Verrundung) fiel dort nicht auf.
+#
+# Bewusst schlank gehalten: eine Zähnezahl statt der Serie 12–19, kein
+# Release, kein Render. Es geht um "baut es überhaupt", nicht um Artefakte —
+# die erzeugt weiterhin release-serie.yml nach dem Merge.
+
+on:
+  push:
+    branches: [ "**" ]
+    paths:
+      - ".github/workflows/bau-pruefen.yml"
+      - "params.json"
+      - "freecad/**"
+  pull_request:
+    # Ausgeschrieben statt per YAML-Anker: GitHub Actions loest Anker und
+    # Aliase nicht auf.
+    paths:
+      - ".github/workflows/bau-pruefen.yml"
+      - "params.json"
+      - "freecad/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  # Bei mehreren Pushes kurz hintereinander nur den letzten bauen — der Bau
+  # dauert Minuten, ältere Läufe sind dann ohnehin überholt.
+  group: bau-pruefen-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OUTPUT_DIR: output
+      LIBGL_ALWAYS_SOFTWARE: "1"
+
+    steps:
+      - name: Repo auschecken
+        uses: actions/checkout@v4
+
+      # Gleiche Beschaffung wie in release-serie.yml: Ubuntu 24.04 hat kein
+      # freecad-Paket mehr, das offizielle AppImage wird entpackt statt
+      # gemountet (braucht kein FUSE im Runner).
+      - name: FreeCAD 1.1.1 (AppImage) installieren
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dri
+          wget -q -O FreeCAD.AppImage \
+            "https://github.com/FreeCAD/FreeCAD/releases/download/1.1.1/FreeCAD_1.1.1-Linux-x86_64-py311.AppImage"
+          chmod +x FreeCAD.AppImage
+          ./FreeCAD.AppImage --appimage-extract > /dev/null
+          echo "$PWD/squashfs-root/usr/bin" >> "$GITHUB_PATH"
+
+      # Eine mittlere Zähnezahl genügt als Prüflauf. build_headless.py bricht
+      # von sich aus mit exit 1 ab, wenn kein gültiger Körper entsteht.
+      - name: Ritzel und Bügel bauen (z=14)
+        run: |
+          mkdir -p "$OUTPUT_DIR"
+          PARAMS_JSON='{"zaehne": 14}' freecadcmd freecad/build_headless.py
+
+      - name: Spannrolle bauen (Standardmaße)
+        run: |
+          PARAMS_JSON='{"bauteil": "rolle"}' freecadcmd freecad/build_headless.py
+
+      # Ein leeres oder winziges STEP wäre auch "erfolgreich" gebaut — darum
+      # die Dateien selbst noch einmal ansehen.
+      - name: Ergebnisdateien prüfen
+        run: |
+          ls -la "$OUTPUT_DIR"
+          fehlt=0
+          for f in ritzel_z14.step ritzel_z14.stl \
+                   riemenschutz_z14.step riemenschutz_z14.stl \
+                   spannrolle_d40_b14.step spannrolle_d40_b14.stl; do
+            pfad="$OUTPUT_DIR/$f"
+            if [ ! -f "$pfad" ]; then
+              echo "::error::$f fehlt"
+              fehlt=1
+              continue
+            fi
+            groesse=$(stat -c%s "$pfad")
+            # 10 kB: die kleinste echte Datei (Bügel-STEP) liegt bei ~28 kB,
+            # ein leerer oder abgebrochener Export deutlich darunter.
+            if [ "$groesse" -lt 10240 ]; then
+              echo "::error::$f ist nur $groesse Byte gross — kein vollstaendiger Koerper"
+              fehlt=1
+            else
+              echo "ok: $f ($groesse Byte)"
+            fi
+          done
+          exit $fehlt
