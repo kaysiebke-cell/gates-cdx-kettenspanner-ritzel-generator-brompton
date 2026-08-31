@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20.10"
+  },
   "description": "Build-Werkzeuge für den Online-Ritzel-Generator (web/).",
   "scripts": {
     "build": "npm run build:shell && npm run build:viewer && npm run docs",

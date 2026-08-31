@@ -19,7 +19,25 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { DEFAULTS, ZAEHNE_MIN, ZAEHNE_MAX, defaults } from '../web/js/fields.js';
+// fields.js holt params.json per `import ... with { type: 'json' }`. Das
+// versteht erst Node 20.10 — aeltere Fassungen brechen schon beim Parsen ab,
+// mit einem SyntaxError, der nichts ueber die Ursache sagt. Darum die
+// Version zuerst pruefen und fields.js erst danach laden (dynamisch, sonst
+// zoege der statische Import die Datei vor der Pruefung herein).
+const [NODE_MAJOR, NODE_MINOR] = process.versions.node.split('.').map(Number);
+if (NODE_MAJOR < 20 || (NODE_MAJOR === 20 && NODE_MINOR < 10)) {
+  console.error(
+    `\nDieser Abgleich braucht Node 20.10 oder neuer — hier laeuft ${process.versions.node}.`
+    + '\nGrund: web/js/fields.js liest params.json ueber Import-Attribute'
+    + "\n(`import ... with { type: 'json' }`), die es davor nicht gibt."
+    + '\n\nDie Paketquellen von Ubuntu liefern nur Node 18. Neuere Fassung z.B. so:'
+    + '\n  curl -fsSL https://fnm.vercel.app/install | bash && fnm install 22'
+    + '\nDie gewuenschte Fassung steht in .nvmrc.\n');
+  process.exit(1);
+}
+const { DEFAULTS, ZAEHNE_MIN, ZAEHNE_MAX, defaults } =
+  await import('../web/js/fields.js');
+
 import { radien, konturPunkte } from '../web/js/zahnprofil.js';
 import { ringRadien, kontur, flaeche, istSinnvoll } from '../web/js/speichen.js';
 import { radien as rolleRadien, ringRadien as rolleRing, profil,
