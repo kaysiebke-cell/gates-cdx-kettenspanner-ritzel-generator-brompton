@@ -101,7 +101,22 @@
       laedtNeu = true;
       location.reload();
     });
+    // Auf localhost NICHT registrieren, sondern einen vorhandenen Worker
+    // samt Caches wegraeumen. Sonst liefert er beim lokalen Testen alte
+    // Bundles aus, und die Seite zeigt entweder Veraltetes oder gar nichts.
+    var lokal = ['localhost', '127.0.0.1', '::1'].indexOf(location.hostname) >= 0;
     window.addEventListener('load', function () {
+      if (lokal) {
+        navigator.serviceWorker.getRegistrations().then(function (rs) {
+          rs.forEach(function (r) { r.unregister(); });
+        }).catch(function () {});
+        if (window.caches && caches.keys) {
+          caches.keys().then(function (ks) {
+            ks.forEach(function (k) { caches.delete(k); });
+          }).catch(function () {});
+        }
+        return;
+      }
       navigator.serviceWorker.register('sw.js').catch(function () {});
     });
   }
