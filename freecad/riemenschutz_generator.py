@@ -15,6 +15,8 @@
 import math
 import FreeCAD as App
 import Part
+
+import bau_umgebung
 try:
     import FreeCADGui as Gui
 except Exception:
@@ -91,27 +93,164 @@ def baue_buegel(zaehne, spitzen_abstand=SPITZEN_ABSTAND, spitzen_d=SPITZEN_D):
     return body
 
 
-def build(zaehne=17):
-    """GUI-Vorschau: legt den Buegel als Part::Feature ins aktive Dokument."""
+# ── Part-Design-Weg ────────────────────────────────────────────────────────
+# Derselbe Buegel, gebaut als Body mit Feature-Verlauf statt als fertiges
+# Shape. Dieselben Masse, dieselbe Reihenfolge wie oben — aus fuse wird ein
+# additives Pad, aus cut ein Pocket. Damit sieht der Buegel im Modellbaum
+# aus wie das Ritzel, wenn im Part Design gearbeitet wird.
+
+
+def _origin_feature(body, role):
+    """Liefert ein Ursprungs-Element des Bodys (z.B. 'XY_Plane')."""
+    for feat in body.Origin.OriginFeatures:
+        if getattr(feat, 'Role', '') == role:
+            return feat
+    return None
+
+
+def _xy_sketch(body, name, z_offset):
+    """Skizze auf der XY-Ebene, um z_offset angehoben. Lokale (x, y) sind
+    damit die globalen (X, Y) — die Masse oben lassen sich unveraendert
+    uebernehmen."""
+    sk = body.newObject('Sketcher::SketchObject', name)
+    sk.AttachmentSupport = [(_origin_feature(body, 'XY_Plane'), '')]
+    sk.MapMode = 'FlatFace'
+    sk.AttachmentOffset = App.Placement(
+        App.Vector(0, 0, z_offset), App.Rotation(0, 0, 0))
+    sk.Visibility = False
+    return sk
+
+
+def _pd_platte(body, y_far):
+    """Arm-Platte: Auge-Halbkreis, zwei gerade Armkanten, ellipt. Endkappe."""
+    V2 = App.Vector
+    normal = V2(0, 0, 1)
+    sk = _xy_sketch(body, 'BuegelPlatteSketch', PLATE_Z)
+    # Auge-Halbkreis um den Ursprung, von 180 nach 360 Grad (durch -Y).
+    sk.addGeometry(Part.ArcOfCircle(
+        Part.Circle(V2(0, 0, 0), normal, EYE_R), math.pi, 2 * math.pi), False)
+    sk.addGeometry(Part.LineSegment(V2(EYE_R, 0, 0), V2(FAR_W, y_far, 0)), False)
+    # Ellipt. Endkappe (+Y): Hauptachse in X (FAR_W), Nebenachse CAP_MIN.
+    sk.addGeometry(Part.ArcOfEllipse(
+        Part.Ellipse(V2(0, y_far, 0), FAR_W, CAP_MIN), 0.0, math.pi), False)
+    sk.addGeometry(Part.LineSegment(V2(-FAR_W, y_far, 0), V2(-EYE_R, 0, 0)), False)
+
+    pad = body.newObject('PartDesign::Pad', 'BuegelPlattePad')
+    pad.Profile = sk
+    pad.Length = PLATE_T                   # 5 mm in +Z
+    return pad
+
+
+def _pd_boss(body):
+    """Auge-Boss: ragt 1 mm in die Platte, damit er sauber verschmilzt."""
+    sk = _xy_sketch(body, 'BuegelBossSketch', PLATE_Z + PLATE_T - 1.0)
+    sk.addGeometry(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1),
+                               BOSS_R), False)
+    pad = body.newObject('PartDesign::Pad', 'BuegelBossPad')
+    pad.Profile = sk
+    pad.Length = BOSS_H + 1.0
+    return pad
+
+
+def _pd_fuss(body, y_far):
+    """Fuss/Schutzwand: elliptischer Stab, steht in +Z auf und geht voll
+    durch die Platte."""
+    sk = _xy_sketch(body, 'BuegelFussSketch', FOOT_Z0)
+    # Center/Radien-Form wie im Part-Weg: die Drei-Vektoren-Form von
+    # Part.Ellipse erwartet (Hauptachsenpunkt, Nebenachsenpunkt, Mitte)
+    # und nicht die Mitte zuerst.
+    sk.addGeometry(Part.Ellipse(App.Vector(0, y_far, 0),
+                                FOOT_MAJ, FOOT_MIN), False)
+    pad = body.newObject('PartDesign::Pad', 'BuegelFussPad')
+    pad.Profile = sk
+    pad.Length = FOOT_H
+    return pad
+
+
+def _pd_bohrung(body):
+    """Zentrale Achsbohrung, durch alles."""
+    sk = _xy_sketch(body, 'BuegelBohrungSketch', 0.0)
+    sk.addGeometry(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1),
+                               BORE_R), False)
+    pocket = body.newObject('PartDesign::Pocket', 'BuegelBohrung')
+    pocket.Profile = sk
+    pocket.Type = 'ThroughAll'
+    pocket.SideType = 'Symmetric'          # in beide Richtungen durch
+    return pocket
+
+
+def _pd_sackloch(body):
+    """Schrauben-Sackloch: 3 mm tief von der Rueckseite, nicht durch.
+    Die Skizze liegt 2 mm UNTER der Plattenunterkante, geschnitten wird
+    nach +Z (Reversed) — dieselbe Lage wie der Zylinder im Part-Weg."""
+    sk = _xy_sketch(body, 'BuegelSacklochSketch', PLATE_Z - 2.0)
+    sk.addGeometry(Part.Circle(App.Vector(SCREW_X, SCREW_Y, 0),
+                               App.Vector(0, 0, 1), SCREW_R), False)
+    pocket = body.newObject('PartDesign::Pocket', 'BuegelSackloch')
+    pocket.Profile = sk
+    pocket.Length = SCREW_DEPTH + 2.0
+    pocket.Reversed = True                 # nach +Z statt nach -Z
+    return pocket
+
+
+def baue_buegel_body(doc, zaehne, spitzen_abstand=SPITZEN_ABSTAND,
+                     spitzen_d=SPITZEN_D):
+    """Baut den Buegel als Part-Design-Body und liefert ihn zurueck."""
+    y_far = r_kopf(zaehne, spitzen_abstand, spitzen_d) + LEN_OFF
+    body = doc.addObject('PartDesign::Body', 'Riemenschutz')
+    _pd_platte(body, y_far)
+    _pd_boss(body)
+    _pd_fuss(body, y_far)
+    _pd_bohrung(body)
+    _pd_sackloch(body)
+    doc.recompute()
+    if not body.Shape.isValid() or body.Shape.Volume <= 0:
+        raise ValueError("Riemenschutz: kein gueltiger Koerper entstanden")
+    return body
+
+
+def entferne_buegel(doc):
+    """Entfernt vorhandene Buegel — Part-Feature wie Body, samt Inhalt.
+    Raeumt auch alte 'Riemenschutz_z<N>' aus frueheren Versionen weg."""
+    kandidaten = [o.Name for o in doc.Objects
+                  if (o.Name or "").startswith("Riemenschutz")
+                  or (o.Label or "").startswith("Riemenschutz")]
+    entfernt = []
+    for name in kandidaten:
+        obj = doc.getObject(name)
+        if obj is None:
+            continue            # hing an einem schon entfernten Body
+        entfernt.extend(bau_umgebung.entferne_objekt(doc, obj))
+    return entfernt
+
+
+def build(zaehne=17, spitzen_abstand=SPITZEN_ABSTAND, spitzen_d=SPITZEN_D):
+    """Legt den Buegel im aktiven Dokument an — im Part-Arbeitsbereich als
+    fertiges Shape ohne Baum, im Part Design als Body mit Feature-Verlauf."""
     z = max(12, min(18, int(zaehne)))
     doc = App.ActiveDocument or App.newDocument("Riemenschutz")
-    shape = baue_buegel(z)
+    bereich = bau_umgebung.aktiver_bereich()
     # Fester Name -> vorhandenen Buegel in place ersetzen (kein Anhaeufen).
-    for o in list(doc.Objects):
-        if o.Name.startswith("Riemenschutz") or (o.Label or "").startswith("Riemenschutz"):
-            doc.removeObject(o.Name)
-    obj = doc.addObject("Part::Feature", "Riemenschutz")
+    entferne_buegel(doc)
+
+    if bereich == bau_umgebung.PARTDESIGN:
+        obj = baue_buegel_body(doc, z, spitzen_abstand, spitzen_d)
+    else:
+        obj = doc.addObject("Part::Feature", "Riemenschutz")
+        obj.Shape = baue_buegel(z, spitzen_abstand, spitzen_d)
     obj.Label = "Riemenschutz z%d" % z
-    obj.Shape = shape
     doc.recompute()
-    if Gui and Gui.ActiveDocument:
+    # getattr statt Gui.ActiveDocument: headless ist FreeCADGui zwar
+    # importierbar, hat das Attribut aber nicht — der direkte Zugriff wirft.
+    if getattr(Gui, 'ActiveDocument', None):
         try:
             Gui.ActiveDocument.ActiveView.fitAll()
         except Exception:
             pass
     App.Console.PrintMessage(
-        "Riemenschutz z=%d gebaut (Volumen %.0f mm^3, gueltig=%s)\n"
-        % (z, shape.Volume, shape.isValid()))
+        "Riemenschutz z=%d gebaut (%s, Volumen %.0f mm^3, gueltig=%s)\n"
+        % (z, bau_umgebung.bereich_name(bereich), obj.Shape.Volume,
+           obj.Shape.isValid()))
     return obj
 
 

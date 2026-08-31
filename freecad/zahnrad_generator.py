@@ -50,11 +50,19 @@ class ZahnradVollGenerator:
         """Stellt sicher, dass ein Dokument, ein Body und ein Sketch vorhanden sind."""
         doc = App.ActiveDocument or App.newDocument("ZahnradDokument")
 
-        bodies = doc.findObjects(Type='PartDesign::Body')
-        active_body = (
-            bodies[0] if bodies
-            else doc.addObject('PartDesign::Body', 'ZahnradKoerper')
-        )
+        # Gezielt den EIGENEN Body nehmen. Seit Spannrolle und Riemenschutz
+        # im Part Design ebenfalls als Body entstehen, liegen mehrere im
+        # Dokument — findObjects()[0] haette sonst je nach Reihenfolge das
+        # Ritzel in die Rolle hineingebaut.
+        active_body = doc.getObject('ZahnradKoerper')
+        if active_body is None:
+            fremd = ('spannrolle', 'riemenschutz')
+            eigene = [b for b in doc.findObjects(Type='PartDesign::Body')
+                      if not (b.Name or '').lower().startswith(fremd)]
+            active_body = (
+                eigene[0] if eigene
+                else doc.addObject('PartDesign::Body', 'ZahnradKoerper')
+            )
         self.body = active_body
         if App.GuiUp:
             Gui.ActiveDocument.ActiveView.setActiveObject('pd_body', active_body)
@@ -418,6 +426,41 @@ class ZahnradVollGenerator:
             print(f"Fehler beim Körper-Aufbau: {e}")
             traceback.print_exc()
             return None
+
+    def baue_im_arbeitsbereich(self, params):
+        """Baut das Ritzel so, wie im Dokument gearbeitet wird: im Part Design
+        als Body mit Feature-Verlauf, im Part-Arbeitsbereich als EIN Koerper
+        ohne Baum — damit im Modellbaum nicht beide Bauweisen nebeneinander
+        stehen. Welcher Bereich gilt, sagt bau_umgebung."""
+        import bau_umgebung
+        bereich = bau_umgebung.aktiver_bereich()
+        body = self.build_solid(params)
+        if body is None or bereich == bau_umgebung.PARTDESIGN:
+            return body
+        return self._als_part_koerper(body)
+
+    def _als_part_koerper(self, body):
+        """Ueberfuehrt den fertigen Body in ein einzelnes Part-Objekt 'Ritzel'
+        und raeumt den Body samt Features weg. Anders als make_fertigteil,
+        das den Body bewusst stehen laesst (nur ausgeblendet), bleibt hier
+        nichts vom Feature-Baum zurueck."""
+        import bau_umgebung
+        doc = App.ActiveDocument
+        shape = body.Shape.copy()
+        alt = doc.getObject('Ritzel')
+        if alt is not None:
+            bau_umgebung.entferne_objekt(doc, alt)
+        obj = doc.addObject('Part::Feature', 'Ritzel')
+        obj.Shape = shape
+        obj.Label = 'Ritzel'
+        bau_umgebung.entferne_objekt(doc, body)
+        # Body ist weg: Kurzschluss und gemerkter Sketch zeigen ins Leere.
+        self._letzte_params = None
+        self.body = None
+        self.sketch = None
+        doc.recompute()
+        print("Ritzel als Part-Koerper erzeugt — ein Einzelkoerper ohne Baum.")
+        return obj
 
     def make_fertigteil(self, params):
         """Baut den Körper (falls nötig) und legt eine einfache Kopie

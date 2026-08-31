@@ -657,7 +657,10 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         erfolg = False
         try:
             self._bau_beginnt("Körper wird gebaut …")
-            erfolg = self.generator.build_solid(self._collect_params()) is not None
+            # baue_im_arbeitsbereich statt build_solid: im Part-Arbeitsbereich
+            # entsteht ein Einzelkörper, im Part Design der Body mit Baum.
+            erfolg = self.generator.baue_im_arbeitsbereich(
+                self._collect_params()) is not None
             self._save_values()
         finally:
             self._bau_endet(erfolg)
@@ -732,23 +735,14 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         self._busy = True
         try:
             import FreeCAD as App
-            from riemenschutz_generator import baue_buegel
+            from riemenschutz_generator import build as baue_buegel_objekt
             p = self._collect_params()
             # Bügel-Serie: dieselben Grenzen wie das Ritzel (params.json)
             z = max(ZAEHNE_MIN, min(ZAEHNE_MAX, int(p['zaehne'])))
-            shape = baue_buegel(z, p['spitzen_abstand'], p['spitzen_d'])
-
-            doc = App.ActiveDocument or App.newDocument("ZahnradDokument")
-            # Vorhandene(n) Bügel entfernen (fester Name -> in place aktualisieren;
-            # raeumt auch alte 'Riemenschutz_z<N>' aus frueheren Versionen weg).
-            for o in list(doc.Objects):
-                if o.Name.startswith("Riemenschutz") or \
-                   (o.Label or "").startswith("Riemenschutz"):
-                    doc.removeObject(o.Name)
-            obj = doc.addObject("Part::Feature", "Riemenschutz")
-            obj.Label = "Riemenschutz z%d" % z
-            obj.Shape = shape
-            doc.recompute()
+            # Anlegen, Aufräumen und die Wahl zwischen Part und Part Design
+            # macht der Generator — hier stünde sonst eine zweite, eigene
+            # Bauweise, die genau die Vermischung erzeugt, die weg soll.
+            baue_buegel_objekt(z, p['spitzen_abstand'], p['spitzen_d'])
             try:
                 Gui.ActiveDocument.ActiveView.fitAll()
             except Exception:
