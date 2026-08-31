@@ -29,6 +29,7 @@ import math
 import FreeCAD as App
 import Part
 
+import bau_umgebung
 import rolle_geometrie
 import speichen_geometrie
 
@@ -181,42 +182,220 @@ def baue_rolle(params):
     return koerper
 
 
+# ── Part-Design-Weg ────────────────────────────────────────────────────────
+# Dieselbe Rolle, gebaut als Body mit Feature-Verlauf statt als fertiges
+# Shape. Die Formeln sind unveraendert dieselben (rolle_geometrie,
+# speichen_geometrie) — nur die Bauweise unterscheidet sich, damit die Rolle
+# im Modellbaum aussieht wie das Ritzel, wenn im Part Design gearbeitet wird.
+
+
+def _origin_feature(body, role):
+    """Liefert ein Ursprungs-Element des Bodys (z.B. 'XZ_Plane', 'Z_Axis')."""
+    for feat in body.Origin.OriginFeatures:
+        if getattr(feat, 'Role', '') == role:
+            return feat
+    return None
+
+
+def _pd_drehteil(body, params):
+    """Drehprofil als Skizze in der XZ-Ebene + Revolution um die Z-Achse.
+    Im Sketch heisst lokal x = radial, lokal y = axial — genau das (r, z),
+    das rolle_geometrie.profil() liefert."""
+    sk = body.newObject('Sketcher::SketchObject', 'RolleProfilSketch')
+    sk.AttachmentSupport = [(_origin_feature(body, 'XZ_Plane'), '')]
+    sk.MapMode = 'FlatFace'
+    normal = App.Vector(0, 0, 1)
+    for seg in rolle_geometrie.profil(params):
+        if seg['typ'] == 'linie':
+            sk.addGeometry(Part.LineSegment(
+                App.Vector(seg['p0'][0], seg['p0'][1], 0),
+                App.Vector(seg['p1'][0], seg['p1'][1], 0)), False)
+            continue
+        a0, a1 = seg['a0'], seg['a1']
+        if a1 <= a0:
+            a1 += 2 * math.pi              # ArcOfCircle laeuft gegen den UZS
+        sk.addGeometry(Part.ArcOfCircle(
+            Part.Circle(App.Vector(seg['c'][0], seg['c'][1], 0), normal,
+                        seg['r']),
+            a0, a1), False)
+    sk.Visibility = False
+
+    rev = body.newObject('PartDesign::Revolution', 'RolleDrehteil')
+    rev.Profile = sk
+    # V_Axis der Skizze = senkrechte Achse in der XZ-Ebene = globale Z-Achse.
+    rev.ReferenceAxis = (sk, ['V_Axis'])
+    rev.Angle = 360.0
+    return rev
+
+
+def _pd_speichen(body, params):
+    """Die Durchbrueche als EIN Pocket 'ThroughAll' — dieselbe Kontur wie im
+    Part-Weg und beim Ritzel. Liefert (r_innen, r_aussen) fuer die spaetere
+    Kantenverrundung, oder None, wenn der Ring zu schmal ist."""
+    n = int(round(params.get('speichen_n', 0)))
+    if n < 3 or params.get('speichen_b', 0) <= 0:
+        return None
+
+    r_innen, r_aussen = rolle_geometrie.ring_radien(params)
+    ergebnis = speichen_geometrie.kontur(
+        n, params['speichen_b'], r_innen, r_aussen,
+        params.get('speichen_r', 0.0), 0.0)      # die Rolle laeuft radial
+    oeffnungen = ergebnis['oeffnungen']
+    if not oeffnungen:
+        print("Rolle: freier Ring nur %.1f mm (noetig %.0f mm) — Steg bleibt voll."
+              % (r_aussen - r_innen, speichen_geometrie.MIN_RING))
+        return None
+
+    sk = body.newObject('Sketcher::SketchObject', 'RolleSpeichenSketch')
+    sk.AttachmentSupport = [(_origin_feature(body, 'XY_Plane'), '')]
+    sk.MapMode = 'FlatFace'
+    normal = App.Vector(0, 0, 1)
+    for oeffnung in oeffnungen:
+        for seg in oeffnung:
+            if seg['typ'] == 'linie':
+                sk.addGeometry(Part.LineSegment(
+                    App.Vector(seg['p0'][0], seg['p0'][1], 0),
+                    App.Vector(seg['p1'][0], seg['p1'][1], 0)), False)
+                continue
+            a0, a1 = seg['a0'], seg['a1']
+            if a1 <= a0:
+                a1 += 2 * math.pi
+            sk.addGeometry(Part.ArcOfCircle(
+                Part.Circle(App.Vector(seg['c'][0], seg['c'][1], 0), normal,
+                            seg['r']),
+                a0, a1), False)
+    sk.Visibility = False
+
+    pocket = body.newObject('PartDesign::Pocket', 'RolleSpeichenPocket')
+    pocket.Profile = sk
+    pocket.Type = 'ThroughAll'
+    pocket.SideType = 'Symmetric'          # in beide Richtungen durch
+    return (r_innen, r_aussen)
+
+
+def _pd_speichen_kanten(doc, body, params, ring):
+    """Muendungskanten der Durchbrueche an beiden Stirnflaechen verrunden.
+    Radius-Kaskade wie im Part-Weg: geht der Wunschradius nicht, wird er
+    kleiner; geht gar keiner, bleiben die Kanten scharf."""
+    radius = float(params.get('speichen_kante', 0.0) or 0.0)
+    if radius <= 0 or not ring:
+        return
+    r_innen, r_aussen = ring
+    zmax = params['rolle_b'] / 2.0
+
+    doc.recompute()                        # Kanten muessen berechnet sein
+    tip = body.Tip
+    namen = []
+    for i, kante in enumerate(tip.Shape.Edges):
+        if not kante.Vertexes:
+            continue
+        passt = True
+        for v in kante.Vertexes:
+            if abs(abs(v.Point.z) - zmax) > 0.05:
+                passt = False
+                break
+            r = math.hypot(v.Point.x, v.Point.y)
+            if not (r_innen - 0.3 <= r <= r_aussen + 0.3):
+                passt = False
+                break
+        if passt:
+            namen.append('Edge%d' % (i + 1))
+    if not namen:
+        print("Rolle: keine Oeffnungskanten gefunden — Kanten bleiben scharf.")
+        return
+
+    prev_tip = body.Tip
+    fil = body.newObject('PartDesign::Fillet', 'RolleKantenFillet')
+    fil.Base = (tip, namen)
+    r = min(radius, zmax - 0.05)
+    while r >= 0.1:
+        try:
+            fil.Radius = r
+            doc.recompute()
+            if body.Shape.isValid() and 'Invalid' not in ' '.join(fil.State):
+                if r < radius:
+                    print("Rolle: Kantenradius %.2f mm statt %.2f mm — mehr "
+                          "gab die Geometrie nicht her." % (r, radius))
+                return
+        except Exception:
+            pass
+        # Grosse Radien halbieren, kleine in 0,1er-Schritten: OCC-Fillets
+        # sind nicht monoton, grobe Schritte uebergingen machbare Radien.
+        r = round(r / 2.0, 2) if r > 1.2 else round(r - 0.1, 2)
+    print("Rolle: Oeffnungskanten nicht verrundbar — bleiben scharf.")
+    doc.removeObject(fil.Name)
+    body.Tip = prev_tip
+    doc.recompute()
+
+
+def baue_rolle_body(doc, params):
+    """Baut die Spannrolle als Part-Design-Body und liefert ihn zurueck.
+
+    Wirft ValueError bei unbaubaren Massen — dieselbe Pruefung wie im
+    Part-Weg (rolle_geometrie.maengel)."""
+    fehlt = rolle_geometrie.maengel(params)
+    if fehlt:
+        raise ValueError("Spannrolle mit diesen Massen nicht baubar: "
+                         + ", ".join(fehlt))
+
+    body = doc.addObject('PartDesign::Body', 'Spannrolle')
+    _pd_drehteil(body, params)
+    ring = _pd_speichen(body, params)
+    doc.recompute()
+    if ring:
+        _pd_speichen_kanten(doc, body, params, ring)
+    doc.recompute()
+
+    if not body.Shape.isValid() or body.Shape.Volume <= 0:
+        raise ValueError("Spannrolle: kein gueltiger Koerper entstanden")
+    return body
+
+
 def entferne_rollen(doc):
     """Entfernt vorhandene Spannrollen — egal, auf welchem Weg sie entstanden
-    sind. Der Bau im Fenster legt "Spannrolle" an; der Hintergrundbau
-    importiert die STEP und erbt deren Dateinamen, "spannrolle_d40_b14",
-    also KLEIN geschrieben. Der frühere Vergleich mit
+    sind. Der Bau im Fenster legt "Spannrolle" an (Part-Feature oder Body);
+    der Hintergrundbau importiert die STEP und erbt deren Dateinamen,
+    "spannrolle_d40_b14", also KLEIN geschrieben. Der frühere Vergleich mit
     startswith("Spannrolle") sah die importierte nicht: wer beide Wege
     benutzte, bekam bei jeder Änderung eine weitere Rolle daneben, statt
     die bestehende zu ersetzen. Darum hier case-unabhängig und an einer
     Stelle für beide Wege.
     """
+    # Erst die Namen einsammeln, dann abraeumen: beim Entfernen eines Bodys
+    # verschwinden auch dessen Features aus dem Dokument, und schon der
+    # Zugriff auf .Name eines geloeschten Objekts wirft.
+    kandidaten = [obj.Name for obj in doc.Objects
+                  if ((obj.Name or "").lower().startswith("spannrolle")
+                      or (obj.Label or "").lower().startswith("spannrolle"))]
     entfernt = []
-    for obj in list(doc.Objects):
-        if ((obj.Name or "").lower().startswith("spannrolle")
-                or (obj.Label or "").lower().startswith("spannrolle")):
-            try:
-                doc.removeObject(obj.Name)
-                entfernt.append(obj.Name)
-            except Exception:
-                pass        # haengt noch woanders dran -> stehen lassen
+    for name in kandidaten:
+        obj = doc.getObject(name)
+        if obj is None:
+            continue            # hing an einem schon entfernten Body
+        entfernt.extend(bau_umgebung.entferne_objekt(doc, obj))
     return entfernt
 
 
 def build(params=None):
-    """Legt die Rolle als Vorschauobjekt im aktiven Dokument an (GUI-Weg).
-    Ein vorhandenes Objekt gleichen Namens wird ersetzt, damit wiederholtes
-    Bauen den Baum nicht zumuellt."""
+    """Legt die Rolle im aktiven Dokument an — im Part-Arbeitsbereich als
+    fertiges Shape ohne Baum, im Part Design als Body mit Feature-Verlauf.
+    So sieht die Rolle im Modellbaum aus wie das, womit gerade gearbeitet
+    wird. Ein vorhandenes Objekt gleichen Namens wird ersetzt, damit
+    wiederholtes Bauen den Baum nicht zumuellt."""
     if params is None:
         import zahnrad_params
         params = {key: std for key, _label, std
                   in zahnrad_params.default_fields('rolle')}
 
-    shape = baue_rolle(params)
     doc = App.ActiveDocument or App.newDocument("ZahnradDokument")
+    bereich = bau_umgebung.aktiver_bereich()
     entferne_rollen(doc)
-    obj = doc.addObject("Part::Feature", "Spannrolle")
+
+    if bereich == bau_umgebung.PARTDESIGN:
+        obj = baue_rolle_body(doc, params)
+    else:
+        obj = doc.addObject("Part::Feature", "Spannrolle")
+        obj.Shape = baue_rolle(params)
     obj.Label = "Spannrolle Ø%.0f × %.0f" % (params['rolle_d'], params['rolle_b'])
-    obj.Shape = shape
     doc.recompute()
     return obj
