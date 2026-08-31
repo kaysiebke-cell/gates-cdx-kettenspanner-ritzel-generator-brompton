@@ -79,10 +79,12 @@ export function muldenGeometrie(p, rKopf) {
 export function speichenGeometrie(p, rKopf) {
   if (!(p.speichen_n >= 3) || !(p.speichen_b > 0)) return null;
   const { ri, ra } = ringRadien(rKopf, p);
-  const { oeffnungen } = kontur(p.speichen_n, p.speichen_b, ri, ra,
-                                p.speichen_r, p.speichen_schwung);
-  if (!oeffnungen.length) return null;
-  return speichenPrismen(oeffnungen, p.breite, p.speichen_kante);
+  const basis = kontur(p.speichen_n, p.speichen_b, ri, ra,
+                       p.speichen_r, p.speichen_schwung);
+  if (!basis.oeffnungen.length) return null;
+  const weit = aufgeweitet(p, ri, ra, p.breite, basis.schwung);
+  return weit ? speichenPrismen(weit.oeffnungen, p.breite, weit.kr)
+              : speichenPrismen(basis.oeffnungen, p.breite, 0);
 }
 
 // Dieselben Durchbrüche für die Spannrolle: andere Radien, sonst nichts.
@@ -90,34 +92,58 @@ export function speichenGeometrie(p, rKopf) {
 export function rolleSpeichen(p) {
   if (!(p.speichen_n >= 3) || !(p.speichen_b > 0)) return null;
   const { ri, ra } = rolleRing(p);
-  const { oeffnungen } = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r, 0);
-  if (!oeffnungen.length) return null;
-  return speichenPrismen(oeffnungen, p.rolle_b, p.speichen_kante);
+  const basis = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r, 0);
+  if (!basis.oeffnungen.length) return null;
+  const weit = aufgeweitet(p, ri, ra, p.rolle_b, 0);
+  return weit ? speichenPrismen(weit.oeffnungen, p.rolle_b, weit.kr)
+              : speichenPrismen(basis.oeffnungen, p.rolle_b, 0);
+}
+
+// Die um `kr` aufgeweitete Öffnung — die Form, die der Schneidkörper an
+// seinen Enden haben muss, damit die Kante gerundet erscheint.
+//
+// Sie entsteht NICHT durch Versetzen der fertigen Kontur nach außen: three.js
+// versetzt beim Bevel zuverlässig nur nach innen, nach außen zieht der
+// Miter-Join an jeder Ecke eine Zacke — genau die Grafikfehler, die der
+// erste Anlauf zeigte. Stattdessen kommt sie aus derselben Formel wie die
+// normale Öffnung, nur mit schmaleren Armen, weiterem Ring und größerer
+// Eckenrundung. Das IST die aufgeweitete Öffnung, und der Bevel versetzt
+// sie anschließend nach innen auf die eigentliche Kontur zurück.
+function aufgeweitet(p, ri, ra, dicke, schwung) {
+  const kr = Math.max(0, Math.min(p.speichen_kante || 0,
+                                  dicke / 2 - 0.05,
+                                  p.speichen_b / 2 - 0.2,
+                                  (ra - ri) / 4));
+  if (!(kr > 0.01)) return null;
+  const weit = kontur(p.speichen_n, p.speichen_b - 2 * kr, ri - kr, ra + kr,
+                      p.speichen_r + kr, schwung);   // schwung in Grad
+  // Weicht die Formel bei den aufgeweiteten Werten auf eine andere Stufe aus
+  // (weniger Schwung, andere Rundung), passt die Form nicht mehr zur
+  // Basiskontur — dann lieber ohne Rundung zeigen als mit Versatz.
+  if (!weit.oeffnungen.length || Math.abs(weit.schwung - schwung) > 1e-6) return null;
+  return { kr, oeffnungen: weit.oeffnungen };
 }
 
 // Ein Schneidkörper je Öffnung, über die volle Breite `dicke`.
 //
-// `kante` rundet die Mündungskanten an beiden Stirnflächen — dasselbe, was
-// im Generator die SpeichenVerrundung macht. Der Bevel läuft hier ANDERS
-// HERUM als am Zahnkörper: dort verkleinert er die Enden (bevelSize r,
-// bevelOffset -r) und rundet damit den Körper ab; ein Schneidkörper muss
-// an den Enden dagegen WEITER werden, damit er dort mehr Material mitnimmt.
-// Das ist bevelSize -r bei bevelOffset +r — die Mitte bleibt auf der
-// Kontur, die Enden treten um r heraus.
+// Bei `kante` > 0 ist `oeffnungen` bereits die AUFGEWEITETE Kontur (siehe
+// aufgeweitet()), und der Bevel schrumpft sie über die Strecke `kante`
+// zurück auf die eigentliche Öffnung: an der Stirnfläche ist der
+// Schneidkörper also um `kante` weiter, in der Mitte auf Kontur. Genau das
+// ergibt die gefaste Öffnungskante.
 function speichenPrismen(oeffnungen, dicke, kante = 0) {
   // Ohne Rundung ragt der Schneidkörper beidseitig 1 mm heraus — sicher
   // durch beide Stirnflächen. Mit Rundung muss der Bevel dagegen genau an
   // ihnen sitzen: einen Millimeter weiter draußen liefe er ins Leere und
   // die Kante bliebe scharf.
-  const kr = Math.max(0, Math.min(kante || 0, dicke / 2 - 0.05));
+  const kr = kante || 0;
   const tiefe = kr > 0.01 ? dicke - 2 * kr : dicke + 2;
-  // Genau bündig darf er aber auch nicht enden: der Bevel läuft mit
-  // WAAGERECHTER Tangente in seine Deckfläche, seine Rundung läge dann
-  // tangential auf der Stirnfläche des Ritzels — der schlimmste Fall für
-  // die CSG. Gemessen: 2,7 s ohne Rundung, über 100 s mit. Ein kleiner
-  // Überstand lässt ihn die Stirnfläche in einem gesunden Winkel schneiden
-  // und kostet nichts (1,7 s). Er stutzt die Rundung um sein eigenes Maß,
-  // bei 0,1 mm ist davon nichts zu sehen.
+  // Genau bündig darf er aber auch nicht enden: seine Deckfläche läge dann
+  // in der Stirnfläche des Ritzels — der schlimmste Fall für die CSG.
+  // Gemessen mit dem tangential auslaufenden Viertelkreis: 2,7 s ohne
+  // Rundung, über 100 s mit. Ein kleiner Überstand lässt ihn die
+  // Stirnfläche in einem gesunden Winkel schneiden und kostet nichts.
+  // Er stutzt die Fase um sein eigenes Maß, bei 0,1 mm sieht man das nicht.
   const ueberstand = kr > 0.01 ? Math.max(0.05, 0.10 * kr) : 0;
   const teile = [];
   for (const oef of oeffnungen) {
@@ -133,8 +159,14 @@ function speichenPrismen(oeffnungen, dicke, kante = 0) {
     }
     const geo = new THREE.ExtrudeGeometry(shape, kr > 0.01 ? {
       depth: tiefe, curveSegments: 24,
-      bevelEnabled: true, bevelSegments: 4,
-      bevelSize: -kr, bevelThickness: kr, bevelOffset: kr,
+      // EIN Segment: eine 45°-Fase statt eines Viertelkreises. Der
+      // Viertelkreis läuft an der Deckfläche waagerecht aus und schneidet
+      // die Stirnfläche dadurch fast tangential — daran zerbrach die CSG in
+      // ausgefranste Ränder. Bei dieser Größe ist die Fase von einer
+      // Rundung ohnehin nicht zu unterscheiden; die Fußzeile sagt zudem,
+      // dass die Vorschau Verrundungen nur annähert.
+      bevelEnabled: true, bevelSegments: 1,
+      bevelSize: -kr, bevelThickness: kr, bevelOffset: 0,
     } : { depth: tiefe, bevelEnabled: false, curveSegments: 24 });
     geo.translate(0, 0, -tiefe / 2);
     if (ueberstand > 0) geo.scale(1, 1, (dicke + 2 * ueberstand) / dicke);
