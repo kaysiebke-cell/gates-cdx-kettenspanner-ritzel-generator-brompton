@@ -18,14 +18,28 @@ const teil = (bauteil) => NACH_ID[bauteil] || NACH_ID[STANDARD_BAUTEIL];
 
 // ── Felddefinitionen ───────────────────────────────────────────────────────
 // Form je Abschnitt: [fieldset-Id, [ [key, i18n-Schlüssel, Standard, Schritt] ]]
-export function sections(bauteil = STANDARD_BAUTEIL) {
+
+// Alle Felder, ungefiltert. Grundlage für defaults(): auch Felder, die das
+// Formular nicht zeigt, brauchen ihren Standardwert — er geht beim Bauen an
+// FreeCAD, und der Abgleich JS/Python in tools/golden-test.mjs prüft ihn.
+function alleFelder(bauteil) {
   return teil(bauteil).abschnitte.map(
     a => [a.id, a.felder.map(f => [f.key, f.i18n, f.standard, f.schritt])]);
 }
 
+// Fürs Formular: Felder mit "nur_freecad" bleiben draußen. Sie ergeben online
+// keinen Sinn, weil die Vorschau sie nicht darstellen kann — der Wert wirkt
+// erst im CAD. Abschnitte, die dadurch leer werden, fallen ganz weg.
+export function sections(bauteil = STANDARD_BAUTEIL) {
+  return teil(bauteil).abschnitte
+    .map(a => [a.id, a.felder.filter(f => !f.nur_freecad)
+                             .map(f => [f.key, f.i18n, f.standard, f.schritt])])
+    .filter(([, felder]) => felder.length > 0);
+}
+
 export function defaults(bauteil = STANDARD_BAUTEIL) {
   const d = {};
-  for (const [, felder] of sections(bauteil))
+  for (const [, felder] of alleFelder(bauteil))
     for (const [key,, def] of felder) d[key] = def;
   return d;
 }
