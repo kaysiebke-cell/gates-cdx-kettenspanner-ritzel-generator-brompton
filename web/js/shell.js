@@ -7,6 +7,7 @@ import { initI18n, updateUI, t, i18n } from './i18n.js';
 import { buildFormFields, BAUTEILE } from './fields.js';
 import { renderPrint } from './print.js';
 import { refreshStepButton, exportStep, initStep } from './step.js';
+import { umgebung, beiWechsel } from './umgebung.js';
 
 // Formularänderung → STEP-Button sofort aktualisieren (braucht kein 3D)
 // und (entprellt) den Viewer neu bauen lassen, sobald er da ist.
@@ -77,6 +78,29 @@ function setzeHinweise(an) {
   b.title = text;
 }
 
+// ── Erkannte Umgebung in Worte fassen ───────────────────────────────
+// umgebung.js weiß, worauf die Anwendung läuft; hier wird daraus Text.
+// Zwei Stellen hängen daran: der Untertitel nennt nur die Bedienart, die
+// tatsächlich vorliegt (statt „Maus oder Finger“), und der Erklärtext am
+// Fuß des Formulars nennt den ganzen Befund.
+function setzeUmgebungstexte() {
+  const sub = document.getElementById('subtitle');
+  if (sub) sub.textContent = t(umgebung.zeiger === 'finger' ? 'subtitle_finger' : 'subtitle_maus');
+
+  const el = document.getElementById('umgebunghint');
+  if (!el) return;
+  const teile = [
+    t('env_' + umgebung.form),
+    t('env_' + umgebung.zeiger),
+    // 'android-app' → Schlüssel env_android_app
+    t('env_' + umgebung.huelle.replace(/-/g, '_')),
+    t('env_' + umgebung.lage),
+    `${umgebung.pixelDichte}${t('env_density')}`,
+  ];
+  el.textContent = `${t('env_label')}: ${teile.join(' · ')} — ` +
+    `${t('env_q_' + umgebung.leistung)}. ${t('env_tail')}`;
+}
+
 // Statische Texte, die kein 3D brauchen (Button-Beschriftung, Tabs).
 function setStaticTexts() {
   document.getElementById('stlbtn').textContent =
@@ -89,6 +113,7 @@ function setStaticTexts() {
   const ib = document.getElementById('installbtn');
   if (ib) ib.textContent = t('install');
   setzeHinweise(hinweiseAn);   // Beschriftung des ⓘ-Schalters
+  setzeUmgebungstexte();       // Untertitel + Umgebungszeile in der neuen Sprache
   // Druck-Empfehlungen in der aktuellen Sprache einspeisen
   document.getElementById('printview').innerHTML = renderPrint(i18n.lang);
 }
@@ -121,6 +146,11 @@ zeigeBauteil('ritzel');   // baut das Formular und blendet die Rollen-Gruppen au
 setStaticTexts();
 initStep();               // Cloud-Build-Button verdrahten (eigene Werte)
 refreshStepButton(bauteil);   // STEP-Buttons gleich beim Start setzen (ohne 3D)
+
+// Dreht jemand das Tablet, steckt eine Maus an oder zieht das Fenster auf
+// einen anderen Bildschirm, stimmt der Befund von eben nicht mehr — dann
+// nur die beiden Texte nachziehen, nicht die ganze Oberfläche neu bauen.
+beiWechsel(setzeUmgebungstexte);
 
 document.getElementById('hintsbtn').addEventListener('click', () => {
   setzeHinweise(!hinweiseAn);
