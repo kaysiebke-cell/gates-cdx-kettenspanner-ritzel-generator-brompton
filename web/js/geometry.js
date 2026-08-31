@@ -54,7 +54,7 @@ export function muldenGeometrie(p, rKopf) {
     const mr = Math.max(0, Math.min(p.mulde_r, p.tasche_b / 2 - 0.05));
     const tiefe_b = mr > 0.01 ? p.tasche_b - 2 * mr : p.tasche_b;
     const prisma = new THREE.ExtrudeGeometry(prof, mr > 0.01 ? {
-      depth: tiefe_b, bevelEnabled: true, bevelSegments: 4,
+      depth: tiefe_b, bevelEnabled: true, bevelSegments: 6,
       bevelSize: mr, bevelThickness: mr, bevelOffset: -mr,
     } : { depth: tiefe_b, bevelEnabled: false });
     prisma.translate(0, 0, -tiefe_b / 2);
@@ -175,7 +175,7 @@ function speichenPrismen(oeffnungen, dicke, kante = 0) {
     }
     const geo = new THREE.ExtrudeGeometry(shape, kr > 0.01 ? {
       depth: tiefe, curveSegments: 24,
-      bevelEnabled: true, bevelSegments: 4,
+      bevelEnabled: true, bevelSegments: 6,
       bevelSize: -kr, bevelThickness: kr, bevelOffset: 0,
     } : { depth: tiefe, bevelEnabled: false, curveSegments: 24 });
     geo.translate(0, 0, -tiefe / 2);
@@ -206,7 +206,9 @@ function csgOp(geoA, geoB, op) {
 //
 // toCreasedNormals glaettet nur ueber Kanten unterhalb des Knickwinkels:
 // Bohrung und Rundungen bleiben glatt, echte Kanten bleiben scharf.
-const KNICKWINKEL = Math.PI / 5;        // 36 Grad
+const KNICKWINKEL = Math.PI / 3;        // 60 Grad — glaettet auch die
+                                        // Uebergaenge der Rundung, nur echte
+                                        // Kanten (90 Grad) bleiben scharf
 
 function normalenRichten(geometrie) {
   return toCreasedNormals(geometrie, KNICKWINKEL);
@@ -223,7 +225,7 @@ export function buildMeshes(p, mat) {
   if (zr > 0.01) {
     gear = new THREE.ExtrudeGeometry(shape, {
       depth: p.breite - 2 * zr, curveSegments: 24,
-      bevelEnabled: true, bevelSegments: 4,
+      bevelEnabled: true, bevelSegments: 6,
       bevelSize: zr, bevelThickness: zr, bevelOffset: -zr,
     });
     gear.translate(0, 0, -(p.breite - 2 * zr) / 2);
