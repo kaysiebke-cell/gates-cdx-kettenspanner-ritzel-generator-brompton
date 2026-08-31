@@ -79,12 +79,10 @@ export function muldenGeometrie(p, rKopf) {
 export function speichenGeometrie(p, rKopf) {
   if (!(p.speichen_n >= 3) || !(p.speichen_b > 0)) return null;
   const { ri, ra } = ringRadien(rKopf, p);
-  const basis = kontur(p.speichen_n, p.speichen_b, ri, ra,
-                       p.speichen_r, p.speichen_schwung);
-  if (!basis.oeffnungen.length) return null;
-  const weit = aufgeweitet(p, ri, ra, p.breite, basis);
-  return weit ? speichenPrismen(weit.oeffnungen, p.breite, weit.kr)
-              : speichenPrismen(basis.oeffnungen, p.breite, 0);
+  const { oeffnungen } = kontur(p.speichen_n, p.speichen_b, ri, ra,
+                                p.speichen_r, p.speichen_schwung);
+  if (!oeffnungen.length) return null;
+  return speichenPrismen(oeffnungen, p.breite + 2);
 }
 
 // Dieselben Durchbrüche für die Spannrolle: andere Radien, sonst nichts.
@@ -92,75 +90,23 @@ export function speichenGeometrie(p, rKopf) {
 export function rolleSpeichen(p) {
   if (!(p.speichen_n >= 3) || !(p.speichen_b > 0)) return null;
   const { ri, ra } = rolleRing(p);
-  const basis = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r, 0);
-  if (!basis.oeffnungen.length) return null;
-  const weit = aufgeweitet(p, ri, ra, p.rolle_b, basis);
-  return weit ? speichenPrismen(weit.oeffnungen, p.rolle_b, weit.kr)
-              : speichenPrismen(basis.oeffnungen, p.rolle_b, 0);
+  const { oeffnungen } = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r, 0);
+  if (!oeffnungen.length) return null;
+  return speichenPrismen(oeffnungen, p.rolle_b + 2);
 }
 
-// Die um `kr` aufgeweitete Öffnung — die Form, die der Schneidkörper an
-// seinen Enden haben muss, damit die Kante gerundet erscheint.
+// `speichen_kante` bleibt hier bewusst aussen vor: die Vorschau zeigt die
+// Öffnungskanten scharf, gebaut werden sie gerundet.
 //
-// Sie entsteht NICHT durch Versetzen der fertigen Kontur nach außen: three.js
-// versetzt beim Bevel zuverlässig nur nach innen, nach außen zieht der
-// Miter-Join an jeder Ecke eine Zacke — genau die Grafikfehler, die der
-// erste Anlauf zeigte. Stattdessen kommt sie aus derselben Formel wie die
-// normale Öffnung, nur mit schmaleren Armen, weiterem Ring und größerer
-// Eckenrundung. Das IST die aufgeweitete Öffnung, und der Bevel versetzt
-// sie anschließend nach innen auf die eigentliche Kontur zurück.
-function aufgeweitet(p, ri, ra, dicke, basis) {
-  const gewuenscht = Math.max(0, Math.min(p.speichen_kante || 0,
-                                          dicke / 2 - 0.05,
-                                          p.speichen_b / 2 - 0.2,
-                                          (ra - ri) / 4));
-  if (!(gewuenscht > 0.01)) return null;
+// Drei Anläufe, die Rundung hier zu schneiden, haben je einen eigenen Fehler
+// produziert (Miter-Zacken beim Versetzen der Kontur nach aussen; ein
+// Aufhänger, weil der Viertelkreis tangential auf der Stirnfläche lag; Knicke,
+// weil kontur() die Eckenrundung der aufgeweiteten Fassung deckelt). Der
+// Radius im STEP kommt ohnehin aus FreeCAD — dort ist es ein echter
+// OCC-Fillet auf den Kanten, keine CSG.
 
-  // Die aufgeweitete Kontur muss die Basiskontur um GENAU kr nach aussen
-  // versetzt sein — sonst landet der Bevel beim Zurueckschrumpfen neben der
-  // echten Oeffnung und knickt die Wand. Genau das passiert bei zu grossem
-  // Radius: kontur() deckelt die Eckenrundung auf die Armbreite, und die ist
-  // in der aufgeweiteten Fassung um 2*kr schmaler. Die Rundung waechst dann
-  // nicht um kr mit, und der Versatz stimmt an jeder Ecke nicht mehr.
-  //
-  // Darum wird geprueft, nicht gehofft: die zurueckgelieferte Rundung muss um
-  // kr ueber der Basis liegen und der Schwung derselbe sein. Passt es nicht,
-  // wird kr kleiner — lieber eine kleinere Rundung zeigen als eine falsche.
-  for (const faktor of [1, 0.85, 0.7, 0.55, 0.4, 0.25]) {
-    const kr = gewuenscht * faktor;
-    if (kr < 0.02) break;
-    const weit = kontur(p.speichen_n, p.speichen_b - 2 * kr, ri - kr, ra + kr,
-                        basis.rundung + kr, basis.schwung);   // Schwung in Grad
-    if (weit.oeffnungen.length
-        && Math.abs(weit.rundung - (basis.rundung + kr)) < 1e-6
-        && Math.abs(weit.schwung - basis.schwung) < 1e-6)
-      return { kr, oeffnungen: weit.oeffnungen };
-  }
-  return null;
-}
-
-// Ein Schneidkörper je Öffnung, über die volle Breite `dicke`.
-//
-// Bei `kante` > 0 ist `oeffnungen` bereits die AUFGEWEITETE Kontur (siehe
-// aufgeweitet()), und der Bevel schrumpft sie als Viertelkreis über die
-// Strecke `kante` zurück auf die eigentliche Öffnung: an der Stirnfläche ist
-// der Schneidkörper um `kante` weiter, in der Mitte auf Kontur. Was er
-// dabei zusätzlich wegnimmt, ist die Rundung der Öffnungskante.
-function speichenPrismen(oeffnungen, dicke, kante = 0) {
-  // Ohne Rundung ragt der Schneidkörper beidseitig 1 mm heraus — sicher
-  // durch beide Stirnflächen. Mit Rundung muss der Bevel dagegen genau an
-  // ihnen sitzen: einen Millimeter weiter draußen liefe er ins Leere und
-  // die Kante bliebe scharf.
-  const kr = kante || 0;
-  const tiefe = kr > 0.01 ? dicke - 2 * kr : dicke + 2;
-  // Genau bündig darf er aber auch nicht enden. Der Viertelkreis läuft an
-  // seiner Deckfläche WAAGERECHT aus; bündig gesetzt berührt er die
-  // Stirnfläche über die ganze Kurve, statt sie zu schneiden — der
-  // schlimmste Fall für die CSG. Gemessen: 2,7 s ohne Rundung, über 100 s
-  // mit, und ausgefranste Ränder. Ein Überstand von 30 % des Radius stutzt
-  // den flachsten Teil der Kurve weg, sodass sie die Stirnfläche in rund
-  // 45° schneidet. Was bleibt, ist der sichtbare Teil der Rundung.
-  const ueberstand = kr > 0.01 ? Math.max(0.05, 0.30 * kr) : 0;
+// Ein Schneidkörper je Öffnung, über die volle Breite (tiefe).
+function speichenPrismen(oeffnungen, tiefe) {
   const teile = [];
   for (const oef of oeffnungen) {
     const shape = new THREE.Shape();
@@ -173,13 +119,9 @@ function speichenPrismen(oeffnungen, dicke, kante = 0) {
                    seg.ccw ? seg.a0 : seg.a1,
                    seg.ccw ? seg.a1 : seg.a0, !seg.ccw);
     }
-    const geo = new THREE.ExtrudeGeometry(shape, kr > 0.01 ? {
-      depth: tiefe, curveSegments: 24,
-      bevelEnabled: true, bevelSegments: 6,
-      bevelSize: -kr, bevelThickness: kr, bevelOffset: 0,
-    } : { depth: tiefe, bevelEnabled: false, curveSegments: 24 });
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth: tiefe, bevelEnabled: false, curveSegments: 24 });
     geo.translate(0, 0, -tiefe / 2);
-    if (ueberstand > 0) geo.scale(1, 1, (dicke + 2 * ueberstand) / dicke);
     teile.push(geo);
   }
   return mergeGeometries(teile);
@@ -200,7 +142,7 @@ function csgOp(geoA, geoB, op) {
 //
 // three-bvh-csg erbt die Normalen der Ausgangskoerper und interpoliert sie auf
 // die neuen Schnittdreiecke. An Ecken kommt dabei Unsinn heraus: gemessen am
-// Ritzel (z=18, 5 Speichen) trugen 576 von 41.631 Dreiecken eine Normale, die
+// Ritzel (z=18, 5 Speichen) tragen 576 von 41.631 Dreiecken eine Normale, die
 // bis zu 89 Grad von ihrer eigenen Flaeche abweicht. Solche Dreiecke werden
 // falsch beleuchtet und erscheinen als dunkle Kerben an den Kanten.
 //

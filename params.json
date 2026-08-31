@@ -23,7 +23,6 @@
     "bei Ritzel und Rolle dasselbe. Im Formular steht immer nur EIN Bauteil,",
     "darum können sie sich die Namen teilen."
   ],
-
   "bauteile": [
     {
       "id": "ritzel",
@@ -31,97 +30,371 @@
       "de": "Ritzel",
       "zaehne_min": 12,
       "zaehne_max": 19,
-      "reihenfolge_freecad": ["sec1", "sec3", "sec4", "sec2"],
-
+      "reihenfolge_freecad": [
+        "sec1",
+        "sec3",
+        "sec4",
+        "sec2"
+      ],
       "abschnitte": [
         {
           "id": "sec1",
           "de": "Zahnrad-Körper (Grundkörper)",
           "felder": [
-            { "key": "zaehne",          "i18n": "teeth",        "de": "Zähne",           "standard": 14,    "schritt": 1,    "kommentar": "Zähnezahl" },
-            { "key": "eingriffswinkel", "i18n": "angle",        "de": "Winkel (°)",      "standard": 20.0,  "schritt": 0.5,  "kommentar": "Eingriffswinkel" },
-            { "key": "spitzen_abstand", "i18n": "center_dist",  "de": "Mitte-Mitte",     "standard": 10.20, "schritt": 0.05, "kommentar": "Zahnmittenabstand" },
-            { "key": "spitzen_d",       "i18n": "head_d",       "de": "Kopf Ø",          "standard": 2.80,  "schritt": 0.05, "kommentar": "Kopfrundungs-Ø" },
-            { "key": "fuss_d",          "i18n": "foot_d",       "de": "Fuß Ø",           "standard": 7.00,  "schritt": 0.05, "kommentar": "Fußrundungs-Ø" },
-            { "key": "tiefe",           "i18n": "depth",        "de": "Tiefe",           "standard": 5.60,  "schritt": 0.05, "kommentar": "radiale Zahntiefe" },
-            { "key": "breite",          "i18n": "width_z",      "de": "Breite Z",        "standard": 11.00, "schritt": 0.5,  "kommentar": "axiale Gesamtdicke" },
-            { "key": "zahn_r",          "i18n": "tooth_round",  "de": "Zahn-Rundung",    "standard": 0.40,  "schritt": 0.05, "kommentar": "Verrundung der Zahnkontur beidseitig (0 = scharf)" },
-            { "key": "fuehrung_w",      "i18n": "guide_width",  "de": "Führung Breite",  "standard": 1.00,  "schritt": 0.1,  "kommentar": "Dicke des Führungsrings (0 = keiner)" },
-            { "key": "fuehrung_d",      "i18n": "guide_d",      "de": "Führung Ø",       "standard": 46.50, "schritt": 0.5,  "kommentar": "Führungsring-Außen-Ø (0 = auto)" }
+            {
+              "key": "zaehne",
+              "i18n": "teeth",
+              "de": "Zähne",
+              "standard": 14,
+              "schritt": 1,
+              "kommentar": "Zähnezahl"
+            },
+            {
+              "key": "eingriffswinkel",
+              "i18n": "angle",
+              "de": "Winkel (°)",
+              "standard": 20.0,
+              "schritt": 0.5,
+              "kommentar": "Eingriffswinkel"
+            },
+            {
+              "key": "spitzen_abstand",
+              "i18n": "center_dist",
+              "de": "Mitte-Mitte",
+              "standard": 10.2,
+              "schritt": 0.05,
+              "kommentar": "Zahnmittenabstand"
+            },
+            {
+              "key": "spitzen_d",
+              "i18n": "head_d",
+              "de": "Kopf Ø",
+              "standard": 2.8,
+              "schritt": 0.05,
+              "kommentar": "Kopfrundungs-Ø"
+            },
+            {
+              "key": "fuss_d",
+              "i18n": "foot_d",
+              "de": "Fuß Ø",
+              "standard": 7.0,
+              "schritt": 0.05,
+              "kommentar": "Fußrundungs-Ø"
+            },
+            {
+              "key": "tiefe",
+              "i18n": "depth",
+              "de": "Tiefe",
+              "standard": 5.6,
+              "schritt": 0.05,
+              "kommentar": "radiale Zahntiefe"
+            },
+            {
+              "key": "breite",
+              "i18n": "width_z",
+              "de": "Breite Z",
+              "standard": 11.0,
+              "schritt": 0.5,
+              "kommentar": "axiale Gesamtdicke"
+            },
+            {
+              "key": "zahn_r",
+              "i18n": "tooth_round",
+              "de": "Zahn-Rundung",
+              "standard": 0.4,
+              "schritt": 0.05,
+              "kommentar": "Verrundung der Zahnkontur beidseitig (0 = scharf)"
+            },
+            {
+              "key": "fuehrung_w",
+              "i18n": "guide_width",
+              "de": "Führung Breite",
+              "standard": 1.0,
+              "schritt": 0.1,
+              "kommentar": "Dicke des Führungsrings (0 = keiner)"
+            },
+            {
+              "key": "fuehrung_d",
+              "i18n": "guide_d",
+              "de": "Führung Ø",
+              "standard": 46.5,
+              "schritt": 0.5,
+              "kommentar": "Führungsring-Außen-Ø (0 = auto)"
+            }
           ]
         },
         {
           "id": "sec4",
           "de": "Speichen (Material sparen)",
           "felder": [
-            { "key": "speichen_n",       "i18n": "spokes_n",     "de": "Speichen",         "standard": 0,    "schritt": 1,   "kommentar": "Anzahl Arme (0 = aus, sonst z. B. 5)" },
-            { "key": "speichen_b",       "i18n": "spokes_w",     "de": "Speichen Breite",  "standard": 4.50, "schritt": 0.1, "kommentar": "Armbreite quer zur Speiche" },
-            { "key": "speichen_schwung", "i18n": "spokes_sweep", "de": "Schwung (°)",      "standard": 0.00, "schritt": 1,   "kommentar": "0 = gerade, sonst gebogen" },
-            { "key": "speichen_wand",    "i18n": "spokes_wall",  "de": "Wandstärke",       "standard": 2.00, "schritt": 0.1, "kommentar": "Wand am Kranz UND an der Nabe" },
-            { "key": "speichen_r",       "i18n": "spokes_round", "de": "Speichen-Rundung", "standard": 2.00, "schritt": 0.1, "kommentar": "Eckenradius der Öffnungen (in der Ebene)" },
-            { "key": "speichen_kante",   "i18n": "spokes_edge",  "de": "Kantenradius",     "standard": 0.00, "schritt": 0.1, "kommentar": "Rundung der Öffnungskanten an den Stirnflächen (0 = scharf)" }
+            {
+              "key": "speichen_n",
+              "i18n": "spokes_n",
+              "de": "Speichen",
+              "standard": 0,
+              "schritt": 1,
+              "kommentar": "Anzahl Arme (0 = aus, sonst z. B. 5)"
+            },
+            {
+              "key": "speichen_b",
+              "i18n": "spokes_w",
+              "de": "Speichen Breite",
+              "standard": 4.5,
+              "schritt": 0.1,
+              "kommentar": "Armbreite quer zur Speiche"
+            },
+            {
+              "key": "speichen_schwung",
+              "i18n": "spokes_sweep",
+              "de": "Schwung (°)",
+              "standard": 0.0,
+              "schritt": 1,
+              "kommentar": "0 = gerade, sonst gebogen"
+            },
+            {
+              "key": "speichen_wand",
+              "i18n": "spokes_wall",
+              "de": "Wandstärke",
+              "standard": 2.0,
+              "schritt": 0.1,
+              "kommentar": "Wand am Kranz UND an der Nabe"
+            },
+            {
+              "key": "speichen_r",
+              "i18n": "spokes_round",
+              "de": "Speichen-Rundung",
+              "standard": 2.0,
+              "schritt": 0.1,
+              "kommentar": "Eckenradius der Öffnungen (in der Ebene)"
+            },
+            {
+              "key": "speichen_kante",
+              "i18n": "spokes_edge",
+              "de": "Kantenradius",
+              "standard": 0.0,
+              "schritt": 0.1,
+              "kommentar": "Rundung der Öffnungskanten an den Stirnflächen (0 = scharf). Nur in FreeCAD — die Weboberfläche und die App zeigen das Feld nicht.",
+              "nur_freecad": true
+            }
           ]
         },
         {
           "id": "sec2",
           "de": "Zylinder (Kugellager)",
           "felder": [
-            { "key": "bohrung_d", "i18n": "bore_d",         "de": "Bohrung Ø",        "standard": 14.00, "schritt": 0.5, "kommentar": "zentrale Wellenbohrung (0 = keine)" },
-            { "key": "nabe_d",    "i18n": "hub_d",          "de": "Nabe Ø",           "standard": 20.00, "schritt": 0.5, "kommentar": "Außen-Ø der Nabe (0 = keine)" },
-            { "key": "nabe_l",    "i18n": "hub_len",        "de": "Nabe Länge",       "standard": 13.00, "schritt": 0.5, "kommentar": "axiale Länge der Nabe" },
-            { "key": "lager_d",   "i18n": "bearing_d",      "de": "Lagersitz Ø",      "standard": 16.00, "schritt": 0.5, "kommentar": "Flansch-Senkung beide Enden (0 = keine)" },
-            { "key": "lager_t",   "i18n": "bearing_depth",  "de": "Lagersitz Tiefe",  "standard": 1.00,  "schritt": 0.1, "kommentar": "Tiefe der Flansch-Senkung je Seite" }
+            {
+              "key": "bohrung_d",
+              "i18n": "bore_d",
+              "de": "Bohrung Ø",
+              "standard": 14.0,
+              "schritt": 0.5,
+              "kommentar": "zentrale Wellenbohrung (0 = keine)"
+            },
+            {
+              "key": "nabe_d",
+              "i18n": "hub_d",
+              "de": "Nabe Ø",
+              "standard": 20.0,
+              "schritt": 0.5,
+              "kommentar": "Außen-Ø der Nabe (0 = keine)"
+            },
+            {
+              "key": "nabe_l",
+              "i18n": "hub_len",
+              "de": "Nabe Länge",
+              "standard": 13.0,
+              "schritt": 0.5,
+              "kommentar": "axiale Länge der Nabe"
+            },
+            {
+              "key": "lager_d",
+              "i18n": "bearing_d",
+              "de": "Lagersitz Ø",
+              "standard": 16.0,
+              "schritt": 0.5,
+              "kommentar": "Flansch-Senkung beide Enden (0 = keine)"
+            },
+            {
+              "key": "lager_t",
+              "i18n": "bearing_depth",
+              "de": "Lagersitz Tiefe",
+              "standard": 1.0,
+              "schritt": 0.1,
+              "kommentar": "Tiefe der Flansch-Senkung je Seite"
+            }
           ]
         },
         {
           "id": "sec3",
           "de": "Seitliche Schmutzabweiser",
           "felder": [
-            { "key": "steg_w",       "i18n": "web_width",    "de": "Steg Breite",      "standard": 3.00,  "schritt": 0.1, "kommentar": "stehender Mittelsteg (Muldenabstand)" },
-            { "key": "seiten_t",     "i18n": "side_depth",   "de": "Tiefe am Steg",    "standard": 6.00,  "schritt": 0.1, "kommentar": "radiale Muldentiefe am Steg (Drehpunkt)" },
-            { "key": "tasche_b",     "i18n": "pocket_width", "de": "Mulden-Breite",    "standard": 5.00,  "schritt": 0.1, "kommentar": "tangentiale Breite je Mulde (0 = keine)" },
-            { "key": "mulde_winkel", "i18n": "pocket_angle", "de": "Mulden-Winkel",    "standard": 35.00, "schritt": 1,   "kommentar": "dreht an der Steg-Kante, nach außen tiefer (0 = gerade)" },
-            { "key": "mulde_r",      "i18n": "pocket_round", "de": "Mulden-Rundung",   "standard": 2.00,  "schritt": 0.1, "kommentar": "Radius der Winkelflächen-Verrundung" }
+            {
+              "key": "steg_w",
+              "i18n": "web_width",
+              "de": "Steg Breite",
+              "standard": 3.0,
+              "schritt": 0.1,
+              "kommentar": "stehender Mittelsteg (Muldenabstand)"
+            },
+            {
+              "key": "seiten_t",
+              "i18n": "side_depth",
+              "de": "Tiefe am Steg",
+              "standard": 6.0,
+              "schritt": 0.1,
+              "kommentar": "radiale Muldentiefe am Steg (Drehpunkt)"
+            },
+            {
+              "key": "tasche_b",
+              "i18n": "pocket_width",
+              "de": "Mulden-Breite",
+              "standard": 5.0,
+              "schritt": 0.1,
+              "kommentar": "tangentiale Breite je Mulde (0 = keine)"
+            },
+            {
+              "key": "mulde_winkel",
+              "i18n": "pocket_angle",
+              "de": "Mulden-Winkel",
+              "standard": 35.0,
+              "schritt": 1,
+              "kommentar": "dreht an der Steg-Kante, nach außen tiefer (0 = gerade)"
+            },
+            {
+              "key": "mulde_r",
+              "i18n": "pocket_round",
+              "de": "Mulden-Rundung",
+              "standard": 2.0,
+              "schritt": 0.1,
+              "kommentar": "Radius der Winkelflächen-Verrundung"
+            }
           ]
         }
       ]
     },
-
     {
       "id": "rolle",
       "i18n": "part_roller",
       "de": "Spannrolle",
-      "reihenfolge_freecad": ["rsec1", "rsec2", "rsec3"],
-
+      "reihenfolge_freecad": [
+        "rsec1",
+        "rsec2",
+        "rsec3"
+      ],
       "abschnitte": [
         {
           "id": "rsec1",
           "de": "Laufkranz (Grundkörper)",
           "felder": [
-            { "key": "rolle_d",    "i18n": "roller_d",    "de": "Außen-Ø (gesamt)",     "standard": 40.00, "schritt": 0.5, "kommentar": "größtes Maß der Rolle — hier läuft der Riemen" },
-            { "key": "rolle_b",    "i18n": "roller_w",    "de": "Breite",               "standard": 14.00, "schritt": 0.5, "kommentar": "axiale Breite (Riemen 11 mm + 1,5 je Seite)" },
-            { "key": "rolle_wand", "i18n": "roller_wall", "de": "Dicke der Lauffläche", "standard": 3.00,  "schritt": 0.1, "kommentar": "Kranzstärke nach innen — trägt den Riemendruck" },
-            { "key": "kante_r",    "i18n": "roller_edge", "de": "Kanten-Rundung",       "standard": 0.80,  "schritt": 0.1, "kommentar": "Rundung der beiden umlaufenden Laufflächenkanten (0 = scharf)" }
+            {
+              "key": "rolle_d",
+              "i18n": "roller_d",
+              "de": "Außen-Ø (gesamt)",
+              "standard": 40.0,
+              "schritt": 0.5,
+              "kommentar": "größtes Maß der Rolle — hier läuft der Riemen"
+            },
+            {
+              "key": "rolle_b",
+              "i18n": "roller_w",
+              "de": "Breite",
+              "standard": 14.0,
+              "schritt": 0.5,
+              "kommentar": "axiale Breite (Riemen 11 mm + 1,5 je Seite)"
+            },
+            {
+              "key": "rolle_wand",
+              "i18n": "roller_wall",
+              "de": "Dicke der Lauffläche",
+              "standard": 3.0,
+              "schritt": 0.1,
+              "kommentar": "Kranzstärke nach innen — trägt den Riemendruck"
+            },
+            {
+              "key": "kante_r",
+              "i18n": "roller_edge",
+              "de": "Kanten-Rundung",
+              "standard": 0.8,
+              "schritt": 0.1,
+              "kommentar": "Rundung der beiden umlaufenden Laufflächenkanten (0 = scharf)"
+            }
           ]
         },
         {
           "id": "rsec2",
           "de": "Speichen (Material sparen)",
           "felder": [
-            { "key": "speichen_n", "i18n": "spokes_n",     "de": "Speichen",         "standard": 5,    "schritt": 1,   "kommentar": "Anzahl Arme (0 = voller Steg)" },
-            { "key": "speichen_b", "i18n": "spokes_w",     "de": "Speichen Breite",  "standard": 4.00, "schritt": 0.1, "kommentar": "Armbreite quer zur Speiche" },
-            { "key": "speichen_r", "i18n": "spokes_round", "de": "Speichen-Rundung", "standard": 1.50, "schritt": 0.1, "kommentar": "Eckenradius der Öffnungen (in der Ebene)" },
-            { "key": "speichen_kante", "i18n": "spokes_edge", "de": "Kantenradius",     "standard": 0.00, "schritt": 0.1, "kommentar": "Rundung der Öffnungskanten an den Stirnflächen (0 = scharf)" }
+            {
+              "key": "speichen_n",
+              "i18n": "spokes_n",
+              "de": "Speichen",
+              "standard": 5,
+              "schritt": 1,
+              "kommentar": "Anzahl Arme (0 = voller Steg)"
+            },
+            {
+              "key": "speichen_b",
+              "i18n": "spokes_w",
+              "de": "Speichen Breite",
+              "standard": 4.0,
+              "schritt": 0.1,
+              "kommentar": "Armbreite quer zur Speiche"
+            },
+            {
+              "key": "speichen_r",
+              "i18n": "spokes_round",
+              "de": "Speichen-Rundung",
+              "standard": 1.5,
+              "schritt": 0.1,
+              "kommentar": "Eckenradius der Öffnungen (in der Ebene)"
+            },
+            {
+              "key": "speichen_kante",
+              "i18n": "spokes_edge",
+              "de": "Kantenradius",
+              "standard": 0.0,
+              "schritt": 0.1,
+              "kommentar": "Rundung der Öffnungskanten an den Stirnflächen (0 = scharf). Nur in FreeCAD — die Weboberfläche und die App zeigen das Feld nicht.",
+              "nur_freecad": true
+            }
           ]
         },
         {
           "id": "rsec3",
           "de": "Zylinder (Kugellager)",
           "felder": [
-            { "key": "bohrung_d", "i18n": "bore_d",        "de": "Bohrung Ø",       "standard": 14.00, "schritt": 0.5, "kommentar": "zentrale Wellenbohrung" },
-            { "key": "nabe_d",    "i18n": "hub_d",         "de": "Nabe Ø",          "standard": 20.00, "schritt": 0.5, "kommentar": "Außen-Ø der Nabe — dort setzen die Speichen an" },
-            { "key": "lager_d",   "i18n": "bearing_d",     "de": "Lagersitz Ø",     "standard": 16.00, "schritt": 0.5, "kommentar": "Flansch-Senkung beide Enden (0 = keine)" },
-            { "key": "lager_t",   "i18n": "bearing_depth", "de": "Lagersitz Tiefe", "standard": 1.00,  "schritt": 0.1, "kommentar": "Tiefe der Flansch-Senkung je Seite" }
+            {
+              "key": "bohrung_d",
+              "i18n": "bore_d",
+              "de": "Bohrung Ø",
+              "standard": 14.0,
+              "schritt": 0.5,
+              "kommentar": "zentrale Wellenbohrung"
+            },
+            {
+              "key": "nabe_d",
+              "i18n": "hub_d",
+              "de": "Nabe Ø",
+              "standard": 20.0,
+              "schritt": 0.5,
+              "kommentar": "Außen-Ø der Nabe — dort setzen die Speichen an"
+            },
+            {
+              "key": "lager_d",
+              "i18n": "bearing_d",
+              "de": "Lagersitz Ø",
+              "standard": 16.0,
+              "schritt": 0.5,
+              "kommentar": "Flansch-Senkung beide Enden (0 = keine)"
+            },
+            {
+              "key": "lager_t",
+              "i18n": "bearing_depth",
+              "de": "Lagersitz Tiefe",
+              "standard": 1.0,
+              "schritt": 0.1,
+              "kommentar": "Tiefe der Flansch-Senkung je Seite"
+            }
           ]
         }
       ]
