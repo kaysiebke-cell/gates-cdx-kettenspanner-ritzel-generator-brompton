@@ -82,7 +82,7 @@ export function speichenGeometrie(p, rKopf) {
   const basis = kontur(p.speichen_n, p.speichen_b, ri, ra,
                        p.speichen_r, p.speichen_schwung);
   if (!basis.oeffnungen.length) return null;
-  const weit = aufgeweitet(p, ri, ra, p.breite, basis.schwung);
+  const weit = aufgeweitet(p, ri, ra, p.breite, basis);
   return weit ? speichenPrismen(weit.oeffnungen, p.breite, weit.kr)
               : speichenPrismen(basis.oeffnungen, p.breite, 0);
 }
@@ -94,7 +94,7 @@ export function rolleSpeichen(p) {
   const { ri, ra } = rolleRing(p);
   const basis = kontur(p.speichen_n, p.speichen_b, ri, ra, p.speichen_r, 0);
   if (!basis.oeffnungen.length) return null;
-  const weit = aufgeweitet(p, ri, ra, p.rolle_b, 0);
+  const weit = aufgeweitet(p, ri, ra, p.rolle_b, basis);
   return weit ? speichenPrismen(weit.oeffnungen, p.rolle_b, weit.kr)
               : speichenPrismen(basis.oeffnungen, p.rolle_b, 0);
 }
@@ -109,19 +109,34 @@ export function rolleSpeichen(p) {
 // normale Öffnung, nur mit schmaleren Armen, weiterem Ring und größerer
 // Eckenrundung. Das IST die aufgeweitete Öffnung, und der Bevel versetzt
 // sie anschließend nach innen auf die eigentliche Kontur zurück.
-function aufgeweitet(p, ri, ra, dicke, schwung) {
-  const kr = Math.max(0, Math.min(p.speichen_kante || 0,
-                                  dicke / 2 - 0.05,
-                                  p.speichen_b / 2 - 0.2,
-                                  (ra - ri) / 4));
-  if (!(kr > 0.01)) return null;
-  const weit = kontur(p.speichen_n, p.speichen_b - 2 * kr, ri - kr, ra + kr,
-                      p.speichen_r + kr, schwung);   // schwung in Grad
-  // Weicht die Formel bei den aufgeweiteten Werten auf eine andere Stufe aus
-  // (weniger Schwung, andere Rundung), passt die Form nicht mehr zur
-  // Basiskontur — dann lieber ohne Rundung zeigen als mit Versatz.
-  if (!weit.oeffnungen.length || Math.abs(weit.schwung - schwung) > 1e-6) return null;
-  return { kr, oeffnungen: weit.oeffnungen };
+function aufgeweitet(p, ri, ra, dicke, basis) {
+  const gewuenscht = Math.max(0, Math.min(p.speichen_kante || 0,
+                                          dicke / 2 - 0.05,
+                                          p.speichen_b / 2 - 0.2,
+                                          (ra - ri) / 4));
+  if (!(gewuenscht > 0.01)) return null;
+
+  // Die aufgeweitete Kontur muss die Basiskontur um GENAU kr nach aussen
+  // versetzt sein — sonst landet der Bevel beim Zurueckschrumpfen neben der
+  // echten Oeffnung und knickt die Wand. Genau das passiert bei zu grossem
+  // Radius: kontur() deckelt die Eckenrundung auf die Armbreite, und die ist
+  // in der aufgeweiteten Fassung um 2*kr schmaler. Die Rundung waechst dann
+  // nicht um kr mit, und der Versatz stimmt an jeder Ecke nicht mehr.
+  //
+  // Darum wird geprueft, nicht gehofft: die zurueckgelieferte Rundung muss um
+  // kr ueber der Basis liegen und der Schwung derselbe sein. Passt es nicht,
+  // wird kr kleiner — lieber eine kleinere Rundung zeigen als eine falsche.
+  for (const faktor of [1, 0.85, 0.7, 0.55, 0.4, 0.25]) {
+    const kr = gewuenscht * faktor;
+    if (kr < 0.02) break;
+    const weit = kontur(p.speichen_n, p.speichen_b - 2 * kr, ri - kr, ra + kr,
+                        basis.rundung + kr, basis.schwung);   // Schwung in Grad
+    if (weit.oeffnungen.length
+        && Math.abs(weit.rundung - (basis.rundung + kr)) < 1e-6
+        && Math.abs(weit.schwung - basis.schwung) < 1e-6)
+      return { kr, oeffnungen: weit.oeffnungen };
+  }
+  return null;
 }
 
 // Ein Schneidkörper je Öffnung, über die volle Breite `dicke`.
