@@ -302,7 +302,7 @@ class ZahnradVollGenerator:
             lager_t   = params.get('lager_t', 0.0) # Tiefe der Flansch-Senkung je Seite
             steg_w    = params['steg_w']           # Breite des stehenden Mittelstegs (Muldenabstand)
             fuehr_w   = params['fuehrung_w']       # axiale Dicke des Führungsrings
-            fuehr_d   = params['fuehrung_d']       # Außen-Ø des Führungsrings (0 = auto)
+            fuehr_d   = params['fuehrung_d']       # Außen-Ø des Führungsrings (0 = keine Führung)
             seiten_t  = params['seiten_t']         # radiale Tiefe der Mulde (außen)
             tasche_b  = params['tasche_b']         # tangentiale Breite je Tasche
             m_winkel  = params['mulde_winkel']     # Neigung der Muldenflanke [Grad]
@@ -368,8 +368,8 @@ class ZahnradVollGenerator:
             #    Ecken auf den Zähnen, Flachseiten über den Lücken — wie in der
             #    Vorlage), steht in den Zahnlücken über den Zahnfuß hinaus.
             #    Schmaler als der Steg -> gewollter Steg-Überstand je Seite.
-            if fuehr_w > 0:
-                r_guide = (fuehr_d / 2.0) if fuehr_d > 0 else (self.r_kopf_max - 1.1)
+            if fuehr_w > 0 and fuehr_d > 0:
+                r_guide = fuehr_d / 2.0
                 self._add_fuehrungsring(doc, body, r_guide, fuehr_w, z,
                                         params.get('rotation', 0.0))
 

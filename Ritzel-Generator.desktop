@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Ritzel-Generator
+Comment=Gates CDX Ritzel-Generator lokal starten
+Exec=/home/kaysiebke/GidHub/Gates CDX Ritzel Generator/tools/starte-app.sh
+Icon=/home/kaysiebke/GidHub/Gates CDX Ritzel Generator/web/icons/icon-512.png
+Terminal=false
+Categories=Graphics;Engineering;

@@ -15,4 +15,7 @@
 // genuegt es, hier '' einzutragen: dann erscheint statt des Knopfs wieder
 // der erklaerende Hinweis. Voraussetzung im Worker ist das Secret
 // GITHUB_TOKEN (Repo + Actions, Read/Write), siehe worker/README.md.
-export const STEP_API = 'https://gates-cdx-kettenspanner-ritzel-generator-brompton.kaysiebke.workers.dev';
+// Stand 2026-10: die Worker-Adresse antwortet mit 404 (Worker nicht
+// deployt/geloescht) -> Cloud-Bau schlug immer fehl. Erst wieder eintragen,
+// wenn der Worker laeuft.
+export const STEP_API = '';

@@ -188,9 +188,10 @@ export function buildMeshes(p, mat) {
   const mulden = muldenGeometrie(p, rKopf);
   if (mulden) gear = csgOp(gear, mulden, SUBTRACTION);
 
-  // Riemenführung: z-Eck (Ecken auf den Zähnen), Loch = Nabe
-  if (p.fuehrung_w > 0) {
-    const rG = p.fuehrung_d > 0 ? p.fuehrung_d / 2 : rKopf - 1.1;
+  // Riemenführung: z-Eck (Ecken auf den Zähnen), Loch = Nabe.
+  // Ø 0 = keine Führung.
+  if (p.fuehrung_w > 0 && p.fuehrung_d > 0) {
+    const rG = p.fuehrung_d / 2;
     const poly = [];
     for (let i = 0; i < p.zaehne; i++)
       poly.push(dir2(2 * Math.PI * i / p.zaehne).multiplyScalar(rG));

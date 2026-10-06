@@ -42,6 +42,13 @@ export function refreshStepButton(bauteil = 'ritzel') {
   const bbtn = el('stepbuildbtn'), bhint = el('stepbuildhint'), status = el('stepbuildstatus');
   if (!btn) return;
 
+  // In der Android-App ist STEP nutzlos: die Datei braucht einen Rechner mit
+  // CAD. Dort also gar nichts anzeigen (die Bruecke gibt es nur in der App).
+  if (window.AndroidDownload) {
+    for (const e of [btn, hint, bbtn, bhint, status]) if (e) e.style.display = 'none';
+    return;
+  }
+
   aktivesBauteil = bauteil;
 
   // Für die Spannrolle gibt es keine vorgebaute Serie — sie hängt an keiner
