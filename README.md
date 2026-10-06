@@ -31,6 +31,7 @@ The per-field explanations are collapsed by default — the **ⓘ** button at th
 
 1. Copy the project folder into your FreeCAD macro directory (or any location of your choice).
 2. Run `freecad/main.py` as a macro in FreeCAD. The **"Zahnrad Setup"** (Gear Setup) panel will automatically dock on the right side.
+   On Linux (FreeCAD as Flatpak) a double-click on `Ritzel-Generator.desktop` in the project folder does the same.
 
 | Button | Function |
 |---|---|
@@ -136,7 +137,7 @@ A solid web runs between hub and tooth rim across the full width. Structurally i
 
 To get spokes on smaller sprockets, reduce `Side Depth` or `Pocket Angle` first.
 
-> **Note:** The pre-built release files (12–19 teeth) are built without spokes. As soon as you enable spokes your values differ from the standard – download the STL straight from the browser and the STEP via the cloud build.
+> **Note:** The pre-built release files (12–19 teeth) are built without spokes. As soon as you enable spokes your values differ from the standard – download the STL straight from the browser ; there is currently no cloud build for custom STEP values (relay switched off) – build the body in FreeCAD instead.
 
 ## Matching Ball Bearings
 

@@ -28,8 +28,8 @@ Sie bringt die komplette Web-App mit und **läuft ohne Netz** — Werte ändern,
 Heruntergeladene Dateien landen im Ordner **„Downloads"**:
 
 - **ZIP (Ritzel + Bügel als STL)** wird auf dem Gerät gebaut, geht also offline.
-- **STEP-ZIP** (nur bei Standardwerten) holt die fertige Datei aus dem Release
-  „serie" — dafür braucht das Handy einmal Netz.
+- **STEP** gibt es in der App nicht — die Datei braucht ohnehin einen Rechner
+  mit CAD. Die fertigen STEP-Dateien liegen im Release „serie".
 
 ## ⚠️ Beim Aktualisieren
 

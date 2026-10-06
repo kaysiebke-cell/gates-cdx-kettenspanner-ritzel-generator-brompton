@@ -31,6 +31,7 @@ Die Erklärungen zu den einzelnen Feldern sind eingeklappt — der Knopf **ⓘ**
 
 1. Kopiere den Projektordner in dein FreeCAD-Makroverzeichnis (oder an einen Ort deiner Wahl).
 2. Starte die `freecad/main.py` als Makro in FreeCAD. Das Bedienfeld **"Zahnrad Setup"** dockt sich automatisch rechts an.
+   Unter Linux (FreeCAD als Flatpak) startet das auch per Doppelklick auf `Ritzel-Generator.desktop` im Projektordner.
 
 | Button | Funktion |
 |---|---|
@@ -136,7 +137,7 @@ Zwischen Nabe und Zahnkranz sitzt ein massiver Steg über die volle Breite. Trag
 
 Wer auch bei kleineren Ritzeln Speichen will, muss zuerst `Tiefe am Steg` oder `Mulden-Winkel` zurücknehmen.
 
-> **Hinweis:** Die vorgebauten Release-Dateien (12–19 Zähne) sind ohne Speichen gebaut. Sobald du Speichen aktivierst, weichen deine Werte vom Standard ab – die STL lädst du dann direkt aus dem Browser, die STEP über den Cloud-Bau.
+> **Hinweis:** Die vorgebauten Release-Dateien (12–19 Zähne) sind ohne Speichen gebaut. Sobald du Speichen aktivierst, weichen deine Werte vom Standard ab – die STL lädst du dann direkt aus dem Browser. Einen Cloud-Bau für eigene STEP-Werte gibt es zurzeit nicht (Vermittler abgeschaltet) – dafür den Körper in FreeCAD erzeugen.
 
 ## Passende Kugellager
 
