@@ -32,3 +32,6 @@ android/keystore.properties
 
 # Ausgabe des Hintergrund-Baus (Bedienfeld) und der Serien-Skripte
 freecad/output/
+
+# Linux-Paket (wird mit linux/bauen-deb.sh erzeugt)
+linux/dist/

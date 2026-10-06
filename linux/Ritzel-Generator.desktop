@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Ritzel-Generator
-Comment=Ritzel-Generator in FreeCAD starten
-Exec="/home/kaysiebke/GidHub/Gates CDX Ritzel Generator/linux/starte-app.sh"
-Icon=/home/kaysiebke/GidHub/Gates CDX Ritzel Generator/linux/icon.png
-Terminal=false
-Categories=Graphics;Engineering;

@@ -1,10 +1,29 @@
-# Linux-App (FreeCAD)
+# Linux-App
 
-Startet FreeCAD und öffnet darin das Bedienfeld „Zahnrad Setup" (`../freecad/main.py`).
+Eigenständige Linux-Anwendung: eigenes Fenster (GTK + WebKitGTK), kein Browser,
+läuft offline. Zeigt dieselbe Oberfläche wie `../web/`, liefert sie aber
+selbst lokal aus. Downloads landen in `~/Downloads`.
 
-- `Ritzel-Generator.desktop` – Doppelklick zum Starten (Pfade sind absolut, bei Umzug des Projekts anpassen)
-- `icon.png` – Symbol des Starters
-- `starte-app.sh` – das eigentliche Startskript (Flatpak oder normales FreeCAD)
+| Datei | Inhalt |
+|---|---|
+| `ritzel-generator.py` | Die Anwendung |
+| `bauen-deb.sh` | Baut das Paket `dist/ritzel-generator_<version>_all.deb` |
+| `freecad-starter/` | Doppelklick-Starter für die FreeCAD-Version (`../freecad/`) |
 
-Ordnerübersicht: `web/` Browser-Version · `android/` Android-App · `freecad/` FreeCAD-Code · `linux/` dieser Starter.
-Gemeinsam genutzt (deshalb im Hauptordner): `params.json`.
+## Bauen und installieren
+
+```bash
+linux/bauen-deb.sh
+sudo apt install ./linux/dist/ritzel-generator_*_all.deb
+```
+
+Danach „Ritzel-Generator“ im Anwendungsmenü starten (oder `ritzel-generator`).
+
+## Ohne Installation ausprobieren
+
+```bash
+npm run build:shell && npm run build:viewer
+python3 linux/ritzel-generator.py
+```
+
+Braucht `python3-gi`, `gir1.2-gtk-3.0` und `gir1.2-webkit2-4.1`.

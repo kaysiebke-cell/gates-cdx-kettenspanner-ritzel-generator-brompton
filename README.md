@@ -31,7 +31,7 @@ The per-field explanations are collapsed by default — the **ⓘ** button at th
 
 1. Copy the project folder into your FreeCAD macro directory (or any location of your choice).
 2. Run `freecad/main.py` as a macro in FreeCAD. The **"Zahnrad Setup"** (Gear Setup) panel will automatically dock on the right side.
-   On Linux (FreeCAD as Flatpak) a double-click on `linux/Ritzel-Generator.desktop` does the same.
+   On Linux (FreeCAD as Flatpak) a double-click on `linux/freecad-starter/Ritzel-Generator.desktop` does the same.
 
 | Button | Function |
 |---|---|
