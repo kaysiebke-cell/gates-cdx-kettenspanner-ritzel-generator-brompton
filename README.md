@@ -137,7 +137,7 @@ A solid web runs between hub and tooth rim across the full width. Structurally i
 
 To get spokes on smaller sprockets, reduce `Side Depth` or `Pocket Angle` first.
 
-> **Note:** The pre-built release files (12–19 teeth) are built without spokes. As soon as you enable spokes your values differ from the standard – download the STL straight from the browser ; there is currently no cloud build for custom STEP values (relay switched off) – build the body in FreeCAD instead.
+> **Note:** The pre-built release files (12–19 teeth) are built without spokes. As soon as you enable spokes your values differ from the standard – download the STL straight from the browser; there is currently no cloud build for custom STEP values (relay switched off) – build the body in FreeCAD instead.
 
 ## Matching Ball Bearings
 
