@@ -34,13 +34,9 @@ let building = false;
 // liest es — sonst schickte der Cloud-Bau die Rollenmaße als Ritzel los.
 let aktivesBauteil = 'ritzel';
 
-// Laeuft die Seite als App? Android: die Download-Bruecke gibt es nur dort.
-// PC: der Starter (tools/starte-app.sh) oeffnet ?app=1 im eigenen Fenster;
-// zusaetzlich zaehlt eine installierte PWA (display-mode standalone).
+// Laeuft die Seite in der Android-App? Die Download-Bruecke gibt es nur dort.
 function inAppFenster() {
-  return !!window.AndroidDownload
-    || new URLSearchParams(location.search).has('app')
-    || window.matchMedia('(display-mode: standalone)').matches;
+  return !!window.AndroidDownload;
 }
 
 // Sichtbarkeit + Beschriftung an die aktuellen Formularwerte anpassen.
@@ -51,7 +47,7 @@ export function refreshStepButton(bauteil = 'ritzel') {
   const bbtn = el('stepbuildbtn'), bhint = el('stepbuildhint'), status = el('stepbuildstatus');
   if (!btn) return;
 
-  // In der App (Android oder PC-Fenster) ist STEP nutzlos: dort gar nichts anzeigen.
+  // In der Android-App ist STEP nutzlos: dort gar nichts anzeigen.
   if (inAppFenster()) {
     for (const e of [btn, hint, bbtn, bhint, status]) if (e) e.style.display = 'none';
     return;

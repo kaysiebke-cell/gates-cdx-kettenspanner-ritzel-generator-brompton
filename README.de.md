@@ -31,7 +31,7 @@ Die Erklärungen zu den einzelnen Feldern sind eingeklappt — der Knopf **ⓘ**
 
 1. Kopiere den Projektordner in dein FreeCAD-Makroverzeichnis (oder an einen Ort deiner Wahl).
 2. Starte die `freecad/main.py` als Makro in FreeCAD. Das Bedienfeld **"Zahnrad Setup"** dockt sich automatisch rechts an.
-   Unter Linux (FreeCAD als Flatpak) startet das auch per Doppelklick auf `Ritzel-Generator.desktop` im Projektordner.
+   Unter Linux (FreeCAD als Flatpak) startet das auch per Doppelklick auf `linux/Ritzel-Generator.desktop`.
 
 | Button | Funktion |
 |---|---|
