@@ -183,9 +183,16 @@ export default {
           return new Response(JSON.stringify({ error: 'kein STEP-Artifact' }),
             { status: 404, headers: jsonHeaders(origin) });
 
-        const zip = await fetch(
+        // GitHub antwortet mit einer Weiterleitung auf einen Speicherserver.
+        // Dem Link muss OHNE den GitHub-Zugang gefolgt werden: schickt fetch
+        // den Authorization-Header dorthin mit, antwortet der Speicher mit 401.
+        const erste = await fetch(
           `${GH}/repos/${repo}/actions/artifacts/${art.id}/zip`,
-          { headers: ghHeaders(env) });
+          { headers: ghHeaders(env), redirect: 'manual' });
+        const ziel = erste.headers.get('Location');
+        const zip = (erste.status >= 300 && erste.status < 400 && ziel)
+          ? await fetch(ziel)
+          : erste;
         if (!zip.ok)
           return new Response(JSON.stringify({ error: `artifact ${zip.status}` }),
             { status: 502, headers: jsonHeaders(origin) });
