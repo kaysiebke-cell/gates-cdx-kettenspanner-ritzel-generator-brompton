@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      # Exakt gepinnte Dev-Abhaengigkeiten (esbuild, three, three-bvh-csg)
+      # Exakt gepinnte Dev-Abhaengigkeiten (esbuild, three, manifold-3d)
       # aus package.json installieren und Bundles nach web/js/ bauen.
       - name: Abhaengigkeiten installieren
         run: npm install

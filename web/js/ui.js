@@ -7,6 +7,7 @@ import { maengel } from './rolle.js';
 import { scene, camera, controls, boden, mat } from './scene.js';
 import { buegelGeometrie, buegelMaterial } from './buegel.js';
 import { makeZip } from './zip.js';
+import { csgBereit } from './csg.js';
 
 let group = null;
 let lastR = 0;
@@ -39,6 +40,7 @@ let bauteil = 'ritzel';
 export function setzeBauteil(id) { bauteil = id; }
 
 export function rebuild() {
+  if (!csgBereit()) return;   // WebAssembly noch nicht geladen: viewer.js baut danach selbst
   const p = params(bauteil);
   if (group) { scene.remove(group); group.traverse(o => o.geometry && o.geometry.dispose()); }
   const rolle = bauteil === 'rolle';

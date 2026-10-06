@@ -53,3 +53,7 @@ jobs:
         run: |
           npm install
           npm run build:shell && npm run build:viewer
+
+      # Sind die Netze wasserdicht? Sonst melden Slicer "non-manifold edges".
+      - name: Netze auf Wasserdichtigkeit pruefen
+        run: npm run test:dicht

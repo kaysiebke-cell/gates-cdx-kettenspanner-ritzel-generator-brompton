@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
+import { vereinige, csgOp, alsGeometrie, SUBTRACTION } from './csg.js';
 
 // Riemenschutz-Bügel — parametrisch als Formel gebaut (wie das Ritzel), damit
 // alles einheitlich live gerechnet wird. Aus den echten FreeCAD-Buegeln
@@ -75,7 +74,9 @@ export function buegelGeometrie(p) {
   foot.translate(0, yFar - B.foot_inset, B.foot_z0);
   teile.push(foot);
 
-  let geo = mergeGeometries(teile);
+  // Arm, Boss und Fuss überlappen sich: wirklich vereinigen, nicht nur
+  // aneinanderlegen — sonst steckt im STL ein Körper im anderen.
+  let geo = vereinige(teile);
 
   // --- Schrauben-Sackloch: 3 mm tief von HINTEN (nicht durch) per CSG ---
   // Zylinder ragt hinten heraus und schneidet screw_depth mm in die Platte.
@@ -84,14 +85,11 @@ export function buegelGeometrie(p) {
   const cut = new THREE.CylinderGeometry(B.screw_r, B.screw_r, cutH, 40);
   cut.rotateX(Math.PI / 2);                        // Achse auf Z
   cut.translate(B.screw_x, B.screw_y, zBack + B.screw_depth - cutH / 2);
-  geo = evaluator.evaluate(new Brush(geo), new Brush(cut), SUBTRACTION).geometry;
+  geo = alsGeometrie(csgOp(geo, cut, SUBTRACTION));
 
   geo.computeVertexNormals();
   return geo;
 }
-
-const evaluator = new Evaluator();
-evaluator.useGroups = false;
 
 // Bügel-Optik: mattes Metallgrau, klar vom bronzenen Ritzel unterscheidbar.
 export const buegelMaterial = new THREE.MeshStandardMaterial({

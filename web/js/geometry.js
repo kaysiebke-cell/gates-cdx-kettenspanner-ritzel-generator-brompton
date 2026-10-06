@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { mergeGeometries, mergeVertices, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
-import { Brush, Evaluator, SUBTRACTION, ADDITION } from 'three-bvh-csg';
+import { mergeVertices, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
+import { csgOp, alsGeometrie, ADDITION, SUBTRACTION } from './csg.js';
 import { ringRadien, kontur } from './speichen.js';
 import { radien, konturPunkte } from './zahnprofil.js';
 import { radien as rolleRadien, ringRadien as rolleRing,
@@ -71,7 +71,7 @@ export function muldenGeometrie(p, rKopf) {
     }
     prisma.dispose();
   }
-  return mergeGeometries(teile);
+  return teile;      // Liste: csgOp vereinigt sie selbst
 }
 
 // Speichen-Durchbrüche — Kontur aus speichen.js, identisch zum Generator
@@ -124,18 +124,7 @@ function speichenPrismen(oeffnungen, tiefe) {
     geo.translate(0, 0, -tiefe / 2);
     teile.push(geo);
   }
-  return mergeGeometries(teile);
-}
-
-const evaluator = new Evaluator();
-evaluator.useGroups = false;   // ein Material für das Ergebnis, keine Gruppen
-
-function csgOp(geoA, geoB, op) {
-  const a = new Brush(geoA); a.updateMatrixWorld();
-  const b = new Brush(geoB); b.updateMatrixWorld();
-  const ergebnis = evaluator.evaluate(a, b, op);
-  geoA.dispose(); geoB.dispose();
-  return ergebnis.geometry;
+  return teile;      // Liste: csgOp vereinigt sie selbst
 }
 
 // Normalen nach dem letzten Schnitt neu berechnen.
@@ -161,7 +150,10 @@ function normalenRichten(geometrie) {
   // Erst zusammenschweissen: die CSG liefert lose Dreiecke, benachbarte
   // Flaechen teilen sich keinen Eckpunkt. Ohne das findet die Glaettung
   // keine Nachbarn und laesst alles facettiert.
-  return toCreasedNormals(mergeVertices(geometrie, 1e-4), KNICKWINKEL);
+  // Das Ergebnis von csgOp ist schon verschweisst und indiziert — dann
+  // entfaellt das teure mergeVertices.
+  const welded = geometrie.index ? geometrie : mergeVertices(geometrie, 1e-4);
+  return toCreasedNormals(welded, KNICKWINKEL);
 }
 
 export function buildMeshes(p, mat) {
@@ -236,7 +228,7 @@ export function buildMeshes(p, mat) {
   if (speichen) gear = csgOp(gear, speichen, SUBTRACTION);
 
   // Ein einziger wasserdichter Körper — sauber für STL/Slicer
-  const koerper = new THREE.Mesh(normalenRichten(gear), mat);
+  const koerper = new THREE.Mesh(normalenRichten(alsGeometrie(gear)), mat);
   koerper.castShadow = true;
   // KEIN receiveShadow: das Teil schattiert sich sonst selbst, und bei einer
   // Schattenkarte mit rund 0,07 mm je Texel entstehen daraus Streifen quer
@@ -287,7 +279,7 @@ export function rolleMeshes(p, mat) {
   const speichen = rolleSpeichen(p);
   if (speichen) koerper = csgOp(koerper, speichen, SUBTRACTION);
 
-  const mesh = new THREE.Mesh(normalenRichten(koerper), mat);
+  const mesh = new THREE.Mesh(normalenRichten(alsGeometrie(koerper)), mat);
   mesh.castShadow = true;
   mesh.receiveShadow = false;   // wie beim Ritzel: keine Selbstverschattung
   g.add(mesh);

@@ -21,6 +21,7 @@ Eine Änderung in `web/js/` oder `web/index.html` wirkt also auf **Web, Android 
 
 - **Gemeinsame Quelle:** `params.json` (Eingabefelder, Standardwerte, Grenzen) — gelesen von Web **und** FreeCAD. Werte nur dort eintragen.
 - **Geometrie doppelt:** Web `web/js/geometry.js` (Vorschau, Näherung) ↔ FreeCAD `freecad/zahnrad_generator.py` (exakt). Änderungen an der Form müssen **in beiden** gemacht werden. Geteilte Mathematik: `zahnprofil`, `speichen_geometrie`/`speichen.js` (geprüft mit `npm test`, braucht Node ≥ 20).
+- **Boolesche Operationen (Mulden, Führung, Nabe, Speichen, Bügel):** `web/js/csg.js` mit `manifold-3d` (WebAssembly, als Base64 im Viewer-Bundle). Seit 2026-10-06 statt `three-bvh-csg`, das Netze mit Rissen lieferte (Slicer: „non-manifold edges“, Reddit-Meldung). Prüfung: `npm run test:dicht` (läuft in `pruefen.yml`). Ein Neuaufbau der Vorschau dauert dadurch ca. 1 s.
 - **Web-Dateien:** `web/index.html`, `web/js/*.js` (Quellen), `web/js/*.bundle.js` (**generiert, nicht in Git**, `npm run build`).
 - **Android:** `android/app/src/main/java/.../MainActivity.kt` (Download-Brücke `AndroidDownload`), `android/app/build.gradle`. Debug-APK: `cd android && ./gradlew assembleDebug`.
 - **Linux-App:** `linux/ritzel-generator.py`, Paket bauen mit `linux/bauen-deb.sh` → `linux/dist/*.deb` (nicht in Git).

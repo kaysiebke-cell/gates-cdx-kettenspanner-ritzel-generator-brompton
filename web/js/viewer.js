@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { t } from './i18n.js';
 import { renderer, scene, camera, resize, startRenderLoop } from './scene.js';
 import { rebuild, setzeBauteil, exportStl } from './ui.js';
+import { initCsg } from './csg.js';
 
 // Download: Ritzel + Schutzbügel gebündelt als ZIP
 document.getElementById('stlbtn').addEventListener('click', (e) => {
@@ -31,9 +32,17 @@ if (window.__ritzelBauteil) setzeBauteil(window.__ritzelBauteil);
 window.__ritzelLangChanged = rebuild;
 
 resize();
-rebuild();
 window.__dbg = { renderer, scene, THREE };
 startRenderLoop();
 
-// Lade-Indikator entfernen, sobald das erste Modell steht
-document.getElementById('loader')?.remove();
+// Die Booleschen Operationen laufen in WebAssembly (csg.js) und brauchen einen
+// asynchronen Start. Erst danach steht das erste Modell.
+initCsg().then(() => {
+  rebuild();
+  // Lade-Indikator entfernen, sobald das erste Modell steht
+  document.getElementById('loader')?.remove();
+}).catch((e) => {
+  console.error('CSG-Start fehlgeschlagen:', e);
+  const l = document.getElementById('loader');
+  if (l) l.textContent = '3D konnte nicht geladen werden';
+});
