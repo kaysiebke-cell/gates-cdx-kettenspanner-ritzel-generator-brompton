@@ -70,7 +70,6 @@ button, a.btn {
   cursor: pointer; text-align: center; text-decoration: none;
 }
 a.btn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
-button:hover, a.btn:hover { filter: brightness(0.96); }
 #copied { color: var(--accent); font-size: 12.5px; text-align: center; min-height: 16px; }
 #overlaynote {
   position: absolute; left: 12px; bottom: 10px; font-size: 12px;
@@ -98,7 +97,6 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
   background: var(--bg); color: var(--text); font-size: 12px;
   cursor: pointer; white-space: nowrap; margin-left: auto;
 }
-#lang-toggle:hover { background: var(--border); }
 
 /* ⓘ-Schalter: klappt alle Erklärtexte auf einmal auf und zu. Sitzt am
    rechten Ende der Tab-Leiste — dort ist Platz frei, und die Kopfzeile
@@ -110,7 +108,6 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
   background: var(--bg); color: var(--muted); font-size: 15px; line-height: 1.2;
   cursor: pointer;
 }
-#hintsbtn:hover { background: var(--border); filter: none; }
 /* Eingeschaltet: in der Themenfarbe, damit erkennbar bleibt, woher die
    zusätzlichen Texte kommen. */
 #hintsbtn[aria-pressed="true"] {
@@ -129,7 +126,6 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
   cursor: pointer; white-space: nowrap; margin-left: auto;
 }
 #installbtn + #lang-toggle { margin-left: 8px; }
-#installbtn:hover { filter: brightness(1.08); }
 #installbtn[hidden] { display: none; }
 
 /* ── Tab-Leiste ───────────────────────────────────────────────────── */
@@ -151,7 +147,6 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
 .tab[aria-selected="true"] {
   color: var(--text); font-weight: 600; border-bottom-color: var(--accent);
 }
-.tab:hover { color: var(--text); filter: none; }
 
 /* ── Druck-Empfehlungen ───────────────────────────────────────────── */
 #printview {
@@ -203,6 +198,32 @@ button:hover, a.btn:hover { filter: brightness(0.96); }
 .disclaimer {
   margin-top: 24px; padding: 12px; border: 1px solid var(--border);
   border-radius: 6px; background: var(--panel); color: var(--muted); font-size: 12.5px;
+}
+
+/* ── Zeiger-abhängiges Verhalten ───────────────────────────────────── */
+/* Hover-Zustände nur, wo ein Zeiger schwebt. Auf Touch-Geräten bleibt der
+   zuletzt angetippte Knopf sonst „hängen“, weil der Finger keinen
+   Mouse-Out kennt — er sieht dann dauerhaft aus wie ausgewählt. */
+@media (hover: hover) {
+  button:hover, a.btn:hover { filter: brightness(0.96); }
+  #lang-toggle:hover { background: var(--border); }
+  /* Nicht im eingeschalteten Zustand: dort gehört der Knopf der
+     Themenfarbe, sonst überdeckte das Schweben die Rückmeldung. */
+  #hintsbtn:not([aria-pressed="true"]):hover { background: var(--border); filter: none; }
+  #installbtn:hover { filter: brightness(1.08); }
+  .tab:hover { color: var(--text); filter: none; }
+}
+
+/* Fingerbedienung auf breitem Bildschirm — Tablet im Querformat, Touch-
+   Monitor. Hier wird BEWUSST nur eine einzige Sache geändert: die Schrift
+   in den Eingabefeldern auf 16px. Unter 16px zoomt Safari (iPad) beim
+   Antippen die ganze Seite hinein und kommt von allein nicht zurück.
+   Alles andere — Zeilenabstände, Knöpfe, Reiter — bleibt wie am PC:
+   größere Trefferflächen sähen auf dem Papier richtig aus, schoben aber in
+   der Praxis das halbe Formular unter den Bildschirmrand. Auf dem Handy
+   erledigen die Regeln unter max-width:700px das ohnehin. */
+@media (min-width: 701px) {
+  html[data-zeiger="finger"] .row input { font-size: 16px; }
 }
 
 /* Mobil (schmale Bildschirme): Vorschau oben, Formular darunter scrollbar */
