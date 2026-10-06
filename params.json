@@ -108,18 +108,18 @@
             {
               "key": "fuehrung_w",
               "i18n": "guide_width",
-              "de": "Führung Breite",
+              "de": "Riemenführung Breite",
               "standard": 1.0,
               "schritt": 0.1,
-              "kommentar": "Dicke des Führungsrings (0 = keiner)"
+              "kommentar": "Dicke des mittleren Führungsrings für den Gates-Riemen (0 = keiner)"
             },
             {
               "key": "fuehrung_d",
               "i18n": "guide_d",
-              "de": "Führung Ø",
+              "de": "Riemenführung Ø",
               "standard": 46.5,
               "schritt": 0.5,
-              "kommentar": "Führungsring-Außen-Ø (0 = keine Führung)"
+              "kommentar": "Außen-Ø des mittleren Führungsrings für den Gates-Riemen (0 = ohne Ring)"
             }
           ]
         },
