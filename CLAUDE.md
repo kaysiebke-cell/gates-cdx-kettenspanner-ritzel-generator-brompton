@@ -43,6 +43,16 @@ Eine Änderung in `web/js/` oder `web/index.html` wirkt also auf **Web, Android 
 
 Pflege dieser Tabelle: bei jeder Änderung, die nur eine Version betrifft, hier eintragen.
 
+## ⚠️ Erinnerung: STEP-Token läuft ab (2027-01-04)
+
+Der STEP-Bau für eigene Werte (Web) läuft über den Cloudflare-Worker `ritzel-step`
+(`https://ritzel-step.kaysiebke.workers.dev`, Code in `worker/`). Er nutzt ein GitHub-Token
+(fein abgestuft, Name `ritzel-step`, Actions: Read and write, Contents: Read-only) als Secret `GITHUB_TOKEN`.
+**Bei Problemen mit dem STEP-Button/-Bau in der Web-Version zuerst den Nutzer auf dieses Token hinweisen.**
+Erneuern: neues Token anlegen, dann im Ordner `worker/` `npx wrangler secret put GITHUB_TOKEN`
+(Wert nur im Terminal des Nutzers). Kein Redeploy nötig. Das GitHub-Konto hat 2FA-Probleme
+(alte Telefonnummer, keine Recovery-Codes) — Zugang rechtzeitig prüfen.
+
 ## Regeln für die Zusammenarbeit
 
 - Sprache: Deutsch.
