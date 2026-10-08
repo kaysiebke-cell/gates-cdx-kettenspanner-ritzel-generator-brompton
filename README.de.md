@@ -9,7 +9,7 @@ Dieses Tool generiert parametrische **Umlenkrollen / Führungsritzel für den or
 ![FreeCAD](https://img.shields.io/badge/FreeCAD-1.1%2B-blue)
 ![Python](https://img.shields.io/badge/Python-PySide6-green)
 
-![Fertiges Ritzel](bilder/ritzel.png)
+<img src="bilder/titelbild.png" alt="Ritzel, Ritzel mit Speichen, Spannrolle und Riemenschutz – alles mit dem Tool erzeugt" width="720">
 
 ## Quick Start: Online konfigurieren – ohne Installation
 

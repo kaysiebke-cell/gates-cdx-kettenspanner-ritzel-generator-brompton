@@ -9,7 +9,7 @@ This tool generates parametric **pulley wheels / guide sprockets for the origina
 ![FreeCAD](https://img.shields.io/badge/FreeCAD-1.1%2B-blue)
 ![Python](https://img.shields.io/badge/Python-PySide6-green)
 
-![Finished Sprocket](bilder/ritzel.png)
+<img src="bilder/titelbild.png" alt="Sprocket, sprocket with spokes, tensioner roller and belt guard – all generated with the tool" width="720">
 
 ## Quick Start: Configure Online – No Installation Required
 
