@@ -26,7 +26,7 @@ Eine Änderung in `web/js/` oder `web/index.html` wirkt also auf **Web, Android 
 - **Android:** `android/app/src/main/java/.../MainActivity.kt` (Download-Brücke `AndroidDownload`), `android/app/build.gradle`. Debug-APK: `cd android && ./gradlew assembleDebug`.
 - **Linux-App:** `linux/ritzel-generator.py`, Paket bauen mit `linux/bauen-deb.sh` → `linux/dist/*.deb` (nicht in Git).
 - **FreeCAD-Starter:** `linux/freecad-starter/` (Doppelklick-Datei, startet FreeCAD mit `freecad/main.py`).
-- **STEP-Vermittler (Cloud-Bau auf Zuruf):** `worker/` (Cloudflare Worker) — derzeit **nicht erreichbar** (404), `STEP_API` in `web/js/config.js` ist deshalb leer.
+- **STEP-Vermittler (Cloud-Bau auf Zuruf):** `worker/` (Cloudflare Worker) — läuft seit 2026-10-06 wieder (neu deployt, `STEP_API` in `web/js/config.js` zeigt darauf; Token siehe Erinnerung unten).
 - **CI:** `pages.yml` (Web veröffentlichen), `android.yml` (APK), `build-ritzel.yml` (Körper bauen), `release-serie.yml` (Release 12–19 Zähne), `pruefen.yml` + `bau-pruefen.yml` (Prüfungen im PR).
 - **Doku:** `README.de.md` / `README.md` (FreeCAD + Web), `APK-HERUNTERLADEN.md` (Android).
 
@@ -34,8 +34,8 @@ Eine Änderung in `web/js/` oder `web/index.html` wirkt also auf **Web, Android 
 
 | | Web | Android | Linux-App | FreeCAD |
 |---|---|---|---|---|
-| STEP-Button | ja (nur fertige Release-ZIP bei Standardwerten) | **nein, ausgeblendet** (`window.AndroidDownload`) | ja | gibt es nicht (Export über „Fertigteil“) |
-| STEP für eigene Werte per Cloud | nein (Worker aus) | – | nein | – |
+| STEP-Button | ja (Standardwerte: fertige Release-ZIP; eigene Werte: Cloud-Bau) | **nein, ausgeblendet** (`window.AndroidDownload`) | ja | gibt es nicht (Export über „Fertigteil“) |
+| STEP für eigene Werte per Cloud | ja (Worker `ritzel-step`, ca. 2–3 Min) | – | ja | – |
 | Download STL/ZIP | Browser-Download | Brücke → `Downloads` | WebKit → `~/Downloads` | Export im Programm |
 | Verrundungen | genähert | genähert | genähert | exakt (CAD) |
 | Führung Ø `0` | **keine Führung** | keine Führung | keine Führung | **keine Führung** (seit 2026-10-06, vorher „auto“) |
