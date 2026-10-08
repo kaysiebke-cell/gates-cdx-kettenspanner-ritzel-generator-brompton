@@ -17,6 +17,7 @@ import FreeCAD as App
 import Part
 
 import bau_umgebung
+from zahnrad_params import BUEGEL_ZAEHNE
 try:
     import FreeCADGui as Gui
 except Exception:
@@ -227,7 +228,7 @@ def entferne_buegel(doc):
 def build(zaehne=17, spitzen_abstand=SPITZEN_ABSTAND, spitzen_d=SPITZEN_D):
     """Legt den Buegel im aktiven Dokument an — im Part-Arbeitsbereich als
     fertiges Shape ohne Baum, im Part Design als Body mit Feature-Verlauf."""
-    z = max(12, min(18, int(zaehne)))
+    z = max(BUEGEL_ZAEHNE[0], min(BUEGEL_ZAEHNE[1], int(zaehne)))
     doc = App.ActiveDocument or App.newDocument("Riemenschutz")
     bereich = bau_umgebung.aktiver_bereich()
     # Fester Name -> vorhandenen Buegel in place ersetzen (kein Anhaeufen).

@@ -24,8 +24,17 @@ with open(PARAMS_DATEI, encoding="utf-8") as _f:
 _BAUTEILE = {b["id"]: b for b in _PARAMS["bauteile"]}
 STANDARD_BAUTEIL = _PARAMS["bauteile"][0]["id"]
 
-# (id, Name) je Bauteil — für einen künftigen Umschalter im Bedienfeld.
-BAUTEILE = [(b["id"], b["de"]) for b in _PARAMS["bauteile"]]
+# Der Riemenschutz-Bügel steht NICHT in params.json: Es gibt ihn nur in FreeCAD
+# (die Web-Version zeigt ihn als Häkchen am Ritzel), und seine drei Maße gehören
+# zum Ritzel. Sie werden darum aus den Ritzel-Feldern abgeleitet — Beschriftung
+# und Standardwert bleiben EINE Quelle.
+BUEGEL_ID = "buegel"
+BUEGEL_NAME = "Riemenschutz-Bügel"
+BUEGEL_FELDER = ("zaehne", "spitzen_abstand", "spitzen_d")
+BUEGEL_ZAEHNE = (12, 18)     # Bügel gibt es nur für 12–18 Zähne (riemenschutz_generator)
+
+# (id, Name) je Bauteil — Auswahl „Bauteil“ im Bedienfeld.
+BAUTEILE = [(b["id"], b["de"]) for b in _PARAMS["bauteile"]] + [(BUEGEL_ID, BUEGEL_NAME)]
 
 
 def _teil(bauteil):
@@ -35,6 +44,12 @@ def _teil(bauteil):
 def feld_sektionen(bauteil=STANDARD_BAUTEIL):
     """Eingabefelder eines Bauteils, gegliedert wie das FreeCAD-Bedienfeld
     sie anzeigt. Format je Abschnitt: (Überschrift, [(key, label, default)])."""
+    if bauteil == BUEGEL_ID:
+        ritzel = {key: (key, label, std)
+                  for _, felder in feld_sektionen(STANDARD_BAUTEIL)
+                  for key, label, std in felder}
+        return [("Bügel (passt zum Ritzel)",
+                 [ritzel[k] for k in BUEGEL_FELDER])]
     teil = _teil(bauteil)
     nach_id = {a["id"]: a for a in teil["abschnitte"]}
     reihenfolge = teil.get("reihenfolge_freecad", list(nach_id))
@@ -52,6 +67,8 @@ def default_fields(bauteil=STANDARD_BAUTEIL):
 
 def zaehne_grenzen(bauteil=STANDARD_BAUTEIL):
     """(min, max) — oder None für Bauteile ohne Zähne."""
+    if bauteil == BUEGEL_ID:
+        return BUEGEL_ZAEHNE
     teil = _teil(bauteil)
     if "zaehne_min" not in teil:
         return None

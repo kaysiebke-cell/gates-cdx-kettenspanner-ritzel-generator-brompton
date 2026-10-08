@@ -10,8 +10,8 @@ from PySide6 import QtCore, QtWidgets
 import FreeCADGui as Gui
 
 from zahnrad_generator import ZahnradVollGenerator
-from zahnrad_params import (BAUTEILE, DEFAULT_FIELDS, FIELD_SECTIONS,
-                            ZAEHNE_MIN, ZAEHNE_MAX, default_fields,
+from zahnrad_params import (BAUTEILE, BUEGEL_FELDER, BUEGEL_ID, BUEGEL_ZAEHNE,
+                            DEFAULT_FIELDS, FIELD_SECTIONS, default_fields,
                             feld_sektionen)
 
 # Datei, in der die zuletzt benutzten Feldwerte gespeichert werden
@@ -63,8 +63,9 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         # kommen vollständig vom FreeCAD-Theme.
         outer = QtWidgets.QVBoxLayout(self.content)
 
-        # Bauteil-Umschalter: Ritzel und Spannrolle teilen sich das Panel,
-        # sichtbar ist immer nur eines. Die Auswahl steht in params.json.
+        # Bauteil-Umschalter: Ritzel, Spannrolle und Riemenschutz-Bügel teilen
+        # sich das Panel, sichtbar ist immer nur eines. Ritzel und Rolle stehen
+        # in params.json, der Bügel kommt aus zahnrad_params.py (nur FreeCAD).
         wahl = QtWidgets.QHBoxLayout()
         wahl.addWidget(QtWidgets.QLabel("Bauteil:"))
         self.bauteil_wahl = QtWidgets.QComboBox()
@@ -107,6 +108,8 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
                     self.inputs[key] = spinbox
                     paare.append((label, spinbox))
                 liste.append((self._reiter_titel(abschnitt), abschnitt, paare))
+            if bid == BUEGEL_ID:
+                self.inputs['zaehne'].setRange(*BUEGEL_ZAEHNE)   # nur 12–18
             self.inputs_je_bauteil[bid] = self.inputs
             self.abschnitte[bid] = liste
 
@@ -149,21 +152,24 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         b_vorschau = self._make_button("Vorschau", self.run_update)
         b_koerper = self._make_button("Körper erzeugen", self.build_body)
         self.b_fertig = self._make_button("Fertigteil", self.build_fertigteil)
-        b_buegel = self._make_button("Riemenschutz-Bügel", self.build_buegel)
         self.b_rolle = self._make_button("Spannrolle erzeugen", self.build_rolle)
+        self.b_buegel = self._make_button("Riemenschutz-Bügel erzeugen", self.build_buegel)
         btn_layout.addWidget(b_vorschau, 0, 0)
         btn_layout.addWidget(b_koerper, 0, 1)
-        btn_layout.addWidget(self.b_fertig, 1, 0)
-        btn_layout.addWidget(b_buegel, 1, 1)
+        btn_layout.addWidget(self.b_fertig, 1, 0, 1, 2)
+        # Spannrolle und Bügel liegen an derselben Stelle: sichtbar ist je
+        # nach Bauteil nur einer von beiden.
         btn_layout.addWidget(self.b_rolle, 1, 0, 1, 2)
+        btn_layout.addWidget(self.b_buegel, 1, 0, 1, 2)
         btn_layout.addWidget(self._make_button("Schließen", self.close), 2, 0, 1, 2)
         outer.addLayout(btn_layout)
 
-        # Zum Ritzel gehören vier Knöpfe, zur Rolle einer — sie liegen an
-        # derselben Stelle im Raster und wechseln sich ab.
+        # Zum Ritzel gehören drei Knöpfe, zur Rolle und zum Bügel je einer —
+        # sie liegen an derselben Stelle im Raster und wechseln sich ab.
         self.btn_je_bauteil = {
-            'ritzel': [b_vorschau, b_koerper, self.b_fertig, b_buegel],
+            'ritzel': [b_vorschau, b_koerper, self.b_fertig],
             'rolle': [self.b_rolle],
+            BUEGEL_ID: [self.b_buegel],
         }
         # Die Rundungs-Option ist eine Ritzel-Sache (Zahn- und Muldenfillets).
         self.bauteil_wahl.currentIndexChanged.connect(self._wechsle_bauteil)
@@ -375,6 +381,8 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         Weitere (Bauen, Speichern) liest von dort."""
         aktiv = self._bauteil()
         self.inputs = self.inputs_je_bauteil[aktiv]
+        if aktiv == BUEGEL_ID and self._letztes_bauteil != BUEGEL_ID:
+            self._buegel_vom_ritzel()
 
         # Reiter des bisherigen Bauteils merken, damit hin und zurück nicht
         # jedes Mal beim ersten Abschnitt landet.
@@ -391,6 +399,23 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
                 b.setVisible(bid == aktiv)
         # Zahn- und Muldenverrundung gibt es nur am Ritzel.
         self.chk_rundungen.setVisible(aktiv == 'ritzel')
+
+    def _buegel_vom_ritzel(self):
+        """Der Bügel muss zum Ritzel passen: beim Wechsel zum Bügel werden
+        Zähnezahl, Mitte-Mitte und Kopf-Ø vom Ritzel übernommen. Danach lassen
+        sie sich am Bügel noch ändern. Gibt es zur Zähnezahl keinen Bügel
+        (nur 12–18), steht das in der Statuszeile."""
+        ritzel = self.inputs_je_bauteil.get('ritzel', {})
+        buegel = self.inputs_je_bauteil[BUEGEL_ID]
+        for key in BUEGEL_FELDER:
+            if key in ritzel and key in buegel:
+                buegel[key].setValue(ritzel[key].value())
+        z = int(ritzel['zaehne'].value()) if 'zaehne' in ritzel else None
+        if z is not None and not (BUEGEL_ZAEHNE[0] <= z <= BUEGEL_ZAEHNE[1]):
+            self.lbl_status.setText(
+                "Den Riemenschutz-Bügel gibt es nur für %d–%d Zähne — "
+                "das Ritzel hat %d, der Bügel wird für %d gebaut."
+                % (BUEGEL_ZAEHNE[0], BUEGEL_ZAEHNE[1], z, int(buegel['zaehne'].value())))
 
     def _collect_params(self):
         params = {k: v.value() for k, v in self.inputs.items()}
@@ -737,12 +762,14 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
             import FreeCAD as App
             from riemenschutz_generator import build as baue_buegel_objekt
             p = self._collect_params()
-            # Bügel-Serie: dieselben Grenzen wie das Ritzel (params.json)
-            z = max(ZAEHNE_MIN, min(ZAEHNE_MAX, int(p['zaehne'])))
+            # Das Zähnezahl-Feld des Bügels kennt nur 12–18 (zahnrad_params).
+            z = int(p['zaehne'])
             # Anlegen, Aufräumen und die Wahl zwischen Part und Part Design
             # macht der Generator — hier stünde sonst eine zweite, eigene
             # Bauweise, die genau die Vermischung erzeugt, die weg soll.
-            baue_buegel_objekt(z, p['spitzen_abstand'], p['spitzen_d'])
+            obj = baue_buegel_objekt(z, p['spitzen_abstand'], p['spitzen_d'])
+            art = "Part Design" if obj.isDerivedFrom('PartDesign::Body') else "Part"
+            self.lbl_status.setText("Riemenschutz-Bügel z=%d erzeugt (%s)." % (z, art))
             try:
                 Gui.ActiveDocument.ActiveView.fitAll()
             except Exception:
