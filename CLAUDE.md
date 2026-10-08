@@ -9,12 +9,11 @@ Nicht mischen — Web, Android, Linux-App und FreeCAD sind verschiedene Dinge.
 |---|---|---|---|---|
 | 1 | **Web** | `web/` | Konfigurator mit 3D-Vorschau (JavaScript/Three.js), über GitHub Pages | Browser (Chrome) |
 | 2 | **Android-App** | `android/` | Kotlin-WebView, die `web/` ins App-Paket kopiert (Gradle-Task). Läuft offline | Handy |
-| 3 | **Linux-App** | `linux/` | Eigenes GTK-Fenster (Python + WebKitGTK), liefert `web/` lokal aus. Paket als `.deb` | Eigenes Fenster, kein Browser |
+| 3 | **Linux-App** | `linux/` | Echtes GTK-Programm (Python, Cinnamon-/Systemdesign): Formular, Reiter, Knöpfe sind GTK-Widgets; `web/` läuft als Rechenkern im Hintergrund, nur die 3D-Vorschau ist eine WebView. Paket als `.deb` | Eigenes Fenster, kein Browser |
 | 4 | **FreeCAD** | `freecad/` | Bedienfeld „Zahnrad Setup“ (PySide), baut den echten CAD-Körper. Einstieg `freecad/main.py` | FreeCAD (Flatpak) |
 | 5 | **Cloud-Bau / Release-Serie** | `freecad/build_headless.py` + `.github/workflows/` | FreeCAD ohne Oberfläche in GitHub Actions: erzeugt STEP/STL der Release-Dateien (Zähne 12–19) | GitHub Actions |
 
-**Wichtig:** 2 und 3 sind keine eigene Oberfläche, sondern `web/` in einem anderen Rahmen.
-Eine Änderung in `web/js/` oder `web/index.html` wirkt also auf **Web, Android und Linux-App zugleich**.
+**Wichtig:** 2 und 3 nutzen `web/` als Rechenkern (Geometrie, Export, STEP). Eine Änderung in `web/js/` wirkt also auf **Web, Android und Linux-App zugleich**. Die Linux-App liest ihr Formular aus der Seite (`#form`, Feld-IDs) und schreibt Werte dorthin zurück — wer IDs oder Aufbau des Formulars in `web/` ändert, muss `linux/ritzel-generator.py` prüfen.
 4 und 5 haben eigenen Python-Code (`freecad/`).
 
 ## Wo liegt was

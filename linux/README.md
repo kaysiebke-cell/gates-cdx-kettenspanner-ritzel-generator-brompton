@@ -1,8 +1,11 @@
 # Linux-App
 
-Eigenständige Linux-Anwendung: eigenes Fenster (GTK + WebKitGTK), kein Browser,
-läuft offline. Zeigt dieselbe Oberfläche wie `../web/`, liefert sie aber
-selbst lokal aus. Downloads landen in `~/Downloads`.
+Echtes GTK-Programm im Systemdesign (Cinnamon/Mint): Formular, Reiter und
+Knöpfe sind GTK-Bausteine, kein Browser, läuft offline. Gerechnet wird mit
+der Logik aus `../web/`: sie läuft im Hintergrund, die Oberfläche liest die
+Felder daraus aus und schreibt Änderungen zurück. Nur die 3D-Vorschau ist eine
+WebView. Dieselbe Bauweise wie `linux-native/` der Schreibhilfe. Downloads
+landen in `~/Downloads`.
 
 | Datei | Inhalt |
 |---|---|
