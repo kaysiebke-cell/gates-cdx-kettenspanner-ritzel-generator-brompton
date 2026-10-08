@@ -39,7 +39,7 @@ Nicht mischen — Web, Android, Linux-App und FreeCAD sind verschiedene Dinge.
 - **FreeCAD-Starter:** `linux/freecad-starter/` (Doppelklick-Datei, startet FreeCAD mit `freecad/main.py`).
 - **STEP-Vermittler (Cloud-Bau auf Zuruf):** `worker/` (Cloudflare Worker) — läuft seit 2026-10-06 wieder (neu deployt, `STEP_API` in `web/js/config.js` zeigt darauf; Token siehe Erinnerung unten).
 - **CI:** `pages.yml` (Web veröffentlichen), `android.yml` (APK), `build-ritzel.yml` (Körper bauen), `release-serie.yml` (Release 12–19 Zähne), `pruefen.yml` + `bau-pruefen.yml` (Prüfungen im PR).
-- **Doku:** `README.de.md` / `README.md` (FreeCAD + Web), `APK-HERUNTERLADEN.md` (Android).
+- **Doku:** `README.de.md` / `README.md` (kurzer Überblick mit den 4 Versionen), Details in `docs/de/` und `docs/en/` (je eine Seite pro Version plus Speichen, Lager, 3D-Druck, Projektstruktur, Rechtliches), `APK-HERUNTERLADEN.md` (Android). Aufbau nach dem Muster von `kaysiebke-cell/FreeCAD_MultiAI_Panel`. Die Seiten `docs/*/3d-druck.md` werden aus `web/js/print-data.js` erzeugt (`npm run docs`) — nicht von Hand ändern. Bilder in `bilder/` (`ansicht-*.png` = Ansichten der vier Versionen).
 
 ## Unterschiede im Verhalten (Stand 2026-10-06)
 

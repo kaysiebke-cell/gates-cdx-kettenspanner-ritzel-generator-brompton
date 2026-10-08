@@ -1,5 +1,5 @@
-// Generiert die Druck-Empfehlungs-Abschnitte in README.md (EN) und
-// README.de.md (DE) aus der EINZIGEN Datenquelle web/js/print-data.js.
+// Generiert die Druck-Empfehlungen in docs/en/3d-druck.md (EN) und
+// docs/de/3d-druck.md (DE) aus der EINZIGEN Datenquelle web/js/print-data.js.
 // Ersetzt den Inhalt zwischen <!-- PRINT:START --> und <!-- PRINT:END -->.
 // Aufruf: `node tools/gen-readme.mjs` (Teil von `npm run build`).
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -59,8 +59,8 @@ function section(L) {
 const MARKER = /<!-- PRINT:START[\s\S]*?<!-- PRINT:END -->/;
 
 for (const { file, lang } of [
-  { file: 'README.md', lang: 'en' },
-  { file: 'README.de.md', lang: 'de' },
+  { file: 'docs/en/3d-druck.md', lang: 'en' },
+  { file: 'docs/de/3d-druck.md', lang: 'de' },
 ]) {
   const path = join(root, file);
   const src = readFileSync(path, 'utf8');

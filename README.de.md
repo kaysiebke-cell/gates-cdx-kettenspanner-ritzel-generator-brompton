@@ -1,197 +1,87 @@
 # Gates CDX Riemenspanner-Ritzel Generator (Brompton)
 
+**Parametrischer Generator für Umlenkrollen und Führungsritzel des Brompton-Riemenspanners – als Webseite, Android-App, Linux-Programm und FreeCAD-Bedienfeld.**
+
 > English version: [README.md](README.md)
 
-Dieses Tool generiert parametrische **Umlenkrollen / Führungsritzel für den originalen oder modifizierten Brompton-Riemenspanner**, wenn das Faltrad auf den **Gates Carbon Drive (CDX)** Riemenantrieb umgerüstet wurde (z. B. bei einem Kinetics-Umbau). Die Ritzel werden als fertige 3D-Volumenkörper generiert – optimiert für den 3D-Druck oder die CNC-Fräse.
-
-**Wichtig:** Dies ist *kein* tragendes Antriebsritzel für die Hinterradnabe, sondern ein kugelgelagertes **Schaltröllchen / Führungsritzel für den Riemenspanner**!
-
-![FreeCAD](https://img.shields.io/badge/FreeCAD-1.1%2B-blue)
-![Python](https://img.shields.io/badge/Python-PySide6-green)
+![FreeCAD](https://img.shields.io/badge/FreeCAD-1.1%2B-blue) ![Python](https://img.shields.io/badge/Python-GTK%20%7C%20PySide6-green) ![Web](https://img.shields.io/badge/Web-Browser-orange) ![Android](https://img.shields.io/badge/Android-APK-brightgreen)
 
 <img src="bilder/titelbild.png" alt="Ritzel, Ritzel mit Speichen, Spannrolle und Riemenschutz – alles mit dem Tool erzeugt" width="720">
 
-## Quick Start: Online konfigurieren – ohne Installation
+---
 
-[![⚙ Konfigurator öffnen](https://img.shields.io/badge/%E2%9A%99%20Konfigurator%20%C3%B6ffnen-Live--Vorschau%20im%20Browser-blue?style=for-the-badge)](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/)
+## Worum es geht
 
-[![📱 Android-App](https://img.shields.io/badge/%F0%9F%93%B1%20Android--App-APK%20herunterladen-brightgreen?style=for-the-badge)](APK-HERUNTERLADEN.md)
+Dieses Tool erzeugt parametrische **Umlenkrollen und Führungsritzel für den originalen oder modifizierten Brompton-Riemenspanner**, wenn das Faltrad auf den **Gates Carbon Drive (CDX)** Riemenantrieb umgerüstet wurde (z. B. bei einem Kinetics-Umbau). Die Teile entstehen als fertige 3D-Körper – optimiert für den 3D-Druck oder die CNC-Fräse.
 
-Fürs Handy gibt es dieselbe Anwendung als **installierbare App** — sie bringt alles mit und läuft ohne Netz: [Anleitung zum Herunterladen](APK-HERUNTERLADEN.md).
+**Wichtig:** Das ist *kein* tragendes Antriebsritzel für die Hinterradnabe, sondern ein kugelgelagertes **Schaltröllchen / Führungsritzel für den Riemenspanner**.
 
-Im Web-Konfigurator kannst du das **Spannrollen-Ritzel live in 3D drehen und anpassen**. Zahnprofil, Schmutzöffnungen, Riemenführung, Nabe und Kugellagersitze verändern sich direkt mit deinen Wünschen.
+---
 
-Die Erklärungen zu den einzelnen Feldern sind eingeklappt — der Knopf **ⓘ** rechts in der Tab-Leiste blendet sie ein und wieder aus. Die Einstellung bleibt bis zum nächsten Besuch erhalten.
+## Vier Versionen
 
-**Zwei Wege zum Download:**
-* **Fertige STL direkt laden:** Für Standardgrößen von **12 bis 19 Zähnen** liegen fertig verrundete Dateien bereit (gibt es auch inklusive STEP-Dateien im [Release "stl-serie"](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/tag/stl-serie)).
-* **Eigene Maße generieren:** Du kannst die Parameter frei eintragen (Zähnezahl **12–19**) und das STL direkt aus dem Browser ziehen (die Verrundungen werden hierbei angenähert; die exakten CAD-Verrundungen gibt es in den Release-Dateien).
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><a href="docs/de/web.md"><img src="bilder/ansicht-web.png" alt="Web (Browser)" width="100%"></a><br><b>Web (Browser)</b><br>Nichts zu installieren – direkt im Browser konfigurieren und STL/STEP laden.</td>
+<td width="50%" valign="top" align="center"><a href="docs/de/linux-app.md"><img src="bilder/ansicht-linux.png" alt="Linux-App (GTK, Cinnamon)" width="100%"></a><br><b>Linux-App (GTK, Cinnamon)</b><br>Eigenes Fenster im Systemdesign, kein Browser, läuft offline.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><a href="docs/de/android.md"><img src="bilder/ansicht-android.png" alt="Android-App" height="380"></a><br><b>Android-App</b><br>Aufs Handy, läuft offline. Per APK installieren.</td>
+<td width="50%" valign="top" align="center"><a href="docs/de/freecad.md"><img src="bilder/panel.png" alt="FreeCAD-Bedienfeld" height="380"></a><br><b>FreeCAD-Bedienfeld</b><br>Exakte CAD-Körper mit echten Verrundungen, STEP/STL aus FreeCAD.</td>
+</tr>
+</table>
 
-## Nutzung direkt in FreeCAD
-
-1. Kopiere den Projektordner in dein FreeCAD-Makroverzeichnis (oder an einen Ort deiner Wahl).
-2. Starte die `freecad/main.py` als Makro in FreeCAD. Das Bedienfeld **"Zahnrad Setup"** dockt sich automatisch rechts an.
-   Unter Linux (FreeCAD als Flatpak) startet das auch per Doppelklick auf `linux/freecad-starter/Ritzel-Generator.desktop`.
-
-| Button | Funktion |
+| Ich möchte … | Version |
 |---|---|
-| **Vorschau** | Zeichnet nur die Skizze des Zahnprofils neu (geht extrem schnell). |
-| **Körper erzeugen** | Baut den kompletten PartDesign-Körper auf. |
-| **Fertigteil** | Erstellt eine saubere Kopie (`RitzelFertig`) ohne Feature-Baum – perfekt für den STL/STEP-Export. |
+| schnell ausprobieren | **Web** |
+| am Rechner ohne Browser arbeiten | **Linux-App** |
+| unterwegs am Handy | **Android-App** |
+| exakte Verrundungen und eigene Änderungen am Körper | **FreeCAD** |
 
-**Tipp:** Die Checkbox **"Rundungen anwenden"** steuert die Verrundungen. Da diese beim Berechnen am meisten Performance fressen, lässt man sie für schnelle Entwürfe am besten weg. Erst für das finale Teil aktivieren.
+→ Alle Unterschiede im Detail: [Versionen im Vergleich](docs/de/versionen.md)
 
-**Voraussetzungen:** FreeCAD 1.1+ (getestet als Flatpak unter Linux), keine weiteren Abhängigkeiten. Die UI des Panels ist auf Deutsch.
+---
 
-<img src="bilder/panel.png" alt="Bedienfeld &quot;Zahnrad Setup&quot;" width="320">
+## Schnellstart
 
-## Features
+1. **Web:** [Konfigurator öffnen](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/) – Werte eintragen, STL oder STEP laden.
+2. **Linux-App:** `linux/bauen-deb.sh` ausführen, dann `sudo apt install ./linux/dist/ritzel-generator_*_all.deb` → „Ritzel-Generator“ im Menü. → [Details](docs/de/linux-app.md)
+3. **Android:** [APK herunterladen](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/download/app/ritzel-generator.apk) und installieren. → [Details](docs/de/android.md)
+4. **FreeCAD:** Projektordner kopieren, `freecad/main.py` als Makro starten – das Bedienfeld „Zahnrad Setup“ dockt rechts an. → [Details](docs/de/freecad.md)
 
-* **Komplett parametrisch:** Zähnezahl (**12–19**), Eingriffswinkel, Teilung, Kopf-/Fußradius und Zahntiefe lassen sich frei einstellen.
-* **Durchdachte Geometrie:** Zentraler Steg als Riemenführung, seitliche Schmutzmulden (Winkel, Tiefe und Rundung anpassbar), plus Bohrung und Absätze für die Kugellager des Riemenspanners.
-* **Speichen zum Materialsparen:** Auf Wunsch werden Durchbrüche in den Steg zwischen Nabe und Zahnkranz geschnitten – gerade oder tangential geschwungen (Parameter `Schwung`). Bei 19 Zähnen spart das rund 8,6 cm³ (etwa 9 g PA12-CF, gut ein Viertel des Bauteils). Ist der freie Ring zu schmal, bleibt der Steg automatisch voll – mit den Standardwerten greift das ab 17 Zähnen. Siehe [Speichen](#speichen-material-sparen).
-* **Smartes UI:** Das Dock-Panel ist übersichtlich aufgeteilt und passt sich automatisch an das FreeCAD-Design (Light/Dark Mode) an.
-* **Merkt sich Einstellungen:** Die zuletzt genutzten Parameter werden beim nächsten Start automatisch wieder geladen.
-* **Verrundungs-Cache:** Das Tool merkt sich funktionierende Radien. Schlägt ein Versuch fehl, springt es nicht komplett zurück, sondern spart teure Rechenzeit.
-* **Cloud-Build & Web-Konfigurator:** Komplett im Browser nutzbar, falls du kein FreeCAD installiert hast.
+---
 
-## 3D-Druck (PA12-CF)
+## Highlights
 
-Das Ritzel live im [Online-Tool](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/) konfigurieren; dessen Tab **Druck-Empfehlungen** und der Abschnitt unten werden aus derselben Quelle (`web/js/print-data.js`) generiert und driften daher nie auseinander.
+* **Komplett parametrisch:** Zähnezahl (**12–19**), Eingriffswinkel, Teilung, Kopf-/Fußradius und Zahntiefe frei einstellbar.
+* **Durchdachte Geometrie:** Zentraler Steg als Riemenführung (Breite und Ø einstellbar, Ø 0 = automatisch), seitliche Schmutzmulden, Bohrung und Absätze für die Kugellager des Riemenspanners.
+* **Speichen zum Materialsparen:** Durchbrüche im Steg, gerade oder geschwungen – bei 19 Zähnen rund ein Viertel weniger Material. → [Speichen](docs/de/speichen.md)
+* **Druckfertige Dateien:** STL-Netze sind geschlossen (Slicer-tauglich ohne Reparatur), STEP mit exakten CAD-Verrundungen.
+* **Auch die Spannrolle und der Riemenschutz-Bügel** lassen sich erzeugen.
+* **Vier Versionen, eine Quelle:** `params.json` ist die einzige Quelle für Felder und Standardwerte; `npm test` und `npm run test:dicht` halten Web und CAD gleich bzw. prüfen die Netze.
+* **Praxiserprobt:** PA12-CF im Dauerbetrieb, über 2800 km. → [3D-Druck](docs/de/3d-druck.md)
 
-<!-- PRINT:START (auto-generiert aus web/js/print-data.js – nicht von Hand ändern; `npm run build`) -->
-> ✅ Praxiserprobt: PA12-CF hat sich im realen Dauerbetrieb bewährt und erfüllt die Anforderungen – Laufleistung 2800–2850 km in ca. 5 Monaten und weiterhin im Einsatz.
->
-> **Eigenschaften PA12-CF:** sehr verschleißfest · steif & formstabil · geringe Feuchtigkeitsaufnahme · gute Gleiteigenschaften (leiser Lauf) · hohe Dauer-/Ermüdungsfestigkeit · chemikalienbeständig · leicht
+---
 
-### Druckeinstellungen
+## Dokumentation
 
-| Parameter | Empfehlung | Details |
-|---|---|---|
-| **Filament** | PA12-CF | Kohlenstofffaserverstärktes Nylon – extrem verschleißfest, steif, nimmt weniger Feuchtigkeit auf als PA6. |
-| **Düse** | ≥ 0,4 mm, gehärteter Stahl | CF-Fasern verstopfen kleinere Düsen und verschleißen Messing – gehärtete Stahldüse (oder Rubin) verwenden. |
-| **Füllung** | 100 % | Maximale Stabilität und Langlebigkeit der Flansche – Vollfüllung ist nötig. |
-| **Schichthöhe** | 0,12–0,16 mm | Feine Lagen für ruhigen Lauf – die Zahnflanken führen den Riemen, feine Lagen = vibrationsarmer Betrieb. |
-| **Druckgeschwindigkeit** | Langsam (~20–40 mm/s) | CF-Filament ist abrasiv und zähflüssig – langsamer Druck verbessert Schichthaftung und Maßhaltigkeit. |
-| **Kühlung (Bauteillüfter)** | 0–20 % (möglichst wenig) | Zu viel Kühlung schwächt die Schichthaftung – PA12-CF ohne oder nur mit sehr wenig Bauteillüfter drucken. |
-| **Orientierung** | Flach auf die große Fläche | Zähne werden seitlich gedruckt – kein Stützmaterial an den Flanken nötig. |
-| **Unterstützung** | Nur Nabe & Öffnungen | Der 1 mm tiefe Lagersitz druckt perfekt ohne Stützstrukturen. |
-| **Düsen-Temperatur** | 250–280 °C (Start: 260 °C) | PA12-CF braucht hohe Temperaturen. Bei 260 °C starten, ±5 °C nach Bedarf anpassen. Die CF-Variante braucht stabile Hitze. |
-| **Bett-Temperatur** | 80–120 °C | PA12-CF braucht ein beheiztes Druckbett. Höhere Temperaturen reduzieren Verzug und Schichtablösungen. |
-| **Gehäuse-Temperatur** | 60–80 °C | Mit Enclosure: stabilisiert die Druckqualität deutlich. PA12-CF ist anspruchsvoll – Gehäusekontrolle zahlt sich aus. |
-| **Trocknung** | 8 Stunden bei 70 °C | Vor dem Druck trocknen (falls die Spule offen lag). Bei langen Drucken die Spule in einer Drybox / mit Trockenmittel halten – Nylon zieht auch während des Drucks Feuchtigkeit. |
+Die Seiten sind in dieser Reihenfolge zum Durchlesen gedacht.
 
-### Kompatible Drucker für PA12-CF
-
-- Prusa XL + Enclosure
-- Bambu Lab X1 Carbon
-- Prusa MK3S+ / MK3.9S + Enclosure
-- Zortrax M300+ / M300 Dual
-- Ultimaker S5 Pro
-
-**Anforderungen:** Beheiztes Druckbett (80–120 °C) · Temperaturkontrolliertes Gehäuse (ideal 60–80 °C) · Zuverlässige Kühlung · Gute Bett-Haftung (Bondtech, PEI, Garolite)
-
-### Wichtige Hinweise
-
-1. **PA12-CF ist anspruchsvoll** – nichts für Anfänger.
-2. **Lagerung** – trockene Umgebung, Silica-Gel.
-3. **Tempern (optional)** – kontrolliertes Tempern nach dem Druck (nach Herstellerangabe, oft 1–2 h knapp unter der Erweichungstemperatur, danach langsam abkühlen) erhöht Festigkeit und Formstabilität unter mechanischer Dauerlast. Vorher an einem Probeteil testen – leichter Verzug möglich.
-4. **Passung Lagersitz** – PA12-CF schwindet beim Abkühlen. Praxiswert: den Lagersitz-Durchmesser um +0,2 mm größer auslegen (14-mm-Lager → 14,2 mm), damit das Lager (z. B. F605-2RS) fest sitzt. Am eigenen Drucker mit einem Probedruck prüfen (Schwund variiert).
-5. **Bruchfestigkeit** – PA12-CF ist sehr steif, aber spröder als PA12. Nicht überbelasten.
-6. **Druckqualität prüfen** – erste Proben vor der Serienfertigung machen.
-7. **Gesundheit** – beim Nachbearbeiten (Schleifen/Bohren) entsteht reizender CF-Feinstaub. Absaugung und Staubmaske (FFP2/FFP3) verwenden.
-
-### Oberfläche glätten & versiegeln (optional)
-
-> ⚠️ Funktionsflächen maskieren – nicht beschichten oder schleifen: Lagersitz (F605-2RS, +0,2 mm), Zahnflanken (Riemenkontakt) und Bohrung/Achssitz.
-
-1. **Füllen** – Schichtlinien mit dünnem Sekundenkleber (CA), Epoxid (z. B. XTC-3D) oder 2K-Füllprimer füllen – reines Schleifen allein reicht bei CF-Nylon nicht.
-2. **Nass schleifen** – stufenweise 240 → 400 → 600 → 1000+, nass schleifen – bindet den reizenden CF-Feinstaub. Bei trockenen Arbeiten FFP2/FFP3-Maske.
-3. **Versiegeln** – dünn Epoxid oder 2K-PU-Klarlack (UV-/wetterfest) auftragen. Nylon vorher entfetten und leicht anschleifen (haftet sonst schlecht); ggf. Kunststoff-Haftvermittler.
-4. **Reihenfolge** – falls getempert wird: erst tempern, dann versiegeln (Hitze zerstört Beschichtungen).
-5. **Nicht ratsam** – chemisches Dampfglätten braucht Ameisensäure (giftig/ätzend) – fürs Hobby vermeiden; Heißluft/Flamme verzieht CF-Nylon.
-
-> ⚠️ Diese Angaben beruhen auf Recherche (Herstellerangaben, Drucker-Dokumentationen, Community-Erfahrungen, Datenblätter) und eigener Praxiserfahrung (siehe Kasten oben). Keine Garantie – bitte vor der Verwendung selbst testen und mit aktuellen Quellen abgleichen. Für Hobby-Projekte; keine kommerzielle Nutzung ohne Genehmigung.
-<!-- PRINT:END -->
-
-## Speichen (Material sparen)
-
-Zwischen Nabe und Zahnkranz sitzt ein massiver Steg über die volle Breite. Tragend gebraucht wird er nicht: Das Teil ist eine kugelgelagerte Umlenkrolle, überträgt also kein Drehmoment – der Steg hält nur den Zahnkranz konzentrisch zur Nabe. Über das Feld **Speichen** lassen sich dort Durchbrüche schneiden.
-
-| Parameter | Bedeutung |
+| Thema | Seite |
 |---|---|
-| `Speichen` | Anzahl der Arme. **0 = aus** (Standard), sinnvoll sind 4–6. |
-| `Speichen Breite` | Breite eines Arms quer zur Speiche (Standard 4,5 mm). |
-| `Schwung (°)` | 0° = gerade, radiale Speichen. Größere Werte biegen die Arme tangential. Passt der Wert nicht in den Ring, wird er automatisch zurückgenommen. |
-| `Wandstärke` | Stehen bleibendes Material am Zahnkranz **und** an der Nabe (Standard 2,0 mm). Jeder Millimeter mehr nimmt dem freien Ring 2 mm weg – darüber bleibt der Steg voll: 17 Zähne bis 2,5 mm, 18 Zähne bis 3,0 mm, 19 Zähne bis 4,0 mm. |
-| `Speichen-Rundung` | Eckenradius der Öffnungen. Wird direkt in der Skizze gezeichnet, nicht als 3D-Verrundung. |
+| 1 · Die vier Versionen im Vergleich | [versionen.md](docs/de/versionen.md) |
+| 2 · Web-Version | [web.md](docs/de/web.md) |
+| 3 · Linux-App (GTK, Cinnamon) | [linux-app.md](docs/de/linux-app.md) |
+| 4 · Android-App | [android.md](docs/de/android.md) |
+| 5 · FreeCAD-Bedienfeld | [freecad.md](docs/de/freecad.md) |
+| 6 · 3D-Druck (PA12-CF) | [3d-druck.md](docs/de/3d-druck.md) |
+| 7 · Speichen (Material sparen) | [speichen.md](docs/de/speichen.md) |
+| 8 · Passende Kugellager | [kugellager.md](docs/de/kugellager.md) |
+| 9 · Projektstruktur | [projektstruktur.md](docs/de/projektstruktur.md) |
+| 10 · Rechtliches & Haftung | [rechtliches.md](docs/de/rechtliches.md) |
 
-**Ab wann es sich lohnt:** Maßgeblich ist nicht der Zahnfuß, sondern die Schmutzmulde. Sie wird mit `Mulden-Winkel` zur Stirnfläche hin tiefer und endet dort rund 2,8 mm weiter innen als am Mittelsteg – erst darunter steht Material über die volle Breite. Bleiben zwischen Nabenkragen und Kranz weniger als 5 mm frei, werden gar keine Speichen gebaut und der Steg bleibt voll. Mit den Standardwerten liegt die Grenze bei 17 Zähnen:
+---
 
-| Zähne | Freier Ring | 5 gerade Speichen |
-|---|---|---|
-| ≤ 16 | < 5 mm | – (Steg bleibt voll) |
-| 17 | 6,4 mm | −4,9 cm³ (≈ 5,2 g) |
-| 18 | 8,0 mm | −6,6 cm³ (≈ 7,0 g) |
-| 19 | 9,6 mm | −8,6 cm³ (≈ 9,1 g) |
+## Rechtliches
 
-Wer auch bei kleineren Ritzeln Speichen will, muss zuerst `Tiefe am Steg` oder `Mulden-Winkel` zurücknehmen.
-
-> **Hinweis:** Die vorgebauten Release-Dateien (12–19 Zähne) sind ohne Speichen gebaut. Sobald du Speichen aktivierst, weichen deine Werte vom Standard ab – die STL lädst du dann direkt aus dem Browser. Einen Cloud-Bau für eigene STEP-Werte gibt es zurzeit nicht (Vermittler abgeschaltet) – dafür den Körper in FreeCAD erzeugen.
-
-## Passende Kugellager
-
-Die Standardwerte (Bohrung Ø 14 mm, Lagersitz Ø 16 mm × 1 mm) sind exakt auf das Miniatur-Flanschkugellager **F605-2RS (5 × 14 × 5 mm)** ausgelegt, welches perfekt auf die Achse des Brompton-Riemenspanners passt. Man braucht 2 Stück (eins pro Seite), wobei der Flansch im 1 mm tiefen Absatz sitzt.
-
-<img src="bilder/f605-2rs-zeichnung.jpg" alt="Maßzeichnung F605-2RS" width="280">
-
-Bezugsquelle für Deutschland: [F605-2RS bei Kugellager-Express](https://www.kugellager-express.de/miniatur-flanschkugellager-f-605-2rs-5x14x5-mm)
-
-* **Wichtig:** Unbedingt die **2RS-Variante** (beidseitig gummigedichtet) nehmen. Die dichten am Riemenspanner im spritzwassergefährdeten Bereich deutlich besser gegen Regen und Dreck ab als Metalldeckel (ZZ).
-* Für Ganzjahresfahrer lohnt sich die Edelstahl-Version **SF605-2RS**.
-* **Passung testen:** PA12-CF schwindet beim Abkühlen. Bewährter Praxiswert: den Lagersitz-Durchmesser um **+0,2 mm** größer auslegen (z. B. 14-mm-Lager → 14,2 mm) für einen festen Presssitz. Der Schwund variiert je Drucker – am besten erst einen kleinen Testring drucken und den Parameter `Bohrung Ø` in 0,1-mm-Schritten feinjustieren.
-* **Pressen, nicht hämmern:** Die Lager vorsichtig einpressen (z. B. im Schraubstock mit einer passenden Unterlegscheibe). Druck nur auf den Außenring ausüben, niemals auf den Innenring.
-
-## Struktur der Dateien
-
-Der CAD-Körper entsteht in Python, die Live-Vorschau in JavaScript. Damit beide dasselbe Teil beschreiben, gibt es für die gemeinsamen Teile jeweils **eine** Quelle bzw. ein geprüftes Zwillingspaar – siehe [Eine Quelle statt zwei](#eine-quelle-statt-zwei).
-
-| Datei | Inhalt |
-|---|---|
-| `params.json` | **Einzige Quelle** für Eingabefelder, Standardwerte und Zähnezahl-Grenzen – gelesen von Web und FreeCAD. |
-| `freecad/main.py` | Der Einstiegspunkt für FreeCAD, lädt alle Module sauber rein. |
-| `freecad/zahnrad_ui.py` | Das Bedienfeld (Eingaben, Buttons, Speichern der Werte). |
-| `freecad/zahnrad_generator.py` | Die eigentliche Geometrie: Skizze des Zahnprofils und Aufbau des 3D-Körpers. |
-| `freecad/zahnrad_params.py` | Reicht die Felder aus `params.json` an das Bedienfeld weiter. |
-| `freecad/zahnprofil.py` | Kontur-Mathematik des Zahnprofils (ohne FreeCAD-Import). |
-| `web/js/zahnprofil.js` | Derselbe Code für die Web-Vorschau – `npm test` hält beide gleich. |
-| `freecad/speichen_geometrie.py` | Kontur-Mathematik der Speichen-Durchbrüche (ohne FreeCAD-Import). |
-| `web/js/speichen.js` | Derselbe Code für die Web-Vorschau – `npm test` hält beide gleich. |
-| `tools/golden-test.mjs` | Rechnet beide Fassungen durch und meldet jede Abweichung (`npm test`). |
-| `web/index.html` | Der Web-Konfigurator (läuft über GitHub Pages). |
-| `freecad/build_headless.py` | Hilfsskript: Baut die Release-Serie (STEP/STL) im Hintergrund ohne GUI. |
-| `freecad/render_gui_preview.py` | Cloud-Build: Rendert die Vorschau unter Xvfb. |
-| `freecad/ritzel_params.py` | Cloud-Build: Standardwerte und JSON-Overrides. |
-| `.github/workflows/build-ritzel.yml` | Die GitHub-Aktion für die automatischen Builds. |
-| `.github/workflows/pruefen.yml` | Lässt den Abgleich bei jeder Änderung laufen. |
-
-### Eine Quelle statt zwei
-
-Dieselbe Geometrie zweimal zu pflegen – einmal in Python fürs CAD, einmal in JavaScript für die Vorschau – geht auf Dauer schief: der Konfigurator zeigt dann etwas anderes an, als in der STEP-Datei steht. Dagegen stehen hier zwei Vorkehrungen:
-
-* **Parameter gibt es nur einmal.** Eingabefelder, Standardwerte und die Zähnezahl-Grenzen stehen ausschließlich in `params.json`. FreeCAD liest die Datei beim Start, der Web-Generator bekommt sie beim Bauen ins Bundle gelegt. Werte bitte nirgendwo sonst eintragen.
-* **Formeln werden nachgerechnet.** Die geteilte Kontur-Mathematik (`zahnprofil`, `speichen_geometrie`/`speichen.js`) liegt in Modulen ohne FreeCAD- und ohne Three.js-Bindung. `npm test` rechnet beide Fassungen für rund 20 Parametersätze durch und vergleicht Radien, Konturpunkte und Speichen-Öffnungen auf ein Nanometer genau. Jede Abweichung bricht den Lauf ab – auch auf jedem Zweig, siehe `.github/workflows/pruefen.yml`.
-
-Gebraucht wird dafür nur `python3` und Node; weder FreeCAD noch Three.js müssen installiert sein.
-
-```
-npm test
-```
-
-## Rechtliches & Haftung
-
-Gates® und CDX® sind eingetragene Marken der Gates Corporation; Brompton und Kinetics sind Marken der jeweiligen Eigentümer. Dieses Projekt ist ein unabhängiges Hobby-Tool. Es steht in keiner Verbindung zu den Herstellern und nutzt keine Original-Konstruktionsdaten – die Geometrie wurde eigenständig von einer **Spannrolle** vermessen und nachkonstruiert.
-
-**Nur für den privaten Gebrauch:** Teile des Gates Carbon Drive Systems können patentrechtlich geschützt sein. In vielen Ländern (in Deutschland z. B. nach § 11 Nr. 1 PatG) ist die private, nicht-gewerbliche Herstellung für das eigene Fahrrad vom Patentschutz ausgenommen. Eine **gewerbliche Produktion oder der Verkauf** der generierten Ritzel kann jedoch Rechte Dritter verletzen und erfolgt komplett auf eigene Gefahr. 
-
-Die Nutzung selbstgedruckter Bauteile im Straßenverkehr erfolgt auf eigene Verantwortung.
+Gates® und CDX® sind eingetragene Marken der Gates Corporation; Brompton und Kinetics sind Marken der jeweiligen Eigentümer. Dieses Projekt ist ein unabhängiges Hobby-Tool ohne Verbindung zu den Herstellern; die Geometrie wurde eigenständig vermessen. **Nur für den privaten Gebrauch**, Nutzung der Teile im Straßenverkehr auf eigene Verantwortung. → [Rechtliches & Haftung](docs/de/rechtliches.md)
