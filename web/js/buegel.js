@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { vereinige, csgOp, alsGeometrie, SUBTRACTION } from './csg.js';
 
 // Riemenschutz-Bügel — parametrisch als Formel gebaut (wie das Ritzel), damit
@@ -87,8 +88,11 @@ export function buegelGeometrie(p) {
   cut.translate(B.screw_x, B.screw_y, zBack + B.screw_depth - cutH / 2);
   geo = alsGeometrie(csgOp(geo, cut, SUBTRACTION));
 
-  geo.computeVertexNormals();
-  return geo;
+  // Normalen nur über fast ebene Flächen glätten (Bohrung, Rundungen). Ein
+  // computeVertexNormals() mittelt über jede Kante und färbt die ebenen
+  // Flächen mit Schattenflecken ein, weil das Netz verschweißt ist.
+  // Nur die Beleuchtung ändert sich, nicht die Form: das STL bleibt gleich.
+  return toCreasedNormals(geo, Math.PI / 9);   // 20 Grad
 }
 
 // Bügel-Optik: mattes Metallgrau, klar vom bronzenen Ritzel unterscheidbar.
