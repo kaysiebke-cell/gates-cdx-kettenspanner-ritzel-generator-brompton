@@ -38,7 +38,8 @@ Eine Änderung in `web/js/` oder `web/index.html` wirkt also auf **Web, Android 
 | STEP für eigene Werte per Cloud | ja (Worker `ritzel-step`, ca. 2–3 Min) | – | ja | – |
 | Download STL/ZIP | Browser-Download | Brücke → `Downloads` | WebKit → `~/Downloads` | Export im Programm |
 | Verrundungen | genähert | genähert | genähert | exakt (CAD) |
-| Führung Ø `0` | **keine Führung** | keine Führung | keine Führung | **keine Führung** (seit 2026-10-06, vorher „auto“) |
+| Riemenführung Ø `0` | **automatisch** (Zahnkranz − 1,1 mm) | automatisch | automatisch | automatisch |
+| Riemenführung Breite `0` | kein Ring | kein Ring | kein Ring | kein Ring |
 | Läuft offline | nein | ja | ja | ja |
 
 Pflege dieser Tabelle: bei jeder Änderung, die nur eine Version betrifft, hier eintragen.

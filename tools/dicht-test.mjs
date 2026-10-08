@@ -44,7 +44,8 @@ export async function lauf() {
   for (let z = 12; z <= 19; z++) faelle.push([\`Ritzel z\${z}\`, () => buildMeshes({ ...defaults(), zaehne: z }, mat).g.children[0].geometry]);
   faelle.push(['Ritzel z19, 5 Speichen', () => buildMeshes({ ...defaults(), zaehne: 19, speichen_n: 5 }, mat).g.children[0].geometry]);
   faelle.push(['Ritzel z19, geschwungen', () => buildMeshes({ ...defaults(), zaehne: 19, speichen_n: 5, speichen_schwung: 25 }, mat).g.children[0].geometry]);
-  faelle.push(['Ritzel ohne Führung', () => buildMeshes({ ...defaults(), fuehrung_d: 0 }, mat).g.children[0].geometry]);
+  faelle.push(['Ritzel Führung automatisch (Ø 0)', () => buildMeshes({ ...defaults(), fuehrung_d: 0 }, mat).g.children[0].geometry]);
+  faelle.push(['Ritzel ohne Führung (Breite 0)', () => buildMeshes({ ...defaults(), fuehrung_w: 0 }, mat).g.children[0].geometry]);
   for (const z of [12, 16, 19]) faelle.push([\`Bügel z\${z}\`, () => buegelGeometrie({ ...defaults(), zaehne: z })]);
   faelle.push(['Rolle', () => rolleMeshes(defaults('rolle'), mat).g.children[0].geometry]);
   faelle.push(['Rolle, 6 Speichen', () => rolleMeshes({ ...defaults('rolle'), speichen_n: 6 }, mat).g.children[0].geometry]);

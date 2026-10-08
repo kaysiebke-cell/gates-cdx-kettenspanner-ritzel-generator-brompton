@@ -111,7 +111,7 @@
               "de": "Riemenführung Breite",
               "standard": 1.0,
               "schritt": 0.1,
-              "kommentar": "Dicke des mittleren Führungsrings für den Gates-Riemen (0 = keiner)"
+              "kommentar": "Dicke des mittleren Führungsrings für den Gates-Riemen (0 = ohne Ring)"
             },
             {
               "key": "fuehrung_d",
@@ -119,7 +119,7 @@
               "de": "Riemenführung Ø",
               "standard": 46.5,
               "schritt": 0.5,
-              "kommentar": "Außen-Ø des mittleren Führungsrings für den Gates-Riemen (0 = ohne Ring)"
+              "kommentar": "Außen-Ø des mittleren Führungsrings für den Gates-Riemen (0 = automatisch)"
             }
           ]
         },
