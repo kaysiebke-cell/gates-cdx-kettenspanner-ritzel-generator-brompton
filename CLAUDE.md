@@ -3,13 +3,25 @@
 Es gibt **5 getrennte Versionen**. Vor jeder Änderung klären: *Welche Version ist gemeint?*
 Nicht mischen — Web, Android, Linux-App und FreeCAD sind verschiedene Dinge.
 
+## Wer ist wofür zuständig: Chrome oder GTK?
+
+- **Chrome (bzw. jeder Browser) ist zuständig für die Web-Version — und nur dafür.** Dazu gehören die
+  Webseite, ihr „Als App installieren“-Knopf (PWA: `manifest.webmanifest`, `sw.js`) und die Prüfung im Browser.
+- **Die Linux-Anwendung ist GTK im Cinnamon-/Mint-Stil. Chrome hat dort nichts zu suchen.** Keine
+  `chrome --app=…`-Starter, keine installierte Chrome-Web-App, kein `localhost`-Fenster in Chrome.
+  Die Linux-App bringt ihre Oberfläche selbst mit (GTK-Widgets, WebView nur für die 3D-Vorschau).
+- Android ist eine eigene App (Kotlin-WebView), FreeCAD läuft in FreeCAD. Beide ebenfalls ohne Chrome.
+- Verwechslungsgefahr: Eine in Chrome installierte Web-App aus der Webseite heißt genauso wie die
+  Linux-Anwendung („Gates CDX Ritzel-Generator …“), öffnet aber `localhost`/die Webseite. Sie ist **nicht**
+  die Linux-App. Die echte Linux-App heißt im Menü „Ritzel-Generator“ (Programm `ritzel-generator`).
+
 ## Die 5 Versionen
 
 | # | Version | Ordner | Was es ist | Läuft in |
 |---|---|---|---|---|
-| 1 | **Web** | `web/` | Konfigurator mit 3D-Vorschau (JavaScript/Three.js), über GitHub Pages | Browser (Chrome) |
+| 1 | **Web** | `web/` | Konfigurator mit 3D-Vorschau (JavaScript/Three.js), über GitHub Pages | Browser (Chrome u. a.) |
 | 2 | **Android-App** | `android/` | Kotlin-WebView, die `web/` ins App-Paket kopiert (Gradle-Task). Läuft offline | Handy |
-| 3 | **Linux-App** | `linux/` | Echtes GTK-Programm (Python, Cinnamon-/Systemdesign): Formular, Reiter, Knöpfe sind GTK-Widgets; `web/` läuft als Rechenkern im Hintergrund, nur die 3D-Vorschau ist eine WebView. Paket als `.deb` | Eigenes Fenster, kein Browser |
+| 3 | **Linux-App** | `linux/` | Echtes GTK-Programm (Python, Cinnamon-/Systemdesign): Formular, Reiter, Knöpfe sind GTK-Widgets; `web/` läuft als Rechenkern im Hintergrund, nur die 3D-Vorschau ist eine WebView. Paket als `.deb` | Eigenes GTK-Fenster, **kein Chrome** |
 | 4 | **FreeCAD** | `freecad/` | Bedienfeld „Zahnrad Setup“ (PySide), baut den echten CAD-Körper. Einstieg `freecad/main.py` | FreeCAD (Flatpak) |
 | 5 | **Cloud-Bau / Release-Serie** | `freecad/build_headless.py` + `.github/workflows/` | FreeCAD ohne Oberfläche in GitHub Actions: erzeugt STEP/STL der Release-Dateien (Zähne 12–19) | GitHub Actions |
 
@@ -58,6 +70,7 @@ Erneuern: neues Token anlegen, dann im Ordner `worker/` `npx wrangler secret put
 - Sprache: Deutsch.
 - Erst **lokal** arbeiten; nur committen/pushen, wenn der Nutzer es sagt. Nicht ins Repo: `.claude/`, `tools/serie-parallel.sh`, `web/buegel/` (ungetrackt, nicht anfassen).
 - Vor dem Ändern die passende README lesen — nicht raten, was „die App“ ist.
+- „Linux-App“ oder „PC-App“ heißt immer die GTK-Anwendung in `linux/`, nie die Webseite in Chrome.
 - Downloads/Installationen (SDK, Pakete) nur mit ausdrücklichem Ja.
 - Prüfung der Web-Oberfläche: Testserver `python3 tools/dev-server.py 8765` (oder `preview_start web`).
 - `npm test` braucht Node ≥ 20 (hier läuft Node 18 → Test bisher nicht ausgeführt).

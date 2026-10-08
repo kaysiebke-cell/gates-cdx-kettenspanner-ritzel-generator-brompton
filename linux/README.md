@@ -1,5 +1,8 @@
 # Linux-App
 
+> **GTK im Cinnamon-Stil, nicht Chrome.** Chrome ist nur für die Web-Version (`../web/`) zuständig. Diese
+> Anwendung öffnet kein Chrome-Fenster, keinen `localhost`-Link und keine installierte Chrome-Web-App.
+
 Echtes GTK-Programm im Systemdesign (Cinnamon/Mint): Formular, Reiter und
 Knöpfe sind GTK-Bausteine, kein Browser, läuft offline. Gerechnet wird mit
 der Logik aus `../web/`: sie läuft im Hintergrund, die Oberfläche liest die
