@@ -62,8 +62,11 @@ export const i18n = {
       depth: 'Tiefe',
       width_z: 'Breite Z',
       tooth_round: 'Zahn-Rundung',
-      guide_width: 'Riemenführung Breite (0=ohne)',
-      guide_d: 'Riemenführung Ø (0=automatisch)',
+      guide_width: 'Riemenführung Breite',
+      guide_width_tip: '0 = ohne Ring',
+      guide_d_tip: '0 = automatisch (passt sich dem Zahnkranz an)',
+      hint_guide: 'Riemenführung = der mittlere Führungsring für den Gates-Riemen. Breite 0 = kein Ring. Ø 0 = automatisch, der Ring passt sich dem Zahnkranz an.',
+      guide_d: 'Riemenführung Ø',
       bore_d: 'Bohrung Ø',
       hub_d: 'Nabe Ø',
       hub_len: 'Nabe Länge',
@@ -163,8 +166,11 @@ export const i18n = {
       depth: 'Depth',
       width_z: 'Width Z',
       tooth_round: 'Tooth rounding',
-      guide_width: 'Belt guide width (0=none)',
-      guide_d: 'Belt guide Ø (0=auto)',
+      guide_width: 'Belt guide width',
+      guide_width_tip: '0 = no ring',
+      guide_d_tip: '0 = automatic (adapts to the tooth rim)',
+      hint_guide: 'Belt guide = the central guide ring for the Gates belt. Width 0 = no ring. Ø 0 = automatic, the ring adapts to the tooth rim.',
+      guide_d: 'Belt guide Ø',
       bore_d: 'Bore Ø',
       hub_d: 'Hub Ø',
       hub_len: 'Hub length',
@@ -228,6 +234,7 @@ export function updateUI() {
   }
   document.getElementById('hint4').textContent = t('hint4');
   document.getElementById('hint1').textContent = t('hint1');
+  const hg = document.getElementById('hint_guide'); if (hg) hg.textContent = t('hint_guide');
   document.getElementById('hint2').textContent = t('hint2');
   document.getElementById('hint3').textContent = t('hint3');
   document.getElementById('overlaynote').textContent = t('overlay');

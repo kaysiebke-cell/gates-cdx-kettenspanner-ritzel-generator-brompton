@@ -73,6 +73,9 @@ Erneuern: neues Token anlegen, dann im Ordner `worker/` `npx wrangler secret put
 - Vor dem Ändern die passende README lesen — nicht raten, was „die App“ ist.
 - „Linux-App“ oder „PC-App“ heißt immer die GTK-Anwendung in `linux/`, nie die Webseite in Chrome.
 - Downloads/Installationen (SDK, Pakete) nur mit ausdrücklichem Ja.
+- Feldbeschriftungen kurz halten (eine Zeile, ca. 20 Zeichen): Zusätze wie „0 = …“ gehören in den Tooltip (`<key>_tip` in `i18n.js`) und in den Erklärtext (ⓘ), nicht ins Label. Gilt für Web, Android, Linux-App (liest die Labels aus der Seite) und FreeCAD (`params.json`, Feld `de`).
+- Start der Linux-App aus dem Projektordner nutzt die Projekt-`web/`, nicht die installierte Kopie (`finde_web` in `linux/ritzel-generator.py`).
+- Nie Prozesse per Namensmuster beenden (`pkill -f`, `ps|awk|kill`): das trifft auch Programme des Nutzers (z. B. die installierte Linux-App) und die eigene Shell. Nur gezielt per PID, die man selbst gestartet hat.
 - Prüfung der Web-Oberfläche: Testserver `python3 tools/dev-server.py 8765` (oder `preview_start web`).
 - `npm test` braucht Node ≥ 20 (hier läuft Node 18 → Test bisher nicht ausgeführt).
 - Android-Emulator (`~/Android/Sdk`, AVD `ritzel`, Android 14) ist eingerichtet, stürzte aber beim ersten Test ab; App dort noch nicht geprüft.

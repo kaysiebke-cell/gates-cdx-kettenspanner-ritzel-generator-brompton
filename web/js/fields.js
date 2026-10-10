@@ -105,6 +105,9 @@ export function buildFormFields(onChange, bauteil = STANDARD_BAUTEIL) {
     for (const [key, labelKey, def, step] of felder) {
       const row = document.createElement('div'); row.className = 'row';
       const lab = document.createElement('label'); lab.textContent = t(labelKey); lab.htmlFor = key;
+      // Kurze Beschriftung + Tooltip: „0 = …“ passt nicht in die Zeile (labelKey_tip).
+      const tip = t(labelKey + '_tip');
+      if (tip !== labelKey + '_tip') lab.title = tip;
       const inp = document.createElement('input');
       inp.type = 'number'; inp.id = key; inp.value = def; inp.step = step;
       if (key === 'zaehne' && g) {
@@ -120,6 +123,7 @@ export function buildFormFields(onChange, bauteil = STANDARD_BAUTEIL) {
           onChange();
         });
       }
+      if (lab.title) inp.title = lab.title;
       inp.addEventListener('input', onChange);
       row.append(lab, spinFeld(inp)); sec.append(row);
       inputs[key] = inp;

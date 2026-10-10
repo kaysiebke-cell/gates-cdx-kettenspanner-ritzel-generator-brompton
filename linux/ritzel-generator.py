@@ -91,9 +91,11 @@ JS_ZUSTAND = """(function(){
 
 
 def finde_web():
+    # Reihenfolge: ausdrücklich gesetzt, dann das Projekt neben diesem Skript
+    # (Start aus dem Quellordner), zuletzt die installierte Kopie.
     for p in (os.environ.get('RITZEL_WEB'),
-              '/usr/share/ritzel-generator/web',
-              os.path.join(HIER, '..', 'web')):
+              os.path.join(HIER, '..', 'web'),
+              '/usr/share/ritzel-generator/web'):
         if p and os.path.isfile(os.path.join(p, 'index.html')):
             return os.path.abspath(p)
     sys.exit('web/index.html nicht gefunden')
