@@ -58,6 +58,31 @@ export const ZAEHNE_MIN = grenzen().min, ZAEHNE_MAX = grenzen().max;
 
 export const inputs = {};
 
+// Eingabefeld mit − und + wie ein GTK-Drehfeld (Mint/Cinnamon). Die Pfeile des
+// Browsers sind ausgeblendet (siehe style.css); die Knöpfe zählen um `step`,
+// halten Grenzen ein und lösen dieselben Ereignisse aus wie eine Eingabe.
+function spinFeld(inp) {
+  const wrap = document.createElement('div'); wrap.className = 'spin';
+  const knopf = (zeichen, richtung, name) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'spinbtn'; b.textContent = zeichen;
+    b.setAttribute('aria-label', name); b.tabIndex = -1;
+    b.addEventListener('click', () => {
+      const step = parseFloat(inp.step) || 1;
+      const stellen = (String(step).split('.')[1] || '').length;
+      let v = (parseFloat(inp.value) || 0) + richtung * step;
+      if (inp.min !== '') v = Math.max(parseFloat(inp.min), v);
+      if (inp.max !== '') v = Math.min(parseFloat(inp.max), v);
+      inp.value = String(+v.toFixed(Math.max(stellen, 2)));
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+      inp.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    return b;
+  };
+  wrap.append(inp, knopf('−', -1, '−'), knopf('+', 1, '+'));
+  return wrap;
+}
+
 export function buildFormFields(onChange, bauteil = STANDARD_BAUTEIL) {
   const g = grenzen(bauteil);
   for (const key in inputs) delete inputs[key];
@@ -96,7 +121,7 @@ export function buildFormFields(onChange, bauteil = STANDARD_BAUTEIL) {
         });
       }
       inp.addEventListener('input', onChange);
-      row.append(lab, inp); sec.append(row);
+      row.append(lab, spinFeld(inp)); sec.append(row);
       inputs[key] = inp;
     }
   }
