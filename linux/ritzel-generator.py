@@ -59,7 +59,9 @@ JS_AUSLESEN = """(function(){
     fs.querySelectorAll('.row').forEach(r => {
       const l = r.querySelector('label'), i = r.querySelector('input');
       if (!i) return;
+      const n = r.nextElementSibling;
       rows.push({id: i.id, label: l ? l.textContent.trim() : i.id, value: parseFloat(i.value),
+                 note: n && n.classList.contains('rownote') ? n.textContent.trim() : '',
                  step: parseFloat(i.step) || 1,
                  min: i.min !== '' ? parseFloat(i.min) : null,
                  max: i.max !== '' ? parseFloat(i.max) : null});
@@ -294,7 +296,8 @@ class App(Gtk.Window):
             gitter = Gtk.Grid(row_spacing=6, column_spacing=10)
             for m in ('start', 'end', 'top', 'bottom'):
                 getattr(gitter, f'set_margin_{m}')(10)
-            for z, r in enumerate(sec['rows']):
+            zeile = 0                       # Gitterzeile: Zusätze brauchen eine eigene
+            for r in sec['rows']:
                 lab = Gtk.Label(label=r['label'], xalign=0, wrap=True)
                 lab.set_hexpand(True)
                 step = r['step']
@@ -306,10 +309,17 @@ class App(Gtk.Window):
                 spin.set_width_chars(7)
                 spin.set_alignment(1.0)
                 spin.connect('value-changed', self.wert_geaendert, r['id'])
-                gitter.attach(lab, 0, z, 1, 1)
-                gitter.attach(spin, 1, z, 1, 1)
+                gitter.attach(lab, 0, zeile, 1, 1)
+                gitter.attach(spin, 1, zeile, 1, 1)
                 self.zeilen[r['id']] = spin
-            ende = len(sec['rows'])
+                zeile += 1
+                if r.get('note'):           # Zusatz („0 = …“) als graue Zeile unter dem Feld
+                    zusatz = self.neues_hinweislabel()
+                    zusatz.set_text(r['note'])
+                    zusatz.set_margin_bottom(2)
+                    gitter.attach(zusatz, 0, zeile, 2, 1)
+                    zeile += 1
+            ende = zeile
             for h in sec['hints']:
                 l = self.neues_hinweislabel()
                 l.set_text(h)

@@ -41,6 +41,13 @@ def _teil(bauteil):
     return _BAUTEILE.get(bauteil, _BAUTEILE[STANDARD_BAUTEIL])
 
 
+def _label(feld):
+    """Beschriftung eines Feldes, mit dem Zusatz in Klammern (z. B. „0 = ohne
+    Ring“), falls params.json einen kennt."""
+    zusatz = feld.get("zusatz")
+    return f"{feld['de']} ({zusatz})" if zusatz else feld["de"]
+
+
 def feld_sektionen(bauteil=STANDARD_BAUTEIL):
     """Eingabefelder eines Bauteils, gegliedert wie das FreeCAD-Bedienfeld
     sie anzeigt. Format je Abschnitt: (Überschrift, [(key, label, default)])."""
@@ -55,7 +62,7 @@ def feld_sektionen(bauteil=STANDARD_BAUTEIL):
     reihenfolge = teil.get("reihenfolge_freecad", list(nach_id))
     return [
         (nach_id[_id]["de"],
-         [(f["key"], f["de"], f["standard"]) for f in nach_id[_id]["felder"]])
+         [(f["key"], _label(f), f["standard"]) for f in nach_id[_id]["felder"]])
         for _id in reihenfolge
     ]
 

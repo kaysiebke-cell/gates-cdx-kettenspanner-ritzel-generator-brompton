@@ -66,6 +66,7 @@ legend + * { clear: both; }
 .row input::-webkit-outer-spin-button,
 .row input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .row input:focus { outline: none; border-color: var(--accent); }
+.rownote { font-size: 13px; color: var(--muted); margin: -3px 0 8px; }
 .spinbtn {
   /* globale Knopf-Regel (block/100%) zurücksetzen */
   display: block; width: 32px; flex: 0 0 32px; margin: 0 0 0 -1px; padding: 0;

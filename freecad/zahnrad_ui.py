@@ -210,7 +210,9 @@ class ZahnradDockPanel(QtWidgets.QDockWidget):
         for i, (label, spinbox) in enumerate(paare):
             box = QtWidgets.QVBoxLayout()
             box.setSpacing(2)
-            box.addWidget(QtWidgets.QLabel(label))
+            beschriftung = QtWidgets.QLabel(label)
+            beschriftung.setWordWrap(True)      # lange Zusätze brechen um, statt das Dock zu verbreitern
+            box.addWidget(beschriftung)
             box.addWidget(spinbox)
             grid.addLayout(box, i // spalten, i % spalten)
         for spalte in range(spalten):

@@ -18,6 +18,9 @@
     "          standard = Standardwert",
     "          schritt  = Schrittweite der Pfeiltasten im Web-Formular",
     "          kommentar= Kurzerklärung (nicht von Code ausgewertet)",
+    "          zusatz   = (optional) kurzer Zusatz zur Beschriftung, z. B. \"0 = ohne Ring\" —",
+    "                     FreeCAD hängt ihn in Klammern an das Label; die Web-Oberfläche zeigt",
+    "                     ihn als graue Zeile unter dem Feld (Texte dort in web/js/i18n.js, <i18n>_tip)",
     "",
     "Gleiche Schlüssel in verschiedenen Bauteilen sind gewollt: bohrung_d heißt",
     "bei Ritzel und Rolle dasselbe. Im Formular steht immer nur EIN Bauteil,",
@@ -111,6 +114,7 @@
               "de": "Riemenführung Breite",
               "standard": 1.0,
               "schritt": 0.1,
+              "zusatz": "0 = ohne Ring",
               "kommentar": "Dicke des mittleren Führungsrings für den Gates-Riemen (0 = ohne Ring)"
             },
             {
@@ -119,6 +123,7 @@
               "de": "Riemenführung Ø",
               "standard": 46.5,
               "schritt": 0.5,
+              "zusatz": "0 = automatisch",
               "kommentar": "Außen-Ø des mittleren Führungsrings für den Gates-Riemen (0 = automatisch)"
             }
           ]

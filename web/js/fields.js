@@ -94,7 +94,7 @@ export function buildFormFields(onChange, bauteil = STANDARD_BAUTEIL) {
   for (const b of PARAMS.bauteile)
     for (const a of b.abschnitte) {
       const sec = document.getElementById(a.id);
-      if (sec) sec.querySelectorAll('.row').forEach(r => r.remove());
+      if (sec) sec.querySelectorAll('.row, .rownote').forEach(r => r.remove());
     }
 
   for (const [secId, felder] of sections(bauteil)) {
@@ -105,9 +105,11 @@ export function buildFormFields(onChange, bauteil = STANDARD_BAUTEIL) {
     for (const [key, labelKey, def, step] of felder) {
       const row = document.createElement('div'); row.className = 'row';
       const lab = document.createElement('label'); lab.textContent = t(labelKey); lab.htmlFor = key;
-      // Kurze Beschriftung + Tooltip: „0 = …“ passt nicht in die Zeile (labelKey_tip).
+      // Kurzer Zusatz („0 = …“): passt nicht ins Label, ist aber wichtig — er steht
+      // als graue Zeile unter dem Feld (labelKey_tip in i18n.js) und als Tooltip.
       const tip = t(labelKey + '_tip');
-      if (tip !== labelKey + '_tip') lab.title = tip;
+      const zusatz = tip !== labelKey + '_tip' ? tip : '';
+      if (zusatz) lab.title = zusatz;
       const inp = document.createElement('input');
       inp.type = 'number'; inp.id = key; inp.value = def; inp.step = step;
       if (key === 'zaehne' && g) {
@@ -126,6 +128,10 @@ export function buildFormFields(onChange, bauteil = STANDARD_BAUTEIL) {
       if (lab.title) inp.title = lab.title;
       inp.addEventListener('input', onChange);
       row.append(lab, spinFeld(inp)); sec.append(row);
+      if (zusatz) {
+        const note = document.createElement('div'); note.className = 'rownote';
+        note.textContent = zusatz; sec.append(note);
+      }
       inputs[key] = inp;
     }
   }
