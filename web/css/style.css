@@ -134,7 +134,8 @@ a.btn.primary, #stlbtn {
    bleibt so niedrig wie bisher. Er trägt nur das Zeichen, die
    Beschriftung steckt in aria-label/title (i18n). */
 #hintsbtn {
-  width: auto; flex: 0 0 auto; margin: 0 0 0 auto; align-self: center;
+  width: auto; flex: 0 0 auto; margin: 0;
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
   padding: 3px 9px; border: 1px solid var(--border); border-radius: 3px;
   background: var(--base); color: var(--muted); font-size: 15px; line-height: 1.2;
   cursor: pointer;
@@ -165,12 +166,13 @@ a.btn.primary, #stlbtn {
    Generator-Ansicht trotz hidden-Attribut sichtbar bliebe. */
 #genview[hidden], #printview[hidden] { display: none; }
 #tabs {
-  display: flex; align-items: center; padding: 6px 12px;
-  background: var(--header); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; position: relative;
+  padding: 6px 12px; background: var(--header); border-bottom: 1px solid var(--border);
 }
 /* Reiter als verbundene Knopfgruppe in der Mitte (wie die Kopfzeile des
-   Linux-Fensters); der ⓘ-Schalter bleibt rechts. */
-.tab:first-of-type { margin-left: auto; border-radius: 3px 0 0 3px; }
+   Linux-Fensters). Der ⓘ-Schalter hängt absolut am rechten Rand: Die Mitte darf
+   nicht davon abhängen, ob er da ist (in den Druck-Empfehlungen ist er weg). */
+.tab:first-of-type { margin-left: 0; border-radius: 3px 0 0 3px; }
 .tab:last-of-type { border-radius: 0 3px 3px 0; }
 .tab {
   /* globale Button-Regel (block/100%/Rahmen) zurücksetzen */
@@ -294,6 +296,9 @@ a.btn.primary, #stlbtn {
      zugunsten der Vorschau; Drehen/Zoomen per Finger ist intuitiv. */
   header .sub { display: none; }
   #hintsbtn { padding: 4px 10px; font-size: 17px; }   /* Daumenfläche */
+  /* Schmal: Reiter links, ⓘ rechts im normalen Fluss — mittig bliebe kein Platz. */
+  #tabs { justify-content: flex-start; }
+  #hintsbtn { position: static; transform: none; margin-left: auto; }
   .row { margin: 6px 0; }
   .row label { font-size: 15px; }
   /* 16px verhindert den Auto-Zoom beim Antippen auf iOS */
