@@ -6,6 +6,11 @@
 
 ![FreeCAD](https://img.shields.io/badge/FreeCAD-1.1%2B-blue) ![Python](https://img.shields.io/badge/Python-GTK%20%7C%20PySide6-green) ![Web](https://img.shields.io/badge/Web-Browser-orange) ![Android](https://img.shields.io/badge/Android-APK-brightgreen)
 
+[![⚙ Open Configurator](https://img.shields.io/badge/%E2%9A%99%20Open%20Configurator-Live--Preview%20in%20Browser-blue?style=for-the-badge)](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/)
+[![📱 Android app](https://img.shields.io/badge/%F0%9F%93%B1%20Android%20app-download%20APK-brightgreen?style=for-the-badge)](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/download/app/ritzel-generator.apk)
+
+The app ships everything and works offline – [installation guide](APK-HERUNTERLADEN.md) (German).
+
 <img src="bilder/titelbild.png" alt="Sprocket, sprocket with spokes, tensioner roller and belt guard – all generated with the tool" width="720">
 
 ---

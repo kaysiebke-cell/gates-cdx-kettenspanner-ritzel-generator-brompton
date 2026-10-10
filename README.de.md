@@ -6,6 +6,11 @@
 
 ![FreeCAD](https://img.shields.io/badge/FreeCAD-1.1%2B-blue) ![Python](https://img.shields.io/badge/Python-GTK%20%7C%20PySide6-green) ![Web](https://img.shields.io/badge/Web-Browser-orange) ![Android](https://img.shields.io/badge/Android-APK-brightgreen)
 
+[![⚙ Konfigurator öffnen](https://img.shields.io/badge/%E2%9A%99%20Konfigurator%20%C3%B6ffnen-Live--Vorschau%20im%20Browser-blue?style=for-the-badge)](https://kaysiebke-cell.github.io/gates-cdx-kettenspanner-ritzel-generator-brompton/)
+[![📱 Android-App](https://img.shields.io/badge/%F0%9F%93%B1%20Android--App-APK%20herunterladen-brightgreen?style=for-the-badge)](https://github.com/kaysiebke-cell/gates-cdx-kettenspanner-ritzel-generator-brompton/releases/download/app/ritzel-generator.apk)
+
+Die App bringt alles mit und läuft ohne Netz – [Anleitung zur Installation](APK-HERUNTERLADEN.md).
+
 <img src="bilder/titelbild.png" alt="Ritzel, Ritzel mit Speichen, Spannrolle und Riemenschutz – alles mit dem Tool erzeugt" width="720">
 
 ---
